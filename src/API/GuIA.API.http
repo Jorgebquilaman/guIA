@@ -1,0 +1,6 @@
+@GuIA.API_HostAddress = http://localhost:5290
+
+GET {{GuIA.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

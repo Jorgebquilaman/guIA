@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --color-iupa-green: #1B4D3E;
+  --color-iupa-green-secondary: #2D7A6B;
+  --color-iupa-green-light: #E8F4F1;
+  --color-iupa-accent: #E87100;
+  --color-iupa-dark: #2D2D2D;
+  --color-iupa-medium: #666666;
+  --color-iupa-light: #F5F5F5;
+  --color-iupa-public-green: #184D3E;
+  --color-dept-music: #006A83;
+  --color-dept-audiovisual: #661012;
+  --color-dept-visual-arts: #CF2E2E;
+  --color-dept-movement: #D81480;
+  --color-dept-drama: #FF6900;
+}
