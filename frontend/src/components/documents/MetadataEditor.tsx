@@ -58,6 +58,7 @@ export default function MetadataEditor({
   const { data: aiSuggestions, refetch: fetchAiSuggestions } = useAiSuggestions(document.id)
   const { data: typeDefs } = useDocumentTypes()
   const { data: departments } = useDepartments()
+  const isLink = !!document.sourceUrl
 
   useEffect(() => {
     if (aiSuggestions && !aiLoading) return
@@ -171,37 +172,39 @@ export default function MetadataEditor({
           />
         </div>
 
-        <div className="flex items-center justify-between rounded-lg border border-iupa-green-light bg-iupa-green-light/30 px-4 py-3">
-          <div className="flex items-center gap-2 text-sm text-iupa-green">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813 2.846a4.5 4.5 0 01-3.09 3.09L2.25 22.5l.375-.375L2.25 22.5l1.846-.813A4.5 4.5 0 019 18.75l.813-2.846" />
-            </svg>
-            <span className="font-medium">Completar con IA</span>
-            <span className="text-iupa-medium font-normal">Analiza el documento y sugiere valores para los campos</span>
+        {!isLink && (
+          <div className="flex items-center justify-between rounded-lg border border-iupa-green-light bg-iupa-green-light/30 px-4 py-3">
+            <div className="flex items-center gap-2 text-sm text-iupa-green">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813 2.846a4.5 4.5 0 01-3.09 3.09L2.25 22.5l.375-.375L2.25 22.5l1.846-.813A4.5 4.5 0 019 18.75l.813-2.846" />
+              </svg>
+              <span className="font-medium">Completar con IA</span>
+              <span className="text-iupa-medium font-normal">Analiza el documento y sugiere valores para los campos</span>
+            </div>
+            <button
+              onClick={handleAiFill}
+              disabled={aiLoading}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-iupa-green px-4 py-2 text-sm font-medium text-white hover:bg-iupa-green-secondary disabled:opacity-50 transition-colors"
+            >
+              {aiLoading ? (
+                <>
+                  <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  Analizando...
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813 2.846a4.5 4.5 0 01-3.09 3.09L2.25 22.5l.375-.375L2.25 22.5l1.846-.813A4.5 4.5 0 019 18.75l.813-2.846" />
+                  </svg>
+                  Completar
+                </>
+              )}
+            </button>
           </div>
-          <button
-            onClick={handleAiFill}
-            disabled={aiLoading}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-iupa-green px-4 py-2 text-sm font-medium text-white hover:bg-iupa-green-secondary disabled:opacity-50 transition-colors"
-          >
-            {aiLoading ? (
-              <>
-                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                </svg>
-                Analizando...
-              </>
-            ) : (
-              <>
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813 2.846a4.5 4.5 0 01-3.09 3.09L2.25 22.5l.375-.375L2.25 22.5l1.846-.813A4.5 4.5 0 019 18.75l.813-2.846" />
-                </svg>
-                Completar
-              </>
-            )}
-          </button>
-        </div>
+        )}
 
         <div className="grid gap-5 sm:grid-cols-2">
           <div>

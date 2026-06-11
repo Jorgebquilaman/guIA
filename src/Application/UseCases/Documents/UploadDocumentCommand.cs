@@ -14,9 +14,9 @@ public record UploadDocumentCommand(
     string? Title,
     bool IsPublic,
     (Stream Content, string FileName, string MimeType)? CoverImage = null
-) : IRequest;
+) : IRequest<Guid>;
 
-public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentCommand>
+public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentCommand, Guid>
 {
     private readonly IAppDbContext _context;
     private readonly IFileStoragePort _fileStorage;
@@ -38,8 +38,11 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
         _email = email;
     }
 
-    public async Task Handle(UploadDocumentCommand request, CancellationToken ct)
+    public async Task<Guid> Handle(UploadDocumentCommand request, CancellationToken ct)
     {
+        if (request.CollectionId == Guid.Empty)
+            throw new InvalidOperationException("Debe seleccionar una colección.");
+
         bool collectionExists = await _context.Collections
             .AnyAsync(c => c.Id == request.CollectionId && c.DeletedAt == null, ct);
         if (!collectionExists)
@@ -117,5 +120,7 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
         }
 
         await _channelWriter.WriteAsync(document.Id, ct);
+
+        return document.Id;
     }
 }

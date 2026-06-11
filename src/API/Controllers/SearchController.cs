@@ -29,6 +29,7 @@ public sealed class SearchController : BaseApiController
             "Thesis" => DocumentType.Thesis,
             "Dataset" => DocumentType.Dataset,
             "Software" => DocumentType.Software,
+            "Link" => DocumentType.Link,
             "Other" => DocumentType.Other,
             _ => null
         };

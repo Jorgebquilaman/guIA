@@ -26,6 +26,9 @@ public class Document : BaseEntity
     public string? CoverImagePath { get; private set; }
     public string? CoverImageMimeType { get; private set; }
 
+    // Source URL (for link-type documents)
+    public string? SourceUrl { get; private set; }
+
     // Dublin Core fields
     public string? AdvisorName { get; private set; }
     public string? Institution { get; private set; }
@@ -60,6 +63,11 @@ public class Document : BaseEntity
         Title = title;
     }
 
+    public void SetSourceUrl(string? sourceUrl)
+    {
+        SourceUrl = sourceUrl;
+    }
+
     public void SetDescription(string? description)
     {
         Description = description;
@@ -85,8 +93,8 @@ public class Document : BaseEntity
         if (Status != DocumentStatus.Draft && Status != DocumentStatus.Processing)
             throw new DomainValidationException(
                 "Only documents in Draft or Processing status can be published.");
-        if (Files.Count == 0)
-            throw new DomainValidationException("Cannot publish a document with no files.");
+        if (Files.Count == 0 && string.IsNullOrWhiteSpace(SourceUrl))
+            throw new DomainValidationException("Cannot publish a document with no files and no source URL.");
         Status = DocumentStatus.Published;
         PublishedAt = publishedAt;
     }

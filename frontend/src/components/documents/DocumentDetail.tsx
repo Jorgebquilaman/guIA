@@ -12,6 +12,7 @@ const typeLabels: Record<string, string> = {
   Thesis: 'Tesis',
   Dataset: 'Dataset',
   Software: 'Software',
+  Link: 'Enlace',
   Other: 'Otro',
 }
 
@@ -26,7 +27,8 @@ export default function DocumentDetail({ document }: DocumentDetailProps) {
   const [abstractExpanded, setAbstractExpanded] = useState(false)
 
   const status = statusConfig[document.status] ?? statusConfig.Draft
-  const primary = document.files.find((f) => f.isPrimary) ?? document.files[0]
+  const isLink = !!document.sourceUrl
+  const primary = isLink ? null : (document.files.find((f) => f.isPrimary) ?? document.files[0])
   const isPdf = primary?.mimeType === 'application/pdf'
   const isImage = primary?.mimeType.startsWith('image/')
   const previewUrl = primary ? `/api/documents/${document.id}/preview/${primary.id}` : null
@@ -159,7 +161,32 @@ export default function DocumentDetail({ document }: DocumentDetailProps) {
         </div>
       )}
 
-      {document.files && document.files.length > 0 && primary && (
+      {isLink && document.sourceUrl ? (
+        <div>
+          <h3 className="mb-3 text-lg font-semibold text-iupa-dark">Enlace externo</h3>
+          <div className="overflow-hidden rounded-xl border border-blue-100 bg-blue-50/30 shadow-sm">
+            <div className="flex items-center justify-between border-b border-blue-100 bg-blue-50/50 px-5 py-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <svg className="h-5 w-5 shrink-0 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                </svg>
+                <span className="truncate text-sm font-medium text-blue-800">{document.sourceUrl}</span>
+              </div>
+              <a
+                href={document.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                </svg>
+                Abrir enlace externo
+              </a>
+            </div>
+          </div>
+        </div>
+      ) : document.files && document.files.length > 0 && primary && (
         <div>
           <h3 className="mb-3 text-lg font-semibold text-iupa-dark">Archivos</h3>
 

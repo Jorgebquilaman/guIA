@@ -23,11 +23,11 @@ export default function PublicHome() {
       <DepartmentSection />
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <RecentWorks />
-          </div>
           <div>
             <SidebarSection />
+          </div>
+          <div className="lg:col-span-2">
+            <RecentWorks />
           </div>
         </div>
       </section>

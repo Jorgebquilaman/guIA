@@ -19,6 +19,7 @@ public class DocumentDto
     public DateTime? UpdatedAt { get; set; }
     public DateTime? PublishedAt { get; set; }
     public bool HasCoverImage { get; set; }
+    public string? SourceUrl { get; set; }
     public AiMetadataDto? AiMetadata { get; set; }
     public List<DocumentFileDto> Files { get; set; } = new();
     public List<DocumentAuthorDto> Authors { get; set; } = new();

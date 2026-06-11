@@ -138,6 +138,7 @@ public class ProcessDocumentWithAiCommandHandler : IRequestHandler<ProcessDocume
             UpdatedAt = doc.UpdatedAt,
             PublishedAt = doc.PublishedAt,
             HasCoverImage = doc.CoverImagePath != null,
+            SourceUrl = doc.SourceUrl,
             Authors = doc.Authors.OrderBy(a => a.Order).Select(a => new DocumentAuthorDto
             {
                 Id = a.Id,

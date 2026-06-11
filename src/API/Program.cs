@@ -37,10 +37,9 @@ var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowOrigins", policy =>
-        policy.WithOrigins(corsOrigins)
+        policy.AllowAnyOrigin()
               .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials());
+              .AllowAnyHeader());
 });
 
 builder.Services.AddControllers()
@@ -49,8 +48,6 @@ builder.Services.AddControllers()
         o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssemblyContaining<GuIA.Application.UseCases.Validators.LoginValidator>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHealthChecks();

@@ -361,6 +361,11 @@ namespace GuIA.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("search_vector");
 
+                    b.Property<string>("SourceUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)")
+                        .HasColumnName("source_url");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)

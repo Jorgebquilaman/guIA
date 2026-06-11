@@ -1,5 +1,7 @@
 using GuIA.Application.DTOs;
 using GuIA.Application.UseCases.Documents;
+using GuIA.Application.UseCases.Validators;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,12 +13,16 @@ public sealed class DocumentsController : BaseApiController
     [Authorize]
     public async Task<IActionResult> Upload(
         [FromForm] List<IFormFile> files,
-        [FromForm] Guid collectionId,
+        [FromForm] Guid? collectionId,
         [FromForm] string? title,
         [FromForm] bool isPublic = false,
         [FromForm] IFormFile? coverImage = null,
         CancellationToken ct = default)
     {
+        Console.WriteLine($"[Upload] collectionId raw: {collectionId}, files: {files?.Count}");
+        if (collectionId == null || collectionId == Guid.Empty)
+            return BadRequest("COLLECTION_REQUIRED", "Debe seleccionar una colección.");
+
         var fileTuples = files
             .Select(f => (f.OpenReadStream(), f.FileName, f.ContentType))
             .ToList();
@@ -25,9 +31,25 @@ public sealed class DocumentsController : BaseApiController
         if (coverImage != null)
             cover = (coverImage.OpenReadStream(), coverImage.FileName, coverImage.ContentType);
 
-        var command = new UploadDocumentCommand(fileTuples, collectionId, title, isPublic, cover);
-        await Mediator.Send(command, ct);
-        return Ok(new { message = "Document uploaded successfully." });
+        var command = new UploadDocumentCommand(fileTuples, collectionId ?? Guid.Empty, title, isPublic, cover);
+        var documentId = await Mediator.Send(command, ct);
+        return Ok(new { documentId, message = "Document uploaded successfully." });
+    }
+
+    [HttpPost("upload-link")]
+    [Authorize]
+    public async Task<IActionResult> UploadLink([FromBody] UploadLinkRequest request, CancellationToken ct)
+    {
+        if (request.CollectionId == null || request.CollectionId == Guid.Empty)
+            return BadRequest("COLLECTION_REQUIRED", "Debe seleccionar una colección.");
+
+        var validator = new UploadLinkValidator();
+        var validationResult = await validator.ValidateAsync(request.ToCommand(), ct);
+        if (!validationResult.IsValid)
+            return BadRequest("VALIDATION_ERROR", string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage)));
+
+        var documentId = await Mediator.Send(request.ToCommand(), ct);
+        return Ok(new { documentId, message = "Link uploaded successfully." });
     }
 
     [HttpGet("{id:guid}")]
@@ -147,3 +169,22 @@ public sealed record PatchDocumentRequest(
 );
 public sealed record UpdateMetadataRequest(string? Title, string? Description, List<string>? Authors, List<string>? Keywords);
 public sealed record RejectDocumentRequest(string Reason);
+
+public sealed record UploadLinkRequest(
+    string SourceUrl,
+    string Title,
+    Guid? CollectionId,
+    bool IsPublic = false,
+    string? Description = null,
+    string? DegreeProgram = null,
+    string? Department = null,
+    string? AdvisorName = null,
+    string? Institution = null,
+    string? License = null
+)
+{
+    public UploadLinkCommand ToCommand() => new(
+        SourceUrl, Title, CollectionId ?? Guid.Empty, IsPublic,
+        Description, DegreeProgram, Department, AdvisorName, Institution, License
+    );
+}

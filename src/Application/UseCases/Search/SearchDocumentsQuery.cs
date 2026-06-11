@@ -86,6 +86,7 @@ public class SearchDocumentsQueryHandler : IRequestHandler<SearchDocumentsQuery,
                 UpdatedAt = d.UpdatedAt,
             PublishedAt = d.PublishedAt,
             HasCoverImage = d.CoverImagePath != null,
+            SourceUrl = d.SourceUrl,
             Authors = d.Authors.OrderBy(a => a.Order).Select(a => new DocumentAuthorDto
                 {
                     Id = a.Id,

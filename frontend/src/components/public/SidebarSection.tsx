@@ -15,7 +15,7 @@ export default function SidebarSection() {
   const [career, setCareer] = useState('')
   const [year, setYear] = useState('')
   const [siteConfig, setSiteConfig] = useState<{ showMessage: boolean; messageText: string } | null>(null)
-  const [dismissed, setDismissed] = useState(false)
+  const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
     fetch('/api/stats/filters')
@@ -35,10 +35,14 @@ export default function SidebarSection() {
       .then((res) => res.json())
       .then((data) => {
         const d = data.data ?? data
-        setSiteConfig({
-          showMessage: d.showMessage ?? true,
-          messageText: d.messageText ?? '',
-        })
+        const shouldShow = d.showMessage ?? true
+        const text = d.messageText ?? ''
+        if (shouldShow && text) {
+          setSiteConfig({ showMessage: true, messageText: text })
+          setShowModal(true)
+        } else {
+          setSiteConfig({ showMessage: false, messageText: '' })
+        }
       })
       .catch(() => {})
   }, [])
@@ -52,7 +56,8 @@ export default function SidebarSection() {
     window.location.href = `/buscar?${params.toString()}`
   }
 
-  return (
+    return (
+    <>
     <aside className="space-y-8">
       <div className="rounded-xl border border-iupa-light bg-white p-5 shadow-sm">
         <h3 className="mb-4 text-sm font-bold text-iupa-dark" style={{ fontFamily: 'Montserrat, sans-serif' }}>
@@ -109,32 +114,41 @@ export default function SidebarSection() {
           ))}
         </div>
       </div>
+    </aside>
 
-      {siteConfig?.showMessage && !dismissed && (
-        <div className="relative rounded-xl border border-iupa-light bg-white p-5 shadow-sm">
+    {showModal && siteConfig && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+        onClick={() => setShowModal(false)}
+      >
+        <div
+          className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
-            onClick={() => setDismissed(true)}
-            className="absolute right-3 top-3 rounded p-0.5 text-iupa-medium hover:text-iupa-dark"
+            onClick={() => setShowModal(false)}
+            className="absolute right-4 top-4 rounded-full p-1 text-iupa-medium hover:bg-iupa-light hover:text-iupa-dark transition-colors"
             title="Cerrar"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
-          <div className="mb-2 flex items-center gap-2 text-iupa-green">
+          <div className="mb-3 flex items-center gap-2 text-iupa-green">
             <Info className="h-5 w-5" />
-            <h3 className="text-sm font-bold" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            <h3 className="text-base font-bold" style={{ fontFamily: 'Montserrat, sans-serif' }}>
               Sobre esta página
             </h3>
           </div>
-          <p className="mt-1 text-xs leading-relaxed text-iupa-medium">{siteConfig.messageText}</p>
+          <p className="text-sm leading-relaxed text-iupa-medium">{siteConfig.messageText}</p>
           <Link
             to="/acerca-del-repositorio"
-            className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-iupa-accent hover:text-orange-700"
+            className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-iupa-accent hover:text-orange-700"
           >
             Leer más
-            <ArrowRight className="h-3 w-3" />
+            <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-      )}
-    </aside>
+      </div>
+    )}
+    </>
   )
 }

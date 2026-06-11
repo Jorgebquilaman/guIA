@@ -80,14 +80,25 @@ export default function Search() {
     updateParams({ page: String(p) })
   }, [updateParams])
 
+  const currentCollection = filters.collectionId
+    ? collections?.find((c) => c.id === filters.collectionId)
+    : null
+
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-iupa-light bg-iupa-white px-6 py-5">
-        <SearchBar value={query} onChange={handleQueryChange} placeholder="Buscar documentos..." />
+      <div className="relative bg-gradient-to-br from-[#0a2a20] to-[#061512] px-6 py-8 text-white">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.08)_0%,transparent_60%)]" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+        <div className="mx-auto max-w-5xl">
+          <h1 className="mb-4 text-xl font-bold tracking-tight">
+            {currentCollection ? `Búsqueda en ${currentCollection.name}` : 'Buscar documentos'}
+          </h1>
+          <SearchBar value={query} onChange={handleQueryChange} placeholder="Buscá por título, autor, palabras clave..." />
+        </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="hidden w-72 shrink-0 overflow-y-auto border-r border-iupa-light bg-iupa-white p-4 lg:block">
+      <div className="flex flex-1 overflow-hidden bg-gradient-to-b from-iupa-green-light/30 via-white to-white">
+        <aside className="hidden w-72 shrink-0 overflow-y-auto border-r border-iupa-light bg-white/80 p-4 backdrop-blur-sm lg:block">
           <SearchFilters
             filters={filters}
             onChange={handleFiltersChange}
@@ -95,11 +106,11 @@ export default function Search() {
           />
         </aside>
 
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-6">
           {!query && !filters.types.length && !filters.collectionId ? (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
-                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-iupa-green-light">
+                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-iupa-green-light to-iupa-green/10 shadow-sm">
                   <svg
                     className="h-10 w-10 text-iupa-green"
                     fill="none"
@@ -112,7 +123,7 @@ export default function Search() {
                 </div>
                 <p className="text-lg font-bold text-iupa-dark">Buscar documentos</p>
                 <p className="mt-1.5 text-sm text-iupa-medium">
-                  Utilizá la barra de búsqueda o los filtros para encontrar documentos en el repositorio
+                  Escribí en la barra de búsqueda o usá los filtros del panel lateral para encontrar documentos
                 </p>
               </div>
             </div>

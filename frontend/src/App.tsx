@@ -5,6 +5,7 @@ import AdminGuard from './components/layout/AdminGuard'
 import PublicHome from './pages/public/PublicHome'
 import PublicSearchResults from './pages/public/PublicSearchResults'
 import AcercaDelRepositorio from './pages/public/AcercaDelRepositorio'
+import Relaciones from './pages/public/Relaciones'
 import ForgotPassword from './pages/public/ForgotPassword'
 import ResetPassword from './pages/public/ResetPassword'
 import RequestAccess from './pages/public/RequestAccess'
@@ -31,6 +32,7 @@ export default function App() {
       <Route path="/" element={<PublicHome />} />
       <Route path="/buscar" element={<PublicSearchResults />} />
       <Route path="/acerca-del-repositorio" element={<AcercaDelRepositorio />} />
+      <Route path="/relaciones" element={<Relaciones />} />
       <Route path="/login" element={<Login />} />
       <Route path="/olvide-mi-contrasena" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />

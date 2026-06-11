@@ -50,6 +50,10 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
             .HasMaxLength(500)
             .HasColumnName("cover_image_path");
 
+        builder.Property(d => d.SourceUrl)
+            .HasMaxLength(2048)
+            .HasColumnName("source_url");
+
         builder.Property(d => d.CoverImageMimeType)
             .HasMaxLength(100)
             .HasColumnName("cover_image_mime_type");

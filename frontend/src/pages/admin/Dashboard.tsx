@@ -105,6 +105,13 @@ const statusColors: Record<string, string> = {
   Rejected: 'bg-red-100 text-red-800',
 }
 
+const statusLabel: Record<string, string> = {
+  Published: 'Publicado',
+  Draft: 'Borrador',
+  Processing: 'En proceso',
+  Rejected: 'Rechazado',
+}
+
 const barColors = [
   'bg-iupa-green',
   'bg-emerald-500',
@@ -267,7 +274,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <Badge variant={doc.status.toLowerCase() as 'pending' | 'approved' | 'rejected' | 'archived'}>
-                  {doc.status}
+                  {statusLabel[doc.status] ?? doc.status}
                 </Badge>
               </div>
             ))}

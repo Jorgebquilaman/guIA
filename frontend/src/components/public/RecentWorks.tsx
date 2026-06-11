@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
-import { FileText, Eye, ArrowRight, Download, FileVideo } from 'lucide-react'
+import { FileText, Eye, ArrowRight, Download, FileVideo, Link as LinkIcon } from 'lucide-react'
 
 interface Work {
   id: string
   title: string
+  type: string
   authors: { name: string }[]
   degreeProgram: string | null
   publishedAt: string | null
   files: { mimeType: string }[]
+  sourceUrl: string | null
   department: string | null
 }
 
@@ -18,7 +20,8 @@ const MIME_ICON: Record<string, string> = {
   'audio/mpeg': 'MP3',
 }
 
-function getTypeLabel(files: { mimeType: string }[]): string {
+function getTypeLabel(files: { mimeType: string }[], sourceUrl: string | null): string {
+  if (sourceUrl) return 'LINK'
   for (const f of files) {
     const label = MIME_ICON[f.mimeType]
     if (label) return label
@@ -27,6 +30,7 @@ function getTypeLabel(files: { mimeType: string }[]): string {
 }
 
 function getTypeIcon(type: string) {
+  if (type === 'LINK') return LinkIcon
   return type === 'PDF' ? FileText : FileVideo
 }
 
@@ -66,7 +70,7 @@ export default function RecentWorks() {
 
       <div className="space-y-3">
         {works.map((work) => {
-          const type = getTypeLabel(work.files)
+          const type = getTypeLabel(work.files, work.sourceUrl)
           const Icon = getTypeIcon(type)
           const author = work.authors?.map((a) => a.name).join(', ') || 'Sin autor'
           const year = work.publishedAt
@@ -79,7 +83,7 @@ export default function RecentWorks() {
             >
               <span
                 className={`inline-flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-bold uppercase ${
-                  type === 'PDF'
+                  type === 'PDF' || type === 'LINK'
                     ? 'bg-iupa-green-light text-iupa-green'
                     : 'bg-purple-100 text-purple-800'
                 }`}
@@ -105,8 +109,12 @@ export default function RecentWorks() {
                 className="shrink-0 rounded-lg border border-iupa-green px-4 py-2 text-xs font-semibold text-iupa-green transition-colors hover:bg-iupa-green hover:text-white"
               >
                 <span className="flex items-center gap-1">
-                  <Download className="h-3.5 w-3.5" />
-                  VER / DESCARGAR
+                  {work.sourceUrl ? (
+                    <LinkIcon className="h-3.5 w-3.5" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5" />
+                  )}
+                  {work.sourceUrl ? 'ABRIR ENLACE' : 'VER / DESCARGAR'}
                 </span>
               </a>
             </div>

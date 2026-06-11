@@ -108,6 +108,7 @@ public sealed class AdminController : BaseApiController
                 SizeBytes = f.SizeBytes,
                 HasThumbnail = f.ThumbnailPath != null
             }).ToList(),
+            SourceUrl = d.SourceUrl,
             AiMetadata = d.AiMetadata != null ? new AiMetadataDto
             {
                 Summary = d.AiMetadata.Summary,

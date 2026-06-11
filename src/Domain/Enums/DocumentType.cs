@@ -6,5 +6,6 @@ public enum DocumentType
     Thesis,
     Dataset,
     Software,
+    Link,
     Other
 }

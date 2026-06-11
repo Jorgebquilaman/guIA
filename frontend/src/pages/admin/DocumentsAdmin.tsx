@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAdminDocuments } from '../../api/admin'
 import client from '../../api/client'
 import type { DocumentStatus as DocStatus } from '../../types'
@@ -30,8 +31,13 @@ const statusBadgeVariant: Record<string, 'pending' | 'approved' | 'rejected' | '
 
 export default function DocumentsAdmin() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const addToast = useUiStore((s) => s.addToast)
+
+  const refetch = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['admin', 'documents'] })
+  }, [queryClient])
 
   const statusFilter = (searchParams.get('status') as DocStatus) || undefined
   const page = parseInt(searchParams.get('page') ?? '1', 10)
@@ -71,6 +77,7 @@ export default function DocumentsAdmin() {
       }
       addToast('success', `${docs.length} documento(s) aprobado(s)`)
       setSelected(new Set())
+      refetch()
     } catch {
       addToast('error', 'Error al aprobar documentos')
     }
@@ -85,6 +92,7 @@ export default function DocumentsAdmin() {
       }
       addToast('success', `${docs.length} documento(s) rechazado(s)`)
       setSelected(new Set())
+      refetch()
     } catch {
       addToast('error', 'Error al rechazar documentos')
     }
@@ -94,6 +102,7 @@ export default function DocumentsAdmin() {
     try {
       await client.post(`/documents/${id}/publish`)
       addToast('success', 'Documento aprobado')
+      refetch()
     } catch {
       addToast('error', 'Error al aprobar documento')
     }
@@ -106,6 +115,7 @@ export default function DocumentsAdmin() {
       addToast('success', 'Documento rechazado')
       setRejectModal({ open: false, docId: null })
       setRejectReason('')
+      refetch()
     } catch {
       addToast('error', 'Error al rechazar documento')
     }
@@ -116,6 +126,7 @@ export default function DocumentsAdmin() {
     try {
       await client.delete(`/documents/${id}`)
       addToast('success', 'Documento eliminado')
+      refetch()
     } catch {
       addToast('error', 'Error al eliminar documento')
     }

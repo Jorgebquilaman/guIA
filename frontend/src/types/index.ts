@@ -31,7 +31,7 @@ export interface AiMetadata {
   errorMessage: string | null
 }
 
-export type DocumentType = 'Article' | 'Thesis' | 'Dataset' | 'Software' | 'Other'
+export type DocumentType = 'Article' | 'Thesis' | 'Dataset' | 'Software' | 'Link' | 'Other'
 export type DocumentStatus = 'Draft' | 'Processing' | 'Published' | 'Rejected'
 
 export interface DocumentFile {
@@ -67,6 +67,7 @@ export interface Document {
   publishedAt: string | null
   isPublic: boolean
   hasCoverImage: boolean
+  sourceUrl: string | null
   aiMetadata: AiMetadata | null
   files: DocumentFile[]
   authors: DocumentAuthor[]

@@ -1,9 +1,10 @@
 import axios from 'axios'
 import { useAuthStore } from '../store/authStore'
 
+const baseURL = import.meta.env.VITE_API_URL || '/api'
+
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
-  headers: { 'Content-Type': 'application/json' },
+  baseURL,
 })
 
 client.interceptors.request.use((config) => {

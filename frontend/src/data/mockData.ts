@@ -94,6 +94,7 @@ export const newsItem = {
 
 export const menuItems = [
   { label: 'Inicio', href: '/' },
+  { label: 'Ver relaciones', href: '/relaciones' },
 ]
 
 export const navLinks = [

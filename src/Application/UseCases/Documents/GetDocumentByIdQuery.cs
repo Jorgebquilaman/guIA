@@ -45,6 +45,7 @@ public class GetDocumentByIdQueryHandler : IRequestHandler<GetDocumentByIdQuery,
             UpdatedAt = document.UpdatedAt,
             PublishedAt = document.PublishedAt,
             HasCoverImage = document.CoverImagePath != null,
+            SourceUrl = document.SourceUrl,
             Authors = document.Authors.OrderBy(a => a.Order).Select(a => new DocumentAuthorDto
             {
                 Id = a.Id,

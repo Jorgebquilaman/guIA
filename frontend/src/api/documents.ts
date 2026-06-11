@@ -29,9 +29,31 @@ export function useUploadDocument() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (formData: FormData) => {
-      const { data } = await client.post('/documents/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      const { data } = await client.post('/documents/upload', formData)
+      return data.data ?? data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] })
+    },
+  })
+}
+
+export function useUploadLink() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: {
+      sourceUrl: string
+      title: string
+      collectionId: string
+      isPublic: boolean
+      description?: string | null
+      degreeProgram?: string | null
+      department?: string | null
+      advisorName?: string | null
+      institution?: string | null
+      license?: string | null
+    }) => {
+      const { data } = await client.post('/documents/upload-link', payload)
       return data.data ?? data
     },
     onSuccess: () => {

@@ -129,6 +129,7 @@ export default function PublicSearchResults() {
                     <option value="Thesis">Tesis</option>
                     <option value="Dataset">Dataset</option>
                     <option value="Software">Software</option>
+                    <option value="Link">Enlace</option>
                     <option value="Other">Otro</option>
                   </select>
                 </div>
