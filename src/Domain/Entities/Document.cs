@@ -1,5 +1,6 @@
 using GuIA.Domain.Enums;
 using GuIA.Domain.Exceptions;
+using GuIA.Domain.ValueObjects;
 
 namespace GuIA.Domain.Entities;
 
@@ -21,6 +22,7 @@ public class Document : BaseEntity
     public ICollection<DocumentFile> Files { get; private set; } = new List<DocumentFile>();
     public ICollection<DocumentAuthor> Authors { get; private set; } = new List<DocumentAuthor>();
     public ICollection<Keyword> Keywords { get; private set; } = new List<Keyword>();
+    public ICollection<DocumentMetadataValue> MetadataValues { get; private set; } = new List<DocumentMetadataValue>();
 
     // Cover image
     public string? CoverImagePath { get; private set; }
@@ -28,6 +30,9 @@ public class Document : BaseEntity
 
     // Source URL (for link-type documents)
     public string? SourceUrl { get; private set; }
+
+    // Additional media links (MP3, video from Drive)
+    public List<MediaLink> MediaLinks { get; private set; } = new();
 
     // Dublin Core fields
     public string? AdvisorName { get; private set; }
@@ -218,5 +223,10 @@ public class Document : BaseEntity
     public void SetDegreeProgram(string? degreeProgram)
     {
         DegreeProgram = degreeProgram;
+    }
+
+    public void SetMediaLinks(List<MediaLink>? links)
+    {
+        MediaLinks = links ?? new();
     }
 }

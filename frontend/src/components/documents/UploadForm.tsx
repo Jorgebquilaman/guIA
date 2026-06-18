@@ -177,6 +177,7 @@ export default function UploadForm() {
   const [isPublic, setIsPublic] = useState(true)
   const [coverImage, setCoverImage] = useState<File | null>(null)
   const [uploadedId, setUploadedId] = useState<string | null>(null)
+  const [mediaLinks, setMediaLinks] = useState<{ url: string; label: string; type: string }[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
 
@@ -209,6 +210,18 @@ export default function UploadForm() {
     setFiles((prev) => prev.filter((_, i) => i !== index))
   }, [])
 
+  const addMediaLink = useCallback(() => {
+    setMediaLinks((prev) => [...prev, { url: '', label: '', type: 'video' }])
+  }, [])
+
+  const updateMediaLink = useCallback((index: number, field: 'url' | 'label' | 'type', value: string) => {
+    setMediaLinks((prev) => prev.map((ml, i) => (i === index ? { ...ml, [field]: value } : ml)))
+  }, [])
+
+  const removeMediaLink = useCallback((index: number) => {
+    setMediaLinks((prev) => prev.filter((_, i) => i !== index))
+  }, [])
+
   const handleUpload = useCallback(async () => {
     if (files.length === 0) return
 
@@ -220,6 +233,10 @@ export default function UploadForm() {
     if (collectionId) formData.append('collectionId', collectionId)
     formData.append('isPublic', String(isPublic))
     if (coverImage) formData.append('coverImage', coverImage)
+    const validLinks = mediaLinks.filter((ml) => ml.url.trim())
+    if (validLinks.length > 0) {
+      formData.append('mediaLinks', JSON.stringify(validLinks))
+    }
 
     try {
       const result = await uploadMutation.mutateAsync(formData)
@@ -234,7 +251,7 @@ export default function UploadForm() {
         })),
       )
     }
-  }, [files, title, collectionId, isPublic, coverImage, uploadMutation])
+  }, [files, title, collectionId, isPublic, coverImage, mediaLinks, uploadMutation])
 
   return (
     <div className="space-y-4">
@@ -367,6 +384,70 @@ export default function UploadForm() {
               className="hidden"
               onChange={(e) => setCoverImage(e.target.files?.[0] ?? null)}
             />
+          </div>
+
+          <div className="rounded-lg border border-dashed border-iupa-light bg-white p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <label className="block text-sm font-medium text-iupa-dark">Enlaces multimedia (opcional)</label>
+              <button
+                type="button"
+                onClick={addMediaLink}
+                className="flex items-center gap-1 text-xs text-iupa-green hover:text-iupa-green-secondary"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Agregar enlace
+              </button>
+            </div>
+            {mediaLinks.length === 0 && (
+              <p className="text-xs text-iupa-medium">Agregá enlaces a Google Drive, YouTube, Vimeo, audio, etc. relacionados con el archivo.</p>
+            )}
+            {mediaLinks.map((ml, i) => (
+              <div key={i} className="mt-2 flex flex-wrap items-end gap-2 rounded-lg border border-iupa-light p-3">
+                <div className="flex-1 min-w-[180px]">
+                  <label className="mb-0.5 block text-xs text-iupa-medium">URL</label>
+                  <input
+                    type="url"
+                    value={ml.url}
+                    onChange={(e) => updateMediaLink(i, 'url', e.target.value)}
+                    placeholder="https://drive.google.com/..."
+                    className="w-full rounded border border-iupa-light px-2 py-1.5 text-sm focus:border-iupa-green focus:outline-none"
+                  />
+                </div>
+                <div className="w-[140px]">
+                  <label className="mb-0.5 block text-xs text-iupa-medium">Etiqueta</label>
+                  <input
+                    type="text"
+                    value={ml.label}
+                    onChange={(e) => updateMediaLink(i, 'label', e.target.value)}
+                    placeholder="Video explicativo"
+                    className="w-full rounded border border-iupa-light px-2 py-1.5 text-sm focus:border-iupa-green focus:outline-none"
+                  />
+                </div>
+                <div className="w-[110px]">
+                  <label className="mb-0.5 block text-xs text-iupa-medium">Tipo</label>
+                  <select
+                    value={ml.type}
+                    onChange={(e) => updateMediaLink(i, 'type', e.target.value)}
+                    className="w-full rounded border border-iupa-light px-2 py-1.5 text-sm focus:border-iupa-green focus:outline-none"
+                  >
+                    <option value="video">Video</option>
+                    <option value="audio">Audio</option>
+                    <option value="embed">Embed</option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeMediaLink(i)}
+                  className="mb-0.5 rounded p-1.5 text-iupa-medium hover:bg-red-50 hover:text-red-500"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

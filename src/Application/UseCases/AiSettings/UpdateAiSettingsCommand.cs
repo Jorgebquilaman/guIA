@@ -11,7 +11,8 @@ public record UpdateAiSettingsCommand(
     string ApiKey,
     string Model,
     int MaxTokens,
-    string? UpdatedBy = null
+    string? UpdatedBy = null,
+    string? SystemPrompt = null
 ) : IRequest<AiProviderConfigDto>;
 
 public class UpdateAiSettingsCommandHandler : IRequestHandler<UpdateAiSettingsCommand, AiProviderConfigDto>
@@ -25,17 +26,20 @@ public class UpdateAiSettingsCommandHandler : IRequestHandler<UpdateAiSettingsCo
 
     public async Task<AiProviderConfigDto> Handle(UpdateAiSettingsCommand request, CancellationToken ct)
     {
+        if (!string.IsNullOrEmpty(request.SystemPrompt) && !request.SystemPrompt.Contains("{fields}"))
+            throw new InvalidOperationException("El prompt debe contener el placeholder {fields} para los campos de metadatos.");
+
         var config = await _context.AiProviderConfigs
             .FirstOrDefaultAsync(ct);
 
         if (config == null)
         {
-            config = new AiProviderConfig(request.ApiUrl, request.ApiKey, request.Model, request.MaxTokens);
+            config = new AiProviderConfig(request.ApiUrl, request.ApiKey, request.Model, request.MaxTokens, request.SystemPrompt);
             _context.AiProviderConfigs.Add(config);
         }
         else
         {
-            config.Update(request.ApiUrl, request.ApiKey, request.Model, request.MaxTokens, request.UpdatedBy);
+            config.Update(request.ApiUrl, request.ApiKey, request.Model, request.MaxTokens, request.UpdatedBy, request.SystemPrompt);
         }
 
         await _context.SaveChangesAsync(ct);
@@ -47,7 +51,8 @@ public class UpdateAiSettingsCommandHandler : IRequestHandler<UpdateAiSettingsCo
             ApiKey = config.ApiKey,
             Model = config.Model,
             MaxTokens = config.MaxTokens,
-            IsActive = config.IsActive
+            IsActive = config.IsActive,
+            SystemPrompt = config.SystemPrompt
         };
     }
 }

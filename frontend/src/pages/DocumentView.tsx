@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useDocument, useSearchDocuments } from '../api/documents'
 import { useAuthStore } from '../store/authStore'
@@ -10,6 +10,7 @@ import Button from '../components/ui/Button'
 import Navbar from '../components/public/Navbar'
 import Footer from '../components/public/Footer'
 import { getGoogleDriveEmbedUrl } from '../utils/gdrive'
+import MediaLinkPlayer from '../components/ui/MediaLinkPlayer'
 
 const typeLabels: Record<string, string> = {
   Article: 'Artículo',
@@ -128,7 +129,7 @@ function AuthorsSection({ authors }: { authors: Document['authors'] }) {
                 {author.name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <p className="text-sm font-medium text-iupa-dark">{author.name}</p>
+                <Link to={`/autor/${encodeURIComponent(author.name)}`} className="text-sm font-medium text-iupa-dark hover:text-iupa-green hover:underline">{author.name}</Link>
                 {author.orcid && (
                   <p className="text-xs text-iupa-medium">ORCID: {author.orcid}</p>
                 )}
@@ -251,6 +252,157 @@ export default function DocumentView() {
 
   useDocumentMetaTags(doc ?? null)
 
+  const [exporting, setExporting] = useState(false)
+
+  const exportPdf = useCallback(async () => {
+    if (!doc) return
+    setExporting(true)
+    try {
+      const { jsPDF } = await import('jspdf')
+      const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
+      const pageW = 190
+      const margin = 10
+      let y = 15
+
+      function addText(text: string, opts: { size?: number; bold?: boolean; color?: string; mono?: boolean; maxW?: number } = {}) {
+        const size = opts.size || 10
+        pdf.setFontSize(size)
+        pdf.setFont('helvetica', opts.bold ? 'bold' : 'normal')
+        if (opts.mono) pdf.setFont('courier', opts.bold ? 'bold' : 'normal')
+        if (opts.color) pdf.setTextColor(opts.color)
+        const lines = pdf.splitTextToSize(text || '—', opts.maxW || pageW)
+        for (const line of lines) {
+          if (y > 280) { pdf.addPage(); y = 15 }
+          pdf.text(line, margin, y)
+          y += size * 0.45
+        }
+        pdf.setTextColor('#1a1a1a')
+      }
+
+      function addLine(px: number, py: number, w: number) {
+        pdf.setDrawColor('#ddd')
+        pdf.line(px, py, px + w, py)
+      }
+
+      pdf.setFontSize(18)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setTextColor('#1B4D3E')
+      addText('REPOSITORIO INSTITUCIONAL IUPA', { size: 14, bold: true, color: '#1B4D3E' })
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(9)
+      pdf.setTextColor('#666')
+      addText('Acceso abierto al conocimiento académico y artístico', { size: 9, color: '#666' })
+      addLine(margin, y + 1, pageW)
+      y += 6
+
+      addText(doc.title, { size: 14, bold: true, color: '#1B4D3E' })
+      if (doc.description) addText(doc.description, { size: 9, color: '#666' })
+      y += 3
+
+      const typeLabels: Record<string, string> = {
+        Article: 'Artículo', Thesis: 'Tesis de Licenciatura', Dataset: 'Dataset',
+        Software: 'Software', Other: 'Otro', ConferenceDocument: 'Documento de conferencia', Book: 'Libro',
+      }
+      const pubDate = doc.publicationDate
+        ? new Date(doc.publicationDate).toISOString().split('T')[0]
+        : doc.publishedAt ? new Date(doc.publishedAt).toISOString().split('T')[0] : ''
+      const authorNames = (doc.authors || [])
+        .sort((a, b) => a.order - b.order)
+        .map((a) => { const p = a.name.trim().split(' '); return p.length > 1 ? `${p[p.length-1]}, ${p.slice(0,-1).join(' ')}` : a.name })
+
+      const dcMapping = [
+        { dc: 'dc.title', value: doc.title },
+        { dc: 'dc.creator', value: authorNames.join('; ') || '—' },
+        { dc: 'dc.contributor.advisor', value: doc.advisorName || '—' },
+        { dc: 'dc.publisher', value: doc.institution || 'IUPA' },
+        { dc: 'dc.date.issued', value: pubDate || '—' },
+        { dc: 'dc.type', value: typeLabels[doc.type] || doc.type },
+        { dc: 'dc.description.abstract', value: doc.abstractEs || doc.description || '—' },
+        { dc: 'dc.subject', value: (doc.keywords || []).join('; ') || '—' },
+        { dc: 'dc.language', value: doc.aiMetadata?.language || 'Español' },
+        { dc: 'dc.rights.license', value: doc.license || 'CC BY-NC-ND 4.0' },
+        { dc: 'dc.identifier.uri', value: `${window.location.origin}/documentos/${doc.id}` },
+        { dc: 'dc.coverage.spatial', value: doc.department || '—' },
+        { dc: 'dc.relation.ispartofseries', value: doc.degreeProgram || '—' },
+      ]
+
+      addText('Metadatos Dublin Core', { size: 11, bold: true, color: '#1B4D3E' })
+      y += 2
+      for (const row of dcMapping) {
+        const val = row.value || '—'
+        pdf.setFontSize(8)
+        pdf.setFont('courier', 'normal')
+        pdf.setTextColor('#1B4D3E')
+        const dcLines = pdf.splitTextToSize(row.dc, 45)
+        const valLines = pdf.splitTextToSize(val, pageW - 50)
+        const rowH = Math.max(dcLines.length, valLines.length) * 3.5
+        if (y + rowH > 285) { pdf.addPage(); y = 15 }
+        pdf.setFont('courier', 'normal')
+        pdf.setFontSize(8)
+        pdf.setTextColor('#1B4D3E')
+        dcLines.forEach((line: string, i: number) => pdf.text(line, margin, y + i * 3.5))
+        pdf.setFont('helvetica', 'normal')
+        pdf.setFontSize(8)
+        pdf.setTextColor('#1a1a1a')
+        valLines.forEach((line: string, i: number) => pdf.text(line, margin + 50, y + i * 3.5))
+        y += rowH + 1
+      }
+
+      if (doc.metadataValues && doc.metadataValues.length > 0) {
+        y += 2
+        addText(`Metadatos SNRD${doc.metadataSchemaName ? ` — ${doc.metadataSchemaName}` : ''}`, { size: 11, bold: true, color: '#1B4D3E' })
+        y += 2
+
+        const colW = [35, 55, 100]
+        const headerY = y
+        pdf.setFillColor('#f5f5f5')
+        pdf.rect(margin, y - 3, colW.reduce((a, b) => a + b, 0), 6, 'F')
+        pdf.setFontSize(8)
+        pdf.setFont('helvetica', 'bold')
+        pdf.setTextColor('#1B4D3E')
+        pdf.text('DC Element', margin, y)
+        pdf.text('Campo', margin + colW[0], y)
+        pdf.text('Valor', margin + colW[0] + colW[1], y)
+        y += 6
+
+        let lastLabel = ''
+        for (const mv of doc.metadataValues) {
+          const dc = mv.qualifier ? `${mv.dublinCoreElement}.${mv.qualifier}` : mv.dublinCoreElement
+          const dcLines = pdf.splitTextToSize(mv.fieldLabel === lastLabel ? '' : dc, colW[0] - 2)
+          const labelLines = pdf.splitTextToSize(mv.fieldLabel === lastLabel ? '' : mv.fieldLabel, colW[1] - 2)
+          const valLines = pdf.splitTextToSize(mv.value || '—', colW[2] - 2)
+          const rowH = Math.max(dcLines.length, labelLines.length, valLines.length) * 3.5
+          if (y + rowH > 285) { pdf.addPage(); y = 15 }
+          pdf.setFontSize(7.5)
+          pdf.setFont('courier', 'normal')
+          pdf.setTextColor('#2D7A6B')
+          dcLines.forEach((line: string, i: number) => pdf.text(line, margin, y + i * 3.5))
+          pdf.setFont('helvetica', mv.fieldLabel === lastLabel ? 'normal' : 'bold')
+          pdf.setTextColor(mv.fieldLabel === lastLabel ? '#999' : '#1a1a1a')
+          labelLines.forEach((line: string, i: number) => pdf.text(line, margin + colW[0], y + i * 3.5))
+          pdf.setFont('helvetica', 'normal')
+          pdf.setTextColor('#1a1a1a')
+          valLines.forEach((line: string, i: number) => pdf.text(line, margin + colW[0] + colW[1], y + i * 3.5))
+          y += rowH + 1
+          lastLabel = mv.fieldLabel
+        }
+      }
+
+      y = Math.max(y, 275)
+      addLine(margin, y + 3, pageW)
+      pdf.setFontSize(7)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setTextColor('#999')
+      pdf.text(`Generado desde el Repositorio Institucional IUPA — ${new Date().toLocaleDateString('es-AR')}`, margin, y + 9)
+
+      pdf.save(`${doc.title.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50)}.pdf`)
+    } catch (e) {
+      console.error('PDF export error:', e)
+    } finally {
+      setExporting(false)
+    }
+  }, [doc])
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white">
@@ -319,17 +471,17 @@ export default function DocumentView() {
             <span className="text-iupa-dark font-medium truncate max-w-[200px]">{doc.title}</span>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowDublinCore(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-iupa-light px-3 py-1.5 text-xs font-medium text-iupa-medium hover:border-iupa-green hover:text-iupa-green transition-colors"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Dublin Core
+            </button>
             {(isOwner || isAdmin) && !editing && (
               <>
-                <button
-                  onClick={() => setShowDublinCore(true)}
-                  className="flex items-center gap-1.5 rounded-lg border border-iupa-light px-3 py-1.5 text-xs font-medium text-iupa-medium hover:border-iupa-green hover:text-iupa-green transition-colors"
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Dublin Core
-                </button>
                 {doc.status !== 'Published' && (
                   <button
                     onClick={() => setEditing(true)}
@@ -367,6 +519,23 @@ export default function DocumentView() {
                 DESCARGAR
               </a>
             )}
+            <button
+              onClick={exportPdf}
+              disabled={exporting}
+              className="flex items-center gap-1.5 rounded-lg border border-iupa-light px-3 py-1.5 text-xs font-medium text-iupa-medium hover:border-iupa-green hover:text-iupa-green disabled:opacity-50 transition-colors"
+            >
+              {exporting ? (
+                <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+              ) : (
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+              )}
+              EXPORTAR PDF
+            </button>
           </div>
         </div>
       </div>
@@ -576,7 +745,133 @@ export default function DocumentView() {
                     </div>
                   )}
 
+                  {doc.mediaLinks && doc.mediaLinks.length > 0 && (
+                    <div>
+                      <h3 className="mb-3 text-lg font-semibold text-iupa-dark">Enlaces multimedia</h3>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {doc.mediaLinks.map((ml, i) => (
+                          <div key={i} className="overflow-hidden rounded-xl border border-iupa-light bg-white shadow-sm">
+                            <div className="flex items-center justify-between border-b border-iupa-light bg-iupa-light/50 px-4 py-2.5">
+                              <span className="truncate text-sm font-medium text-iupa-dark">{ml.label || ml.url}</span>
+                              <a
+                                href={ml.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="shrink-0 text-xs font-medium text-iupa-green hover:text-iupa-green-secondary"
+                              >
+                                Abrir
+                              </a>
+                            </div>
+                            <div className={ml.type === 'audio' ? 'px-3 py-2' : 'aspect-video'}>
+                              <MediaLinkPlayer link={ml} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <AuthorsSection authors={doc.authors} />
+
+                  {doc.metadataValues && doc.metadataValues.length > 0 && (
+                    <div>
+                      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-iupa-medium">Metadatos SNRD{doc.metadataSchemaName ? ` — ${doc.metadataSchemaName}` : ''}</h3>
+                      <div className="overflow-hidden rounded-xl border border-iupa-light bg-white shadow-sm">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-iupa-light/50">
+                              <th className="px-4 py-2 text-left font-medium text-iupa-dark">DC Element</th>
+                              <th className="px-4 py-2 text-left font-medium text-iupa-dark">Campo</th>
+                              <th className="px-4 py-2 text-left font-medium text-iupa-dark">Valor</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-iupa-light">
+                            {(() => {
+                              let lastLabel = ''
+                              return doc.metadataValues.map((mv, i) => {
+                                const isSame = mv.fieldLabel === lastLabel
+                                lastLabel = mv.fieldLabel
+                                const dcElement = mv.qualifier ? `${mv.dublinCoreElement}.${mv.qualifier}` : mv.dublinCoreElement
+                                return (
+                                  <tr key={i} className={isSame ? 'bg-iupa-light/20' : ''}>
+                                    {isSame ? (
+                                      <td className="px-4 py-2.5" />
+                                    ) : (
+                                      <td className="px-4 py-2.5 font-mono text-xs text-iupa-green">{dcElement}</td>
+                                    )}
+                                    <td className={`px-4 py-2.5 text-iupa-dark ${isSame ? 'text-iupa-medium/60 text-xs' : 'font-medium'}`}>
+                                      {isSame ? '' : mv.fieldLabel}
+                                    </td>
+                                    <td className={`px-4 py-2.5 text-iupa-dark ${mv.value ? '' : 'text-iupa-medium/50 italic'}`}>{mv.value || '—'}</td>
+                                  </tr>
+                                )
+                              })
+                            })()}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-iupa-medium">Metadatos Dublin Core</h3>
+                      <span className="text-xs text-iupa-medium">Estándar DCMI — Ley 26.899</span>
+                    </div>
+                    {(() => {
+                      const typeLabels: Record<string, string> = {
+                        Article: 'Artículo', Thesis: 'Tesis de Licenciatura', Dataset: 'Dataset',
+                        Software: 'Software', Other: 'Otro',
+                      }
+                      const pubDate = doc.publicationDate
+                        ? new Date(doc.publicationDate).toISOString().split('T')[0]
+                        : doc.publishedAt ? new Date(doc.publishedAt).toISOString().split('T')[0] : ''
+                      const authorNames = (doc.authors || [])
+                        .sort((a, b) => a.order - b.order)
+                        .map((a) => { const p = a.name.trim().split(' '); return p.length > 1 ? `${p[p.length-1]}, ${p.slice(0,-1).join(' ')}` : a.name })
+                      const dcMapping = [
+                        { dc: 'dc.title', value: doc.title, required: true },
+                        { dc: 'dc.creator', value: authorNames.join('; ') || '—', required: true },
+                        { dc: 'dc.contributor.advisor', value: doc.advisorName || '—', required: true },
+                        { dc: 'dc.publisher', value: doc.institution || 'IUPA', required: true },
+                        { dc: 'dc.date.issued', value: pubDate || '—', required: true },
+                        { dc: 'dc.type', value: typeLabels[doc.type] || doc.type, required: true },
+                        { dc: 'dc.description.abstract', value: doc.abstractEs || doc.description || '—', required: true },
+                        { dc: 'dc.subject', value: (doc.keywords || []).join('; ') || '—', required: true },
+                        { dc: 'dc.language', value: doc.aiMetadata?.language || 'Español', required: true },
+                        { dc: 'dc.rights.license', value: doc.license || 'CC BY-NC-ND 4.0', required: true },
+                        { dc: 'dc.identifier.uri', value: `${window.location.origin}/documentos/${doc.id}`, required: true },
+                        { dc: 'dc.coverage.spatial', value: doc.department || '—', required: false },
+                        { dc: 'dc.relation.ispartofseries', value: doc.degreeProgram || '—', required: false },
+                      ]
+                      return (
+                        <div className="overflow-hidden rounded-xl border border-iupa-light bg-white shadow-sm">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="bg-iupa-light/50">
+                                <th className="px-4 py-2 text-left font-medium text-iupa-dark">Campo DCMI</th>
+                                <th className="px-4 py-2 text-left font-medium text-iupa-dark">Valor</th>
+                                <th className="px-4 py-2 text-center font-medium text-iupa-dark w-16">Ley</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-iupa-light">
+                              {dcMapping.map((row) => (
+                                <tr key={row.dc} className="hover:bg-iupa-light/30">
+                                  <td className="px-4 py-2 font-mono text-xs text-iupa-green">{row.dc}</td>
+                                  <td className={`px-4 py-2 text-iupa-dark ${row.value === '—' ? 'text-iupa-medium/50 italic' : ''}`}>{row.value}</td>
+                                  <td className="px-4 py-2 text-center">
+                                    {row.required
+                                      ? <span className="text-xs font-medium text-emerald-600">Sí</span>
+                                      : <span className="text-xs text-iupa-medium">Rec.</span>}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )
+                    })()}
+                  </div>
                 </div>
               </div>
             </div>
@@ -615,6 +910,7 @@ export default function DocumentView() {
         <DublinCorePreview
           document={doc}
           onClose={() => setShowDublinCore(false)}
+          metadataValues={doc.metadataValues}
         />
       )}
 

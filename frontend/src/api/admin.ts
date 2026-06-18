@@ -90,7 +90,7 @@ export function useAiSettings() {
 export function useUpdateAiSettings() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { apiUrl: string; apiKey: string; model: string; maxTokens: number }) => {
+    mutationFn: async (data: { apiUrl: string; apiKey: string; model: string; maxTokens: number; systemPrompt?: string | null }) => {
       const res = await apiClient.put<ApiResponse<AiSettings>>('/admin/ai-settings', data)
       return res.data.data
     },
@@ -113,7 +113,7 @@ export function useDocumentTypes() {
 export function useCreateDocumentType() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { name: string; label: string; sortOrder: number }) => {
+    mutationFn: async (data: { name: string; label: string; sortOrder: number; metadataSchemaId?: string | null }) => {
       const res = await apiClient.post<DocumentTypeDef>('/document-types', data)
       return res.data
     },
@@ -126,7 +126,7 @@ export function useCreateDocumentType() {
 export function useUpdateDocumentType() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: string; name: string; label: string; sortOrder: number }) => {
+    mutationFn: async ({ id, ...data }: { id: string; name: string; label: string; sortOrder: number; metadataSchemaId?: string | null }) => {
       const res = await apiClient.put<DocumentTypeDef>(`/document-types/${id}`, data)
       return res.data
     },
@@ -161,7 +161,7 @@ export function useDepartments() {
 export function useCreateDepartment() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { name: string; color?: string; degreePrograms?: string[] }) => {
+    mutationFn: async (data: { name: string; color?: string; icon?: string | null; degreePrograms?: string[] }) => {
       const res = await apiClient.post<Department>('/departments', data)
       return res.data
     },
@@ -174,7 +174,7 @@ export function useCreateDepartment() {
 export function useUpdateDepartment() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: string; name: string; color?: string; degreePrograms?: string[] }) => {
+    mutationFn: async ({ id, ...data }: { id: string; name: string; color?: string; icon?: string | null; degreePrograms?: string[] }) => {
       const res = await apiClient.put<Department>(`/departments/${id}`, data)
       return res.data
     },
@@ -293,6 +293,32 @@ export function useApproveUser() {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users', 'pending'] })
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
     },
+  })
+}
+
+export interface AiUsage {
+  balance: number | null
+  totalBalance: number | null
+  grantedBalance: number | null
+  currency: string
+  estimatedTokens: number | null
+  provider: string
+  isAvailable?: boolean
+  error?: string | null
+}
+
+export function useAiUsage(enabled = false) {
+  return useQuery({
+    queryKey: ['admin', 'ai-usage'],
+    queryFn: async () => {
+      const res = await apiClient.get<ApiResponse<AiUsage>>('/admin/ai-usage')
+      if (!res.data.success || !res.data.data) {
+        throw new Error(res.data.error?.message ?? 'Failed to fetch AI usage')
+      }
+      return res.data.data
+    },
+    enabled,
+    retry: false,
   })
 }
 

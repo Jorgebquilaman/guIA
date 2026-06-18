@@ -7,5 +7,7 @@ public enum DocumentType
     Dataset,
     Software,
     Link,
-    Other
+    Other,
+    ConferenceDocument,
+    Book
 }

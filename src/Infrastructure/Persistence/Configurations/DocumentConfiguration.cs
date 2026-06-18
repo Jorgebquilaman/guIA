@@ -1,4 +1,5 @@
 using GuIA.Domain.Entities;
+using GuIA.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -53,6 +54,14 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Property(d => d.SourceUrl)
             .HasMaxLength(2048)
             .HasColumnName("source_url");
+
+        builder.Property(d => d.MediaLinks)
+            .HasColumnName("media_links")
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                v => System.Text.Json.JsonSerializer.Deserialize<List<MediaLink>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new())
+            .IsRequired(false);
 
         builder.Property(d => d.CoverImageMimeType)
             .HasMaxLength(100)
@@ -114,6 +123,11 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
             .WithMany(a => a.Documents)
             .HasForeignKey("ai_metadata_id")
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasMany(d => d.MetadataValues)
+            .WithOne(v => v.Document)
+            .HasForeignKey(v => v.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasQueryFilter(d => d.DeletedAt == null);
     }

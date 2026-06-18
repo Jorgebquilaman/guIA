@@ -4,8 +4,13 @@ public class LlmAnalysisResult
 {
     public string? Summary { get; set; }
     public List<string> Keywords { get; set; } = new();
+    public List<string> KeywordsEn { get; set; } = new();
     public List<string> Authors { get; set; } = new();
     public string? Description { get; set; }
     public string? ExtractedEntities { get; set; }
     public double Confidence { get; set; }
+    public string? AbstractEn { get; set; }
+    public string? PublicationVersion { get; set; }
+    public string? DigitalIdentifier { get; set; }
+    public Dictionary<string, string> MetadataValues { get; set; } = new();
 }

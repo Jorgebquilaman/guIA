@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { Document } from '../../types'
 import Badge from '../ui/Badge'
 import Button from '../ui/Button'
+import MediaLinkPlayer from '../ui/MediaLinkPlayer'
 
 interface DocumentDetailProps {
   document: Document
@@ -249,6 +251,32 @@ export default function DocumentDetail({ document }: DocumentDetailProps) {
         </div>
       )}
 
+      {document.mediaLinks && document.mediaLinks.length > 0 && (
+        <div>
+          <h3 className="mb-3 text-lg font-semibold text-iupa-dark">Enlaces multimedia</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {document.mediaLinks.map((ml, i) => (
+              <div key={i} className="overflow-hidden rounded-xl border border-iupa-light bg-white shadow-sm">
+                <div className="flex items-center justify-between border-b border-iupa-light bg-iupa-light/50 px-4 py-2.5">
+                  <span className="truncate text-sm font-medium text-iupa-dark">{ml.label || ml.url}</span>
+                  <a
+                    href={ml.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 text-xs font-medium text-iupa-green hover:text-iupa-green-secondary"
+                  >
+                    Abrir
+                  </a>
+                </div>
+                <div className={ml.type === 'audio' ? 'px-3 py-2' : 'aspect-video'}>
+                  <MediaLinkPlayer link={ml} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-8 sm:grid-cols-2">
         {document.authors && document.authors.length > 0 && (
           <div>
@@ -262,7 +290,7 @@ export default function DocumentDetail({ document }: DocumentDetailProps) {
                       {author.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-iupa-dark">{author.name}</p>
+                      <Link to={`/autor/${encodeURIComponent(author.name)}`} className="text-sm font-medium text-iupa-dark hover:text-iupa-green hover:underline">{author.name}</Link>
                       {author.orcid && (
                         <p className="text-xs text-iupa-medium">ORCID: {author.orcid}</p>
                       )}

@@ -35,6 +35,10 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
             .HasColumnName("color")
             .HasDefaultValue("#1B4D3E");
 
+        builder.Property(d => d.Icon)
+            .HasMaxLength(50)
+            .HasColumnName("icon");
+
         builder.HasMany(d => d.DegreePrograms)
             .WithOne(dp => dp.Department)
             .HasForeignKey(dp => dp.DepartmentId)

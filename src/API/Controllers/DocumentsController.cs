@@ -1,6 +1,9 @@
 using GuIA.Application.DTOs;
 using GuIA.Application.UseCases.Documents;
+using GuIA.Application.UseCases.DocumentMetadata;
 using GuIA.Application.UseCases.Validators;
+using GuIA.Domain.ValueObjects;
+using GuIA.Infrastructure.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +20,7 @@ public sealed class DocumentsController : BaseApiController
         [FromForm] string? title,
         [FromForm] bool isPublic = false,
         [FromForm] IFormFile? coverImage = null,
+        [FromForm] string? mediaLinks = null,
         CancellationToken ct = default)
     {
         Console.WriteLine($"[Upload] collectionId raw: {collectionId}, files: {files?.Count}");
@@ -31,7 +35,17 @@ public sealed class DocumentsController : BaseApiController
         if (coverImage != null)
             cover = (coverImage.OpenReadStream(), coverImage.FileName, coverImage.ContentType);
 
-        var command = new UploadDocumentCommand(fileTuples, collectionId ?? Guid.Empty, title, isPublic, cover);
+        List<MediaLink>? parsedLinks = null;
+        if (!string.IsNullOrWhiteSpace(mediaLinks))
+        {
+            try
+            {
+                parsedLinks = System.Text.Json.JsonSerializer.Deserialize<List<MediaLink>>(mediaLinks, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch { }
+        }
+
+        var command = new UploadDocumentCommand(fileTuples, collectionId ?? Guid.Empty, title, isPublic, cover, parsedLinks);
         var documentId = await Mediator.Send(command, ct);
         return Ok(new { documentId, message = "Document uploaded successfully." });
     }
@@ -77,7 +91,8 @@ public sealed class DocumentsController : BaseApiController
             request.License,
             request.Department,
             request.DegreeProgram,
-            request.Language
+            request.Language,
+            request.MediaLinks
         );
         await Mediator.Send(command, ct);
         return Ok(new { message = "Metadata updated successfully." });
@@ -129,16 +144,20 @@ public sealed class DocumentsController : BaseApiController
     }
 
     [HttpGet("{id:guid}/download/{fileId:guid}")]
-    public async Task<IActionResult> Download(Guid id, Guid fileId, CancellationToken ct)
+    public async Task<IActionResult> Download(Guid id, Guid fileId, [FromServices] IGeoIpService geoIp, CancellationToken ct)
     {
-        var result = await Mediator.Send(new GetDocumentDownloadQuery(id, fileId), ct);
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var country = await geoIp.ResolveCountryAsync(ip, ct);
+        var result = await Mediator.Send(new GetDocumentDownloadQuery(id, fileId, ip, country), ct);
         return File(result.Content, result.ContentType, result.FileName);
     }
 
     [HttpGet("{id:guid}/preview/{fileId:guid}")]
-    public async Task<IActionResult> Preview(Guid id, Guid fileId, CancellationToken ct)
+    public async Task<IActionResult> Preview(Guid id, Guid fileId, [FromServices] IGeoIpService geoIp, CancellationToken ct)
     {
-        var result = await Mediator.Send(new GetDocumentDownloadQuery(id, fileId), ct);
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var country = await geoIp.ResolveCountryAsync(ip, ct);
+        var result = await Mediator.Send(new GetDocumentDownloadQuery(id, fileId, ip, country), ct);
         return File(result.Content, result.ContentType);
     }
 
@@ -149,6 +168,21 @@ public sealed class DocumentsController : BaseApiController
         if (result == null)
             return NotFound();
         return File(result.Content, result.ContentType);
+    }
+
+    [HttpGet("{id:guid}/metadata-values")]
+    public async Task<IActionResult> GetMetadataValues(Guid id, CancellationToken ct)
+    {
+        var result = await Mediator.Send(new GetDocumentMetadataQuery(id), ct);
+        return Ok(result);
+    }
+
+    [HttpPut("{id:guid}/metadata-values")]
+    [Authorize]
+    public async Task<IActionResult> SaveMetadataValues(Guid id, [FromBody] SaveDocumentMetadataRequest request, CancellationToken ct)
+    {
+        await Mediator.Send(new SetDocumentMetadataCommand(id, request.Values), ct);
+        return Ok(new { message = "Metadata saved." });
     }
 }
 
@@ -165,7 +199,8 @@ public sealed record PatchDocumentRequest(
     string? License,
     string? Department,
     string? DegreeProgram,
-    string? Language
+    string? Language,
+    List<MediaLinkDto>? MediaLinks = null
 );
 public sealed record UpdateMetadataRequest(string? Title, string? Description, List<string>? Authors, List<string>? Keywords);
 public sealed record RejectDocumentRequest(string Reason);
@@ -188,3 +223,5 @@ public sealed record UploadLinkRequest(
         Description, DegreeProgram, Department, AdvisorName, Institution, License
     );
 }
+
+public sealed record SaveDocumentMetadataRequest(List<SaveMetadataValueDto> Values);

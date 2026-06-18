@@ -3,8 +3,10 @@ using GuIA.Application.Common;
 using GuIA.Application.DTOs;
 using GuIA.Domain.Entities;
 using GuIA.Domain.Enums;
+using GuIA.Domain.ValueObjects;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace GuIA.Application.UseCases.Documents;
 
@@ -22,7 +24,8 @@ public record UpdateDocumentMetadataCommand(
     string? License,
     string? Department,
     string? DegreeProgram,
-    string? Language
+    string? Language,
+    List<MediaLinkDto>? MediaLinks = null
 ) : IRequest;
 
 public class UpdateDocumentMetadataCommandHandler : IRequestHandler<UpdateDocumentMetadataCommand>
@@ -67,6 +70,12 @@ public class UpdateDocumentMetadataCommandHandler : IRequestHandler<UpdateDocume
         if (request.License != null) AddSet("license", request.License);
         if (request.Department != null) AddSet("department", request.Department);
         if (request.DegreeProgram != null) AddSet("degree_program", request.DegreeProgram);
+        if (request.MediaLinks != null)
+        {
+            setItems.Add($"\"media_links\" = {{{paramIndex}}}::jsonb");
+            paramValues.Add(JsonSerializer.Serialize(request.MediaLinks));
+            paramIndex++;
+        }
         AddSet("UpdatedAt", DateTime.UtcNow);
 
         if (paramValues.Count > 0)

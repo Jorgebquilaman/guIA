@@ -8,11 +8,13 @@ import Navbar from '../../components/public/Navbar'
 import Footer from '../../components/public/Footer'
 import { useState } from 'react'
 import { Menu, X } from 'lucide-react'
+import { useI18n } from '../../i18n/context'
 
 export default function PublicSearchResults() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [menuOpen, setMenuOpen] = useState(false)
+  const { t } = useI18n()
 
   const q = searchParams.get('q') ?? ''
   const type = searchParams.get('type') ?? ''
@@ -21,11 +23,12 @@ export default function PublicSearchResults() {
   const year = searchParams.get('year') ?? ''
   const department = searchParams.get('department') ?? ''
   const collection = searchParams.get('collection') ?? ''
+  const collectionId = searchParams.get('collectionId') ?? ''
   const page = parseInt(searchParams.get('page') ?? '1', 10)
   const keywords = searchParams.get('keywords') ?? ''
 
   const searchQuery = useMemo(() => {
-    const params: Record<string, string | number | boolean> = { page, pageSize: 20, publicOnly: true }
+    const params: Record<string, string | number | boolean> = { page, pageSize: 10, publicOnly: true }
     if (q) params.q = q
     if (type) params.type = type
     if (author) params.author = author
@@ -33,9 +36,10 @@ export default function PublicSearchResults() {
     if (year) params.year = year
     if (department) params.department = department
     if (collection) params.collection = collection
+    if (collectionId) params.collectionId = collectionId
     if (keywords) params.keywords = keywords
     return params
-  }, [q, type, author, career, year, keywords, department, collection, page])
+  }, [q, type, author, career, year, keywords, department, collection, collectionId, page])
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['public-search', searchQuery],
@@ -98,7 +102,7 @@ export default function PublicSearchResults() {
             <input
               name="q"
               defaultValue={q}
-              placeholder="Buscar documentos..."
+              placeholder={t('search.placeholder')}
               className="w-full rounded-xl border border-iupa-light px-5 py-3.5 pr-12 text-sm text-iupa-dark outline-none transition-colors focus:border-iupa-green"
             />
             <button
@@ -114,46 +118,46 @@ export default function PublicSearchResults() {
           <aside className="w-full shrink-0 lg:w-60">
             <div className="rounded-xl border border-iupa-light bg-white p-4 shadow-sm">
               <h3 className="mb-3 text-sm font-bold text-iupa-dark" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                Filtros
+                {t('search.filtros')}
               </h3>
               <div className="space-y-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-iupa-medium">Tipo</label>
+                  <label className="mb-1 block text-xs font-medium text-iupa-medium">{t('search.tipo')}</label>
                   <select
                     value={type}
                     onChange={(e) => updateParams({ type: e.target.value || undefined, page: '1' })}
                     className="w-full rounded-lg border border-iupa-light px-3 py-2 text-xs text-iupa-dark outline-none focus:border-iupa-green"
                   >
-                    <option value="">Todos</option>
-                    <option value="Article">Artículo</option>
-                    <option value="Thesis">Tesis</option>
-                    <option value="Dataset">Dataset</option>
-                    <option value="Software">Software</option>
-                    <option value="Link">Enlace</option>
-                    <option value="Other">Otro</option>
+                    <option value="">{t('search.todos')}</option>
+                    <option value="Article">{t('documentTypes.Article')}</option>
+                    <option value="Thesis">{t('documentTypes.Thesis')}</option>
+                    <option value="Dataset">{t('documentTypes.Dataset')}</option>
+                    <option value="Software">{t('documentTypes.Software')}</option>
+                    <option value="Link">{t('documentTypes.Link')}</option>
+                    <option value="Other">{t('documentTypes.Other')}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-iupa-medium">Departamento</label>
+                  <label className="mb-1 block text-xs font-medium text-iupa-medium">{t('search.departamento')}</label>
                   <select
                     value={department}
                     onChange={(e) => updateParams({ department: e.target.value || undefined, page: '1' })}
                     className="w-full rounded-lg border border-iupa-light px-3 py-2 text-xs text-iupa-dark outline-none focus:border-iupa-green"
                   >
-                    <option value="">Todos los departamentos</option>
+                    <option value="">{t('search.todosDepartamentos')}</option>
                     {departments.map((dept) => (
                       <option key={dept.id} value={dept.name}>{dept.name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-iupa-medium">Autor</label>
+                  <label className="mb-1 block text-xs font-medium text-iupa-medium">{t('search.autor')}</label>
                   <select
                     value={author}
                     onChange={(e) => updateParams({ author: e.target.value || undefined, page: '1' })}
                     className="w-full rounded-lg border border-iupa-light px-3 py-2 text-xs text-iupa-dark outline-none focus:border-iupa-green"
                   >
-                    <option value="">Todos los autores</option>
+                    <option value="">{t('search.todosAutores')}</option>
                     <option value="Néstor Guestrin">Néstor Guestrin</option>
                     <option value="Julio Espinosa Fernández">Julio Espinosa Fernández</option>
                     <option value="Fernando Rull Pérez">Fernando Rull Pérez</option>
@@ -164,13 +168,13 @@ export default function PublicSearchResults() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-iupa-medium">Carrera</label>
+                  <label className="mb-1 block text-xs font-medium text-iupa-medium">{t('search.carrera')}</label>
                   <select
                     value={career}
                     onChange={(e) => updateParams({ career: e.target.value || undefined, page: '1' })}
                     className="w-full rounded-lg border border-iupa-light px-3 py-2 text-xs text-iupa-dark outline-none focus:border-iupa-green"
                   >
-                    <option value="">Todas las carreras</option>
+                    <option value="">{t('search.todasCarreras')}</option>
                     <option value="Licenciatura en Realización Audiovisual">Licenciatura en Realización Audiovisual</option>
                     <option value="Licenciatura en Composición Musical">Licenciatura en Composición Musical</option>
                     <option value="Licenciatura en Danza">Licenciatura en Danza</option>
@@ -179,13 +183,13 @@ export default function PublicSearchResults() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-iupa-medium">Año</label>
+                  <label className="mb-1 block text-xs font-medium text-iupa-medium">{t('search.anio')}</label>
                   <select
                     value={year}
                     onChange={(e) => updateParams({ year: e.target.value ? parseInt(e.target.value) : undefined, page: '1' })}
                     className="w-full rounded-lg border border-iupa-light px-3 py-2 text-xs text-iupa-dark outline-none focus:border-iupa-green"
                   >
-                    <option value="">Todos los años</option>
+                    <option value="">{t('search.todosAnios')}</option>
                     <option value="2026">2026</option>
                   </select>
                 </div>
@@ -196,7 +200,7 @@ export default function PublicSearchResults() {
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-iupa-green px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-iupa-green-secondary"
               >
                 <Search className="h-4 w-4" />
-                BUSCAR
+                {t('search.buscar')}
               </button>
             </div>
           </aside>
@@ -205,7 +209,7 @@ export default function PublicSearchResults() {
             <SearchResults
               results={data ?? null}
               loading={isLoading}
-              error={isError ? (error instanceof Error ? error.message : 'Error al cargar resultados') : null}
+              error={isError ? (error instanceof Error ? error.message : t('search.errorCarga')) : null}
               onPageChange={(p) => updateParams({ page: String(p) })}
               onTitleClick={(id) => navigate(`/documentos/${id}`)}
               onDownload={(id) => navigate(`/documentos/${id}`)}

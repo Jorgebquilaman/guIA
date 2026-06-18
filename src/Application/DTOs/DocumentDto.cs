@@ -24,6 +24,7 @@ public class DocumentDto
     public List<DocumentFileDto> Files { get; set; } = new();
     public List<DocumentAuthorDto> Authors { get; set; } = new();
     public List<string> Keywords { get; set; } = new();
+    public List<MediaLinkDto> MediaLinks { get; set; } = new();
 
     // Dublin Core fields
     public string? AdvisorName { get; set; }
@@ -33,6 +34,20 @@ public class DocumentDto
     public string? License { get; set; }
     public string? Department { get; set; }
     public string? DegreeProgram { get; set; }
+
+    // SNRD metadata values
+    public List<DocumentMetadataDisplayDto> MetadataValues { get; set; } = new();
+    public string? MetadataSchemaName { get; set; }
+}
+
+public class DocumentMetadataDisplayDto
+{
+    public string FieldLabel { get; set; } = string.Empty;
+    public string FieldInternalName { get; set; } = string.Empty;
+    public string DublinCoreElement { get; set; } = string.Empty;
+    public string? Qualifier { get; set; }
+    public string Value { get; set; } = string.Empty;
+    public int RepeatIndex { get; set; }
 }
 
 public sealed record AuthorDto(string Name, string? Email, string? Orcid, int Order);
@@ -63,4 +78,11 @@ public class DocumentFileDto
     public string MimeType { get; set; } = string.Empty;
     public long SizeBytes { get; set; }
     public bool HasThumbnail { get; set; }
+}
+
+public class MediaLinkDto
+{
+    public string Url { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+    public string Type { get; set; } = "video";
 }

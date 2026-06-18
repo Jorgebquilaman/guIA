@@ -4,5 +4,6 @@ public enum AccessAction
 {
     View,
     Download,
-    Search
+    Search,
+    PageView
 }

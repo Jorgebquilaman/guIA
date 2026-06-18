@@ -27,6 +27,10 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<SiteConfig> SiteConfigs => Set<SiteConfig>();
     public DbSet<SmtpConfig> SmtpConfigs => Set<SmtpConfig>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<MetadataSchema> MetadataSchemas => Set<MetadataSchema>();
+    public DbSet<MetadataField> MetadataFields => Set<MetadataField>();
+    public DbSet<MetadataFieldOption> MetadataFieldOptions => Set<MetadataFieldOption>();
+    public DbSet<DocumentMetadataValue> DocumentMetadataValues => Set<DocumentMetadataValue>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

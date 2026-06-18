@@ -2,6 +2,7 @@ using GuIA.Application.Common;
 using GuIA.Application.Ports;
 using GuIA.Domain.Entities;
 using GuIA.Domain.Enums;
+using GuIA.Domain.ValueObjects;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Channels;
@@ -13,7 +14,8 @@ public record UploadDocumentCommand(
     Guid CollectionId,
     string? Title,
     bool IsPublic,
-    (Stream Content, string FileName, string MimeType)? CoverImage = null
+    (Stream Content, string FileName, string MimeType)? CoverImage = null,
+    List<MediaLink>? MediaLinks = null
 ) : IRequest<Guid>;
 
 public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentCommand, Guid>
@@ -81,6 +83,11 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
             var stored = await _fileStorage.SaveAsync(coverStream, coverName, coverMime, ct);
             var thumbPath = await _fileStorage.GenerateThumbnailAsync(stored.StoredPath, coverMime, ct);
             document.SetCoverImage(thumbPath ?? stored.StoredPath, coverMime);
+        }
+
+        if (request.MediaLinks?.Count > 0)
+        {
+            document.SetMediaLinks(request.MediaLinks);
         }
 
         _context.Documents.Add(document);

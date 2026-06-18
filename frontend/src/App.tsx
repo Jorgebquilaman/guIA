@@ -5,6 +5,9 @@ import AdminGuard from './components/layout/AdminGuard'
 import PublicHome from './pages/public/PublicHome'
 import PublicSearchResults from './pages/public/PublicSearchResults'
 import AcercaDelRepositorio from './pages/public/AcercaDelRepositorio'
+import Estadisticas from './pages/public/Estadisticas'
+import DescargasStats from './pages/public/DescargasStats'
+import AuthorStats from './pages/public/AuthorStats'
 import Relaciones from './pages/public/Relaciones'
 import ForgotPassword from './pages/public/ForgotPassword'
 import ResetPassword from './pages/public/ResetPassword'
@@ -25,6 +28,7 @@ import SiteConfig from './pages/admin/SiteConfig'
 import SmtpConfig from './pages/admin/SmtpConfig'
 import DocumentTypes from './pages/admin/DocumentTypes'
 import Departments from './pages/admin/Departments'
+import MetadataSchemasAdmin from './pages/admin/MetadataSchemasAdmin'
 
 export default function App() {
   return (
@@ -33,6 +37,9 @@ export default function App() {
       <Route path="/buscar" element={<PublicSearchResults />} />
       <Route path="/acerca-del-repositorio" element={<AcercaDelRepositorio />} />
       <Route path="/relaciones" element={<Relaciones />} />
+      <Route path="/estadisticas" element={<Estadisticas />} />
+      <Route path="/descargas" element={<DescargasStats />} />
+      <Route path="/autor/:name" element={<AuthorStats />} />
       <Route path="/login" element={<Login />} />
       <Route path="/olvide-mi-contrasena" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
@@ -55,6 +62,7 @@ export default function App() {
           <Route path="/app/admin/smtp-config" element={<AdminGuard><SmtpConfig /></AdminGuard>} />
           <Route path="/app/admin/document-types" element={<AdminGuard><DocumentTypes /></AdminGuard>} />
           <Route path="/app/admin/departments" element={<AdminGuard><Departments /></AdminGuard>} />
+          <Route path="/app/admin/metadata-schemas" element={<AdminGuard><MetadataSchemasAdmin /></AdminGuard>} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -8,4 +8,5 @@ public class AiProviderConfigDto
     public string Model { get; set; } = string.Empty;
     public int MaxTokens { get; set; }
     public bool IsActive { get; set; }
+    public string? SystemPrompt { get; set; }
 }

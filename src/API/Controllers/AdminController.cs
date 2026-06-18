@@ -124,7 +124,13 @@ public sealed class AdminController : BaseApiController
             AbstractEs = d.AbstractEs,
             License = d.License,
             Department = d.Department,
-            DegreeProgram = d.DegreeProgram
+            DegreeProgram = d.DegreeProgram,
+            MediaLinks = (d.MediaLinks ?? []).Select(m => new MediaLinkDto
+            {
+                Url = m.Url,
+                Label = m.Label,
+                Type = m.Type
+            }).ToList()
         }).ToList();
 
         return Ok(new PagedResult<DocumentDto>(items, totalCount, page, pageSize));
@@ -174,9 +180,66 @@ public sealed class AdminController : BaseApiController
             request.ApiKey,
             request.Model,
             request.MaxTokens,
-            user);
+            user,
+            request.SystemPrompt);
         var result = await Mediator.Send(command, ct);
         return Ok(result);
+    }
+
+    [HttpGet("ai-usage")]
+    public async Task<IActionResult> GetAiUsage(CancellationToken ct)
+    {
+        var context = HttpContext.RequestServices.GetRequiredService<IAppDbContext>();
+        var config = await context.AiProviderConfigs
+            .Where(c => c.IsActive)
+            .FirstOrDefaultAsync(ct);
+
+        if (config is null)
+            return NotFound("No active AI provider configured");
+
+        var logger = HttpContext.RequestServices.GetRequiredService<ILogger<AdminController>>();
+
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            var httpRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.deepseek.com/user/balance");
+            httpRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", config.ApiKey);
+            var httpResponse = await http.SendAsync(httpRequest, ct);
+            var body = await httpResponse.Content.ReadAsStringAsync(ct);
+
+            logger.LogInformation("DeepSeek balance response ({StatusCode}): {Body}", (int)httpResponse.StatusCode, body);
+
+            var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var parsed = System.Text.Json.JsonSerializer.Deserialize<DeepSeekBalanceResponse>(body, opts);
+
+            var info = parsed?.BalanceInfos?.FirstOrDefault();
+            if (info is null || info.TotalBalance is null)
+            {
+                return Ok(new { balance = (decimal?)null, totalBalance = (decimal?)null, grantedBalance = (decimal?)null, currency = "—", estimatedTokens = (int?)null, error = "DeepSeek responded without balance data" });
+            }
+
+            var total = decimal.Parse(info.TotalBalance, System.Globalization.CultureInfo.InvariantCulture);
+            var granted = info.GrantedBalance is not null ? decimal.Parse(info.GrantedBalance, System.Globalization.CultureInfo.InvariantCulture) : 0m;
+
+            // Approx: 1M input tokens ~ 0.27 CNY for deepseek-chat
+            var tokenEstimate = total > 0 ? (int)(total / 0.27m * 1_000_000) : 0;
+
+            return Ok(new
+            {
+                balance = total,
+                totalBalance = total,
+                grantedBalance = granted,
+                currency = info.Currency ?? "CNY",
+                estimatedTokens = tokenEstimate,
+                provider = "DeepSeek",
+                isAvailable = parsed?.IsAvailable ?? false
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to query DeepSeek balance");
+            return Ok(new { balance = (decimal?)null, totalBalance = (decimal?)null, grantedBalance = (decimal?)null, currency = "—", estimatedTokens = (int?)null, error = ex.Message });
+        }
     }
 
     [HttpGet("site-config")]
@@ -248,8 +311,19 @@ public sealed class AdminController : BaseApiController
     }
 }
 
+public sealed record DeepSeekBalanceResponse(
+    [property: System.Text.Json.Serialization.JsonPropertyName("is_available")] bool IsAvailable,
+    [property: System.Text.Json.Serialization.JsonPropertyName("balance_infos")] IReadOnlyList<DeepSeekBalanceInfo>? BalanceInfos
+);
+public sealed record DeepSeekBalanceInfo(
+    [property: System.Text.Json.Serialization.JsonPropertyName("currency")] string? Currency,
+    [property: System.Text.Json.Serialization.JsonPropertyName("total_balance")] string? TotalBalance,
+    [property: System.Text.Json.Serialization.JsonPropertyName("granted_balance")] string? GrantedBalance,
+    [property: System.Text.Json.Serialization.JsonPropertyName("topped_up_balance")] string? ToppedUpBalance
+);
+
 public sealed record CreateUserRequest(string Email, string Password, string FullName, UserRole Role);
 public sealed record UpdateUserRequest(string? FullName, UserRole? Role);
-public sealed record UpdateAiSettingsRequest(string ApiUrl, string ApiKey, string Model, int MaxTokens);
+public sealed record UpdateAiSettingsRequest(string ApiUrl, string ApiKey, string Model, int MaxTokens, string? SystemPrompt = null);
 public sealed record UpdateSiteConfigRequest(bool ShowMessage, string MessageText);
 public sealed record UpdateSmtpConfigRequest(string Host, int Port, string Username, string Password, string FromEmail, string FromName, bool UseSsl);

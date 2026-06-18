@@ -65,6 +65,16 @@ function Header() {
       </nav>
 
       <div className="ml-auto flex items-center gap-3">
+        <a
+          href="/"
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+          title="Ver sitio público"
+        >
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.25a1.5 1.5 0 01-1.042-1.956l.317-.831a1.5 1.5 0 011.43-.978L3 8.5h6l.99 1.233a1.5 1.5 0 001.43.978l1.08-.027a1.5 1.5 0 011.43.978l.317.831a1.5 1.5 0 01-1.042 1.956l-.93.186a1.5 1.5 0 01-1.247-.478L12 14.5H8l-.996-1.242a1.5 1.5 0 00-1.247-.478l-.93.186z" />
+          </svg>
+          Vista pública
+        </a>
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}

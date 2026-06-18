@@ -124,7 +124,7 @@ function AuthorsSection({ authors }: { authors: NonNullable<ReturnType<typeof us
                 {author.name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <p className="text-sm font-medium text-iupa-dark">{author.name}</p>
+                <Link to={`/autor/${encodeURIComponent(author.name)}`} className="text-sm font-medium text-iupa-dark hover:text-iupa-green hover:underline">{author.name}</Link>
                 {author.orcid && (
                   <p className="text-xs text-iupa-medium">ORCID: {author.orcid}</p>
                 )}

@@ -5,19 +5,43 @@ import type { Department } from '../../types'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
+import { Music, Video, Palette, Move, Theater, BookOpen, Mic, Camera, Code, Globe, Users, Library, Pen, Star, Heart, Zap, Sun, Moon, Cloud } from 'lucide-react'
 
 interface FormState {
   id?: string
   name: string
   color: string
+  icon: string | null
   degreePrograms: string[]
 }
 
-const emptyForm: FormState = { name: '', color: '#1B4D3E', degreePrograms: [] }
+const emptyForm: FormState = { name: '', color: '#1B4D3E', icon: null, degreePrograms: [] }
 
 const PRESET_COLORS = [
   '#1B4D3E', '#2D7A6B', '#E87100', '#C0392B', '#2980B9',
   '#8E44AD', '#27AE60', '#D35400', '#16A085', '#7F8C8D',
+]
+
+const ICON_OPTIONS = [
+  { name: 'Music', icon: Music },
+  { name: 'Video', icon: Video },
+  { name: 'Palette', icon: Palette },
+  { name: 'Move', icon: Move },
+  { name: 'Theater', icon: Theater },
+  { name: 'BookOpen', icon: BookOpen },
+  { name: 'Mic', icon: Mic },
+  { name: 'Camera', icon: Camera },
+  { name: 'Code', icon: Code },
+  { name: 'Globe', icon: Globe },
+  { name: 'Users', icon: Users },
+  { name: 'Library', icon: Library },
+  { name: 'Pen', icon: Pen },
+  { name: 'Star', icon: Star },
+  { name: 'Heart', icon: Heart },
+  { name: 'Zap', icon: Zap },
+  { name: 'Sun', icon: Sun },
+  { name: 'Moon', icon: Moon },
+  { name: 'Cloud', icon: Cloud },
 ]
 
 export default function Departments() {
@@ -53,6 +77,7 @@ export default function Departments() {
           id: form.id,
           name: form.name,
           color: form.color,
+          icon: form.icon,
           degreePrograms: form.degreePrograms.filter(Boolean),
         })
         addToast('success', 'Departamento actualizado')
@@ -60,6 +85,7 @@ export default function Departments() {
         await createMutation.mutateAsync({
           name: form.name,
           color: form.color,
+          icon: form.icon,
           degreePrograms: form.degreePrograms.filter(Boolean),
         })
         addToast('success', 'Departamento creado')
@@ -76,6 +102,7 @@ export default function Departments() {
       id: d.id,
       name: d.name,
       color: d.color,
+      icon: d.icon ?? null,
       degreePrograms: d.degreePrograms.map((p) => p.name),
     })
     setEditing(true)
@@ -156,41 +183,74 @@ export default function Departments() {
                 className="w-full rounded-lg border border-iupa-light bg-white px-3.5 py-2.5 text-sm text-iupa-dark placeholder:text-iupa-medium/50 focus:border-iupa-green focus:ring-2 focus:ring-iupa-green/20 focus:outline-none transition-all"
               />
             </div>
-            <div>
-              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-iupa-dark">
-                <svg className="h-4 w-4 text-iupa-green-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072" />
-                </svg>
-                Color
-              </label>
-              <div className="flex items-center gap-3">
-                <div className="relative shrink-0">
-                  <input
-                    type="color"
-                    value={form.color}
-                    onChange={(e) => setForm({ ...form, color: e.target.value })}
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                  />
-                  <div
-                    className="flex h-10 w-14 items-center justify-center rounded-lg border border-iupa-light shadow-sm transition-shadow hover:shadow-md cursor-pointer"
-                    style={{ backgroundColor: form.color }}
-                  >
-                    <span className="text-[10px] font-bold text-white drop-shadow-md">{form.color}</span>
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-iupa-dark">
+                  <svg className="h-4 w-4 text-iupa-green-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072" />
+                  </svg>
+                  Color
+                </label>
+                <div className="flex items-center gap-3">
+                  <div className="relative shrink-0">
+                    <input
+                      type="color"
+                      value={form.color}
+                      onChange={(e) => setForm({ ...form, color: e.target.value })}
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                    />
+                    <div
+                      className="flex h-10 w-14 items-center justify-center rounded-lg border border-iupa-light shadow-sm transition-shadow hover:shadow-md cursor-pointer"
+                      style={{ backgroundColor: form.color }}
+                    >
+                      <span className="text-[10px] font-bold text-white drop-shadow-md">{form.color}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {PRESET_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setForm({ ...form, color: c })}
+                        className={`h-8 w-8 rounded-full shadow-sm transition-all duration-150 hover:scale-110 hover:shadow-md ${
+                          form.color === c ? 'ring-2 ring-iupa-dark ring-offset-2 scale-110' : 'ring-1 ring-black/10'
+                        }`}
+                        style={{ backgroundColor: c }}
+                        title={c}
+                      />
+                    ))}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {PRESET_COLORS.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setForm({ ...form, color: c })}
-                      className={`h-8 w-8 rounded-full shadow-sm transition-all duration-150 hover:scale-110 hover:shadow-md ${
-                        form.color === c ? 'ring-2 ring-iupa-dark ring-offset-2 scale-110' : 'ring-1 ring-black/10'
-                      }`}
-                      style={{ backgroundColor: c }}
-                      title={c}
-                    />
-                  ))}
+              </div>
+
+              <div>
+                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-iupa-dark">
+                  <svg className="h-4 w-4 text-iupa-green-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                  </svg>
+                  Icono
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {ICON_OPTIONS.map((opt) => {
+                    const SelectedIcon = opt.icon
+                    const isSelected = form.icon === opt.name
+                    return (
+                      <button
+                        key={opt.name}
+                        type="button"
+                        onClick={() => setForm({ ...form, icon: isSelected ? null : opt.name })}
+                        className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-all ${
+                          isSelected
+                            ? 'border-iupa-green bg-iupa-green text-white shadow-sm'
+                            : 'border-iupa-light text-iupa-medium hover:border-iupa-green/40 hover:text-iupa-green hover:shadow-sm'
+                        }`}
+                        title={opt.name}
+                      >
+                        <SelectedIcon className="h-4 w-4" />
+                      </button>
+                    )
+                  })}
+                  {form.icon && <div className="ml-1 flex items-center text-xs text-iupa-medium">{ICON_OPTIONS.find(o => o.name === form.icon)?.name ?? form.icon}</div>}
                 </div>
               </div>
             </div>

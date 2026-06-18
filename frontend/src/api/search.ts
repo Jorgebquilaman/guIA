@@ -17,3 +17,19 @@ export function useKeywordSuggestions(query: string) {
     enabled: query.length > 0,
   })
 }
+
+export function useAuthorSuggestions(query: string) {
+  return useQuery({
+    queryKey: ['search', 'authors', query],
+    queryFn: async () => {
+      const res = await apiClient.get<ApiResponse<string[]>>('/search/authors', {
+        params: { q: query },
+      })
+      if (!res.data.success || !res.data.data) {
+        throw new Error(res.data.error?.message ?? 'Failed to fetch author suggestions')
+      }
+      return res.data.data
+    },
+    enabled: query.length > 0,
+  })
+}

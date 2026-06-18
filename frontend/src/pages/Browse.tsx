@@ -192,8 +192,8 @@ export default function Browse() {
                     <DocumentCard
                       key={doc.id}
                       document={doc}
-                      onTitleClick={(id) => navigate(`/browse/${id}`)}
-                      onDownload={(id) => navigate(`/browse/${id}`)}
+                      onTitleClick={(id) => navigate(`/app/browse/${id}`)}
+                      onDownload={(id) => navigate(`/app/browse/${id}`)}
                       onEdit={(id) => navigate(`/app/documents/${id}`)}
                     />
                   ))}

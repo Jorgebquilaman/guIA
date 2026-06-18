@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GuIA.Application.UseCases.Documents;
 
-public record GetDocumentDownloadQuery(Guid DocumentId, Guid FileId) : IRequest<FileResponse>;
+public record GetDocumentDownloadQuery(Guid DocumentId, Guid FileId, string? IpAddress = null, string? Country = null) : IRequest<FileResponse>;
 
 public class GetDocumentDownloadQueryHandler : IRequestHandler<GetDocumentDownloadQuery, FileResponse>
 {
@@ -34,7 +34,9 @@ public class GetDocumentDownloadQueryHandler : IRequestHandler<GetDocumentDownlo
 
         _context.AccessLogs.Add(new AccessLog(
             AccessAction.Download,
-            document.Id));
+            document.Id,
+            ipAddress: request.IpAddress,
+            country: request.Country));
 
         await _context.SaveChangesAsync(ct);
 

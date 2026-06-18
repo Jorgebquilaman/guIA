@@ -2,6 +2,7 @@ using System.Threading.Channels;
 using GuIA.Application.Common;
 using GuIA.Application.Ports;
 using GuIA.Infrastructure.Adapters;
+using GuIA.Infrastructure.Services;
 using GuIA.Infrastructure.Persistence;
 using GuIA.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<ILlmPort, DeepSeekLlmAdapter>();
         services.AddScoped<ISearchPort, PostgresFullTextSearchAdapter>();
         services.AddScoped<IEmailPort, SmtpEmailAdapter>();
+        services.AddScoped<IGeoIpService, GeoIpService>();
 
         services.AddSingleton<AiProcessingQueue>();
         services.AddSingleton(sp =>

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import Navbar from '../../components/public/Navbar'
 import HeroSection from '../../components/public/HeroSection'
@@ -11,13 +11,24 @@ import Footer from '../../components/public/Footer'
 export default function PublicHome() {
   const [menuOpen, setMenuOpen] = useState(false)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const visitTracked = useRef(false)
 
-  if (isAuthenticated) {
-    return <Navigate to="/app" replace />
-  }
+  useEffect(() => {
+    if (visitTracked.current) return
+    visitTracked.current = true
+    fetch('/api/stats/visit', { method: 'POST' }).catch(() => {})
+  }, [])
 
   return (
     <div className="min-h-screen bg-iupa-light" style={{ fontFamily: 'Inter, sans-serif' }}>
+      {isAuthenticated && (
+        <div className="bg-iupa-green px-4 py-2 text-center text-sm text-white">
+          Estás logueado —{' '}
+          <Link to="/app" className="font-semibold underline hover:no-underline">Ir al panel de administración</Link>
+          {' · '}
+          <Link to="/app/documents" className="font-semibold underline hover:no-underline">Mis documentos</Link>
+        </div>
+      )}
       <Navbar onMenuToggle={() => setMenuOpen((p) => !p)} menuOpen={menuOpen} />
       <HeroSection />
       <DepartmentSection />

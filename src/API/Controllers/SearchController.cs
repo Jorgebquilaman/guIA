@@ -62,4 +62,11 @@ public sealed class SearchController : BaseApiController
         var result = await Mediator.Send(new GetKeywordSuggestionsQuery(q ?? string.Empty), ct);
         return Ok(result);
     }
+
+    [HttpGet("authors")]
+    public async Task<IActionResult> GetAuthorSuggestions([FromQuery] string q, CancellationToken ct)
+    {
+        var result = await Mediator.Send(new GetAuthorSuggestionsQuery(q ?? string.Empty), ct);
+        return Ok(result);
+    }
 }

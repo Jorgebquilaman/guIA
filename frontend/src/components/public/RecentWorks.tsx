@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { FileText, Eye, ArrowRight, Download, FileVideo, Link as LinkIcon } from 'lucide-react'
+import { useI18n } from '../../i18n/context'
 
 interface Work {
   id: string
@@ -36,6 +38,7 @@ function getTypeIcon(type: string) {
 
 export default function RecentWorks() {
   const [works, setWorks] = useState<Work[]>([])
+  const { t } = useI18n()
 
   useEffect(() => {
     fetch('/api/search?pageSize=4&publicOnly=true')
@@ -56,52 +59,63 @@ export default function RecentWorks() {
             className="text-xl font-bold text-iupa-dark"
             style={{ fontFamily: 'Montserrat, sans-serif' }}
           >
-            Trabajos Recientes
+            {t('recentWorks.titulo')}
           </h2>
         </div>
         <a
           href="/buscar"
           className="flex items-center gap-1 text-sm font-semibold text-iupa-accent hover:text-orange-700"
         >
-          VER TODOS
+          {t('recentWorks.verTodos')}
           <ArrowRight className="h-4 w-4" />
         </a>
       </div>
 
       <div className="space-y-3">
-        {works.map((work) => {
-          const type = getTypeLabel(work.files, work.sourceUrl)
-          const Icon = getTypeIcon(type)
-          const author = work.authors?.map((a) => a.name).join(', ') || 'Sin autor'
-          const year = work.publishedAt
-            ? new Date(work.publishedAt).getFullYear()
-            : ''
-          return (
-            <div
-              key={work.id}
-              className="flex items-start gap-4 rounded-xl border border-iupa-light bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
-            >
-              <span
-                className={`inline-flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-bold uppercase ${
-                  type === 'PDF' || type === 'LINK'
-                    ? 'bg-iupa-green-light text-iupa-green'
-                    : 'bg-purple-100 text-purple-800'
-                }`}
+          {works.map((work) => {
+            const type = getTypeLabel(work.files, work.sourceUrl)
+            const Icon = getTypeIcon(type)
+            const year = work.publishedAt
+              ? new Date(work.publishedAt).getFullYear()
+              : ''
+            return (
+              <div
+                key={work.id}
+                className="flex items-start gap-4 rounded-xl border border-iupa-light bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
               >
-                <Icon className="h-3 w-3" />
-                {type}
-              </span>
-
-              <div className="min-w-0 flex-1">
-                <a
-                  href={`/documentos/${work.id}`}
-                  className="text-sm font-semibold text-iupa-dark transition-colors hover:text-iupa-green hover:underline"
+                <span
+                  className={`inline-flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-bold uppercase ${
+                    type === 'PDF' || type === 'LINK'
+                      ? 'bg-iupa-green-light text-iupa-green'
+                      : 'bg-purple-100 text-purple-800'
+                  }`}
                 >
-                  {work.title}
-                </a>
-                <p className="mt-0.5 text-xs text-iupa-medium">
-                  {author}{work.degreeProgram ? ` — ${work.degreeProgram}` : ''}{year ? ` — ${year}` : ''}
-                </p>
+                  <Icon className="h-3 w-3" />
+                  {type}
+                </span>
+
+                <div className="min-w-0 flex-1">
+                  <a
+                    href={`/documentos/${work.id}`}
+                    className="text-sm font-semibold text-iupa-dark transition-colors hover:text-iupa-green hover:underline"
+                  >
+                    {work.title}
+                  </a>
+                  <p className="mt-0.5 text-xs text-iupa-medium">
+                    {work.authors && work.authors.length > 0 ? (
+                      work.authors.map((a, i) => (
+                        <span key={a.name}>
+                          {i > 0 && ', '}
+                          <Link to={`/autor/${encodeURIComponent(a.name)}`} className="hover:text-iupa-green hover:underline">
+                            {a.name}
+                          </Link>
+                        </span>
+                      ))
+                    ) : (
+                      <span>{t('recentWorks.sinAutor')}</span>
+                    )}
+                    {work.degreeProgram ? ` — ${work.degreeProgram}` : ''}{year ? ` — ${year}` : ''}
+                  </p>
               </div>
 
               <a
@@ -114,7 +128,7 @@ export default function RecentWorks() {
                   ) : (
                     <Download className="h-3.5 w-3.5" />
                   )}
-                  {work.sourceUrl ? 'ABRIR ENLACE' : 'VER / DESCARGAR'}
+                  {work.sourceUrl ? t('recentWorks.abrirEnlace') : t('recentWorks.verDescargar')}
                 </span>
               </a>
             </div>

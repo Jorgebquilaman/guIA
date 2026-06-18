@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { FileText, GraduationCap, Users, Download, ArrowRight } from 'lucide-react'
+import { useI18n } from '../../i18n/context'
 
 type Stats = {
   totalDocuments: number
@@ -19,15 +20,16 @@ function formatNumber(n: number): string {
   return n.toLocaleString('es-AR')
 }
 
-const cards: { key: keyof Stats; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { key: 'totalDocuments', label: 'Trabajos disponibles', icon: FileText },
-  { key: 'totalDegreePrograms', label: 'Carreras de grado', icon: GraduationCap },
-  { key: 'totalAuthors', label: 'Autores', icon: Users },
-  { key: 'totalDownloads', label: 'Descargas totales', icon: Download },
+const cardKeys: { key: keyof Stats; tKey: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { key: 'totalDocuments', tKey: 'hero.trabajos', icon: FileText },
+  { key: 'totalDegreePrograms', tKey: 'hero.carreras', icon: GraduationCap },
+  { key: 'totalAuthors', tKey: 'hero.autores', icon: Users },
+  { key: 'totalDownloads', tKey: 'hero.descargas', icon: Download },
 ]
 
 export default function HeroSection() {
   const [stats, setStats] = useState<Stats>(defaultStats)
+  const { t } = useI18n()
 
   useEffect(() => {
     fetch('/api/stats/overview')
@@ -68,18 +70,17 @@ export default function HeroSection() {
               className="text-4xl leading-tight font-bold text-white sm:text-5xl lg:text-6xl"
               style={{ fontFamily: 'Montserrat, sans-serif' }}
             >
-              Conocimiento que transforma{' '}
-              <span className="text-iupa-accent">y crea</span>
+              {t('hero.titulo')}{' '}
+              <span className="text-iupa-accent">{t('hero.subtitulo')}</span>
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-white/90">
-              Repositorio institucional del IUPA que reúne, preserva y difunde la
-              producción académica, artística y científica de nuestra comunidad.
+              {t('hero.descripcion')}
             </p>
             <a
               href="/acerca-del-repositorio"
               className="mt-7 inline-flex items-center gap-2 rounded-lg border-2 border-white px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white hover:text-iupa-green"
             >
-              CONOCÉ MÁS SOBRE EL REPOSITORIO
+              {t('hero.cta')}
               <ArrowRight className="h-4 w-4" />
             </a>
           </div>
@@ -87,10 +88,16 @@ export default function HeroSection() {
           <div className="lg:col-span-2">
             <div className="relative overflow-hidden rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
               <div className="relative grid grid-cols-2 gap-4">
-                {cards.map(({ key, label, icon: Icon }) => (
-                  <div
+                {cardKeys.map(({ key, tKey, icon: Icon }) => {
+                  const isLink = key === 'totalAuthors' || key === 'totalDownloads'
+                  const Wrapper = isLink ? 'a' : 'div'
+                  const href = key === 'totalAuthors' ? '/estadisticas' : '/descargas'
+                  const wrapperProps = isLink ? { href } : {}
+                  return (
+                  <Wrapper
+                    {...wrapperProps}
                     key={key}
-                    className="rounded-xl bg-white/20 p-4 shadow-sm transition-shadow hover:shadow-md border border-white/20"
+                    className={`rounded-xl bg-white/20 p-4 shadow-sm transition-all hover:shadow-md border border-white/20 ${isLink ? 'cursor-pointer hover:bg-white/30' : ''}`}
                   >
                     <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-white/20">
                       <Icon className="h-5 w-5 text-white" />
@@ -101,9 +108,10 @@ export default function HeroSection() {
                     >
                       {formatNumber(stats[key])}
                     </p>
-                    <p className="text-xs text-white/80">{label}</p>
-                  </div>
-                ))}
+                    <p className="text-xs text-white/80">{t(tKey)}</p>
+                    </Wrapper>
+                  )
+                })}
               </div>
             </div>
           </div>

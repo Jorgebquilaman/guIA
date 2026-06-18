@@ -1,24 +1,82 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Search, Users, Tag, Loader2, AlertCircle, Network } from 'lucide-react'
 import Navbar from '../../components/public/Navbar'
 import Footer from '../../components/public/Footer'
 import ForceGraph from '../../components/graph/ForceGraph'
 import { useGraph } from '../../hooks/useGraph'
+import { useKeywordSuggestions, useAuthorSuggestions } from '../../api/search'
 
 export default function Relaciones() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchMode, setSearchMode] = useState<'tag' | 'author'>('tag')
   const [query, setQuery] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(-1)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const { data: tagSuggestions } = useKeywordSuggestions(
+    searchMode === 'tag' ? debouncedQuery : ''
+  )
+  const { data: authorSuggestions } = useAuthorSuggestions(
+    searchMode === 'author' ? debouncedQuery : ''
+  )
+
+  const suggestions = searchMode === 'tag' ? tagSuggestions : authorSuggestions
+
+  useEffect(() => {
+    const raw = query.trim()
+    if (!raw) { setDebouncedQuery(''); return }
+    // Use the last comma-separated token for suggestions
+    const tokens = raw.split(',').map(t => t.trim()).filter(Boolean)
+    setDebouncedQuery(tokens[tokens.length - 1] || '')
+  }, [query])
+
+  useEffect(() => {
+    setSelectedIndex(-1)
+    setShowSuggestions(false)
+  }, [searchMode])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const raw = query.trim()
+      if (!raw) { setDebouncedQuery(''); return }
+      const tokens = raw.split(',').map(t => t.trim()).filter(Boolean)
+      setDebouncedQuery(tokens[tokens.length - 1] || '')
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [query])
+
+  useEffect(() => {
+    if (debouncedQuery && suggestions && suggestions.length > 0) {
+      setShowSuggestions(true)
+    } else {
+      setShowSuggestions(false)
+    }
+  }, [debouncedQuery, suggestions])
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+          inputRef.current && !inputRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const { data, isLoading, error, refetch } = useGraph(
-    searchMode === 'tag' ? query : undefined,
-    searchMode === 'author' ? query : undefined
+    searchMode === 'tag' && submitted ? query : undefined,
+    searchMode === 'author' && submitted ? query : undefined
   )
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     if (!query.trim()) return
+    setShowSuggestions(false)
     setSubmitted(true)
   }
 
@@ -32,6 +90,36 @@ export default function Relaciones() {
     setSearchMode('author')
     setQuery(author)
     setSubmitted(true)
+  }
+
+  function handleSuggestionClick(value: string) {
+    const raw = query.trim()
+    if (!raw) {
+      setQuery(value)
+    } else {
+      const tokens = raw.split(',').map(t => t.trim()).filter(Boolean)
+      tokens.pop()
+      tokens.push(value)
+      setQuery(tokens.join(', ') + ', ')
+    }
+    setShowSuggestions(false)
+    inputRef.current?.focus()
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (!showSuggestions || !suggestions?.length) return
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setSelectedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1))
+    } else if (e.key === 'Enter' && selectedIndex >= 0) {
+      e.preventDefault()
+      handleSuggestionClick(suggestions[selectedIndex])
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false)
+    }
   }
 
   useEffect(() => {
@@ -63,7 +151,7 @@ export default function Relaciones() {
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => { setSearchMode('tag'); setSubmitted(false) }}
+                onClick={() => { setSearchMode('tag'); setSubmitted(false); setShowSuggestions(false) }}
                 className={`flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-xs font-semibold transition-colors ${
                   searchMode === 'tag'
                     ? 'border-iupa-green bg-iupa-green text-white'
@@ -75,7 +163,7 @@ export default function Relaciones() {
               </button>
               <button
                 type="button"
-                onClick={() => { setSearchMode('author'); setSubmitted(false) }}
+                onClick={() => { setSearchMode('author'); setSubmitted(false); setShowSuggestions(false) }}
                 className={`flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-xs font-semibold transition-colors ${
                   searchMode === 'author'
                     ? 'border-iupa-green bg-iupa-green text-white'
@@ -91,9 +179,12 @@ export default function Relaciones() {
               <div className="relative flex-1">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
+                  ref={inputRef}
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
+                  onFocus={() => suggestions && suggestions.length > 0 && setShowSuggestions(true)}
+                  onKeyDown={handleKeyDown}
                   placeholder={
                     searchMode === 'tag'
                       ? 'Ej: música, teatro, danza...'
@@ -101,6 +192,33 @@ export default function Relaciones() {
                   }
                   className="w-full rounded-lg border border-gray-200 py-2.5 pl-9 pr-3 text-sm outline-none transition-colors focus:border-iupa-green focus:ring-1 focus:ring-iupa-green/20"
                 />
+                {showSuggestions && suggestions && suggestions.length > 0 && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+                  >
+                    {suggestions.map((item, i) => (
+                      <button
+                        key={item}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => handleSuggestionClick(item)}
+                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                          i === selectedIndex
+                            ? 'bg-iupa-green/10 text-iupa-green'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {searchMode === 'tag' ? (
+                          <Tag className="h-3 w-3 shrink-0 text-gray-400" />
+                        ) : (
+                          <Users className="h-3 w-3 shrink-0 text-gray-400" />
+                        )}
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <button
                 type="submit"

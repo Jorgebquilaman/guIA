@@ -36,5 +36,9 @@ public class AiProviderConfigConfiguration : IEntityTypeConfiguration<AiProvider
         builder.Property(c => c.UpdatedBy)
             .HasMaxLength(200)
             .HasColumnName("updated_by");
+
+        builder.Property(c => c.SystemPrompt)
+            .HasColumnType("text")
+            .HasColumnName("system_prompt");
     }
 }

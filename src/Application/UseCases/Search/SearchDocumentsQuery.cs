@@ -119,7 +119,13 @@ public class SearchDocumentsQueryHandler : IRequestHandler<SearchDocumentsQuery,
                 AbstractEs = d.AbstractEs,
                 License = d.License,
                 Department = d.Department,
-                DegreeProgram = d.DegreeProgram
+                DegreeProgram = d.DegreeProgram,
+                MediaLinks = (d.MediaLinks ?? []).Select(m => new MediaLinkDto
+                {
+                    Url = m.Url,
+                    Label = m.Label,
+                    Type = m.Type
+                }).ToList()
             })
             .ToList();
 

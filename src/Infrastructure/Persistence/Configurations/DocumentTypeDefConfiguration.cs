@@ -25,6 +25,14 @@ public class DocumentTypeDefConfiguration : IEntityTypeConfiguration<DocumentTyp
         builder.Property(t => t.SortOrder)
             .HasColumnName("sort_order");
 
+        builder.Property(t => t.MetadataSchemaId)
+            .HasColumnName("metadata_schema_id");
+
+        builder.HasOne(t => t.MetadataSchema)
+            .WithMany()
+            .HasForeignKey(t => t.MetadataSchemaId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasQueryFilter(t => t.DeletedAt == null);
     }
 }

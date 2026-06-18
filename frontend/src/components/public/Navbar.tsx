@@ -1,5 +1,8 @@
-import { Search, Menu, X, Upload, ChevronDown } from 'lucide-react'
+import { Menu, X, Upload, ChevronDown } from 'lucide-react'
 import { menuItems } from '../../data/mockData'
+import CollectionNavDropdown from './CollectionNavDropdown'
+import { useI18n } from '../../i18n/context'
+import type { Lang } from '../../i18n/context'
 
 interface NavbarProps {
   onMenuToggle: () => void
@@ -7,6 +10,12 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onMenuToggle, menuOpen }: NavbarProps) {
+  const { t, lang, setLang } = useI18n()
+
+  function toggleLang() {
+    setLang(lang === 'es' ? 'en' : 'es' as Lang)
+  }
+
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -15,26 +24,22 @@ export default function Navbar({ onMenuToggle, menuOpen }: NavbarProps) {
             <img src="/img/logo-iupa.svg" alt="IUPA" className="h-9 w-auto" />
             <div className="hidden md:block">
               <p className="text-xs font-semibold leading-tight text-iupa-dark" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                REPOSITORIO INSTITUCIONAL
+                {t('nav.repositorio')}
               </p>
               <p className="text-[11px] text-iupa-medium">
-                Acceso abierto al conocimiento académico y artístico
+                {t('nav.accesoAbierto')}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-1 rounded-lg border border-iupa-light bg-iupa-light px-3 py-1.5 sm:flex">
-              <input
-                type="text"
-                placeholder="Buscar..."
-                className="w-28 bg-transparent text-xs text-iupa-dark outline-none placeholder:text-iupa-medium lg:w-36"
-              />
-              <Search className="h-3.5 w-3.5 text-iupa-medium" />
-            </div>
-            <button className="hidden text-xs text-iupa-medium hover:text-iupa-dark md:block">
+            <CollectionNavDropdown />
+            <button
+              onClick={toggleLang}
+              className="hidden text-xs text-iupa-medium hover:text-iupa-dark md:block"
+            >
               <span className="flex items-center gap-1">
-                ES <ChevronDown className="h-3 w-3" />
+                {t('nav.idioma')} <ChevronDown className="h-3 w-3" />
               </span>
             </button>
             <button
@@ -65,7 +70,7 @@ export default function Navbar({ onMenuToggle, menuOpen }: NavbarProps) {
             className="flex items-center gap-2 rounded-b-lg bg-iupa-accent px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-700"
           >
             <Upload className="h-4 w-4" />
-            SUBIR TRABAJO
+            {t('nav.subirTrabajo')}
           </a>
         </div>
       </nav>
@@ -82,13 +87,6 @@ export default function Navbar({ onMenuToggle, menuOpen }: NavbarProps) {
                 {item.label}
               </a>
             ))}
-            <div className="border-t border-iupa-light pt-2">
-              <input
-                type="text"
-                placeholder="Buscar..."
-                className="w-full rounded-lg border border-iupa-light px-3 py-2 text-sm outline-none focus:border-iupa-green"
-              />
-            </div>
           </div>
         </div>
       )}

@@ -56,7 +56,7 @@ public class DepartmentsController : ControllerBase
         if (exists)
             return BadRequest(new { message = "Ya existe un departamento con ese nombre" });
 
-        var department = new Department(request.Name, request.Color ?? "#1B4D3E");
+        var department = new Department(request.Name, request.Color ?? "#1B4D3E", request.Icon);
         _context.Departments.Add(department);
 
         if (request.DegreePrograms != null)
@@ -93,7 +93,7 @@ public class DepartmentsController : ControllerBase
         if (duplicate)
             return BadRequest(new { message = "Ya existe un departamento con ese nombre" });
 
-        department.Update(request.Name, request.Color ?? "#1B4D3E");
+        department.Update(request.Name, request.Color ?? "#1B4D3E", request.Icon);
 
         // Sync degree programs
         if (request.DegreePrograms != null)
@@ -179,5 +179,5 @@ public class DepartmentsController : ControllerBase
     }
 }
 
-public sealed record CreateDepartmentRequest(string Name, string? Color, List<string>? DegreePrograms);
+public sealed record CreateDepartmentRequest(string Name, string? Color, string? Icon, List<string>? DegreePrograms);
 public sealed record AddDegreeProgramRequest(string Name);

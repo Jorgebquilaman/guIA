@@ -31,7 +31,8 @@ public class GetAiSettingsQueryHandler : IRequestHandler<GetAiSettingsQuery, AiP
             ApiKey = config.ApiKey,
             Model = config.Model,
             MaxTokens = config.MaxTokens,
-            IsActive = config.IsActive
+            IsActive = config.IsActive,
+            SystemPrompt = config.SystemPrompt
         };
     }
 }

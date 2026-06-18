@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useDocumentTypes, useCreateDocumentType, useUpdateDocumentType, useDeleteDocumentType } from '../../api/admin'
+import { useMetadataSchemas } from '../../api/metadata'
 import { useUiStore } from '../../store/uiStore'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -10,12 +11,14 @@ interface FormState {
   name: string
   label: string
   sortOrder: number
+  metadataSchemaId: string | null
 }
 
-const emptyForm: FormState = { name: '', label: '', sortOrder: 0 }
+const emptyForm: FormState = { name: '', label: '', sortOrder: 0, metadataSchemaId: null }
 
 export default function DocumentTypes() {
   const { data: types, isLoading } = useDocumentTypes()
+  const { data: schemas } = useMetadataSchemas()
   const createMutation = useCreateDocumentType()
   const updateMutation = useUpdateDocumentType()
   const deleteMutation = useDeleteDocumentType()
@@ -28,10 +31,10 @@ export default function DocumentTypes() {
     if (!form.name.trim() || !form.label.trim()) return
     try {
       if (editing && form.id) {
-        await updateMutation.mutateAsync({ id: form.id, name: form.name, label: form.label, sortOrder: form.sortOrder })
+        await updateMutation.mutateAsync({ id: form.id, name: form.name, label: form.label, sortOrder: form.sortOrder, metadataSchemaId: form.metadataSchemaId || null })
         addToast('success', 'Tipo actualizado')
       } else {
-        await createMutation.mutateAsync({ name: form.name, label: form.label, sortOrder: form.sortOrder })
+        await createMutation.mutateAsync({ name: form.name, label: form.label, sortOrder: form.sortOrder, metadataSchemaId: form.metadataSchemaId || null })
         addToast('success', 'Tipo creado')
       }
       setForm(emptyForm)
@@ -42,7 +45,7 @@ export default function DocumentTypes() {
   }
 
   const handleEdit = (t: NonNullable<typeof types>[number]) => {
-    setForm({ id: t.id, name: t.name, label: t.label, sortOrder: t.sortOrder })
+    setForm({ id: t.id, name: t.name, label: t.label, sortOrder: t.sortOrder, metadataSchemaId: t.metadataSchemaId })
     setEditing(true)
   }
 
@@ -150,6 +153,26 @@ export default function DocumentTypes() {
               />
             </div>
           </div>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-iupa-dark">
+                <svg className="h-4 w-4 text-iupa-green-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                Esquema de metadatos
+              </label>
+              <select
+                value={form.metadataSchemaId ?? ''}
+                onChange={(e) => setForm({ ...form, metadataSchemaId: e.target.value || null })}
+                className="w-full rounded-lg border border-iupa-light bg-white px-3.5 py-2.5 text-sm text-iupa-dark focus:border-iupa-green focus:ring-2 focus:ring-iupa-green/20 focus:outline-none transition-all"
+              >
+                <option value="">Sin esquema asignado</option>
+                {(schemas ?? []).map((s) => (
+                  <option key={s.id} value={s.id}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="flex justify-end gap-3 border-t border-iupa-light pt-4">
             {editing && (
               <Button variant="ghost" onClick={handleCancel}>
@@ -215,6 +238,11 @@ export default function DocumentTypes() {
                       <span className="ml-2 rounded-full bg-iupa-light px-2 py-0.5 text-xs font-medium text-iupa-medium">
                         {t.name}
                       </span>
+                      {t.metadataSchemaLabel && (
+                        <span className="ml-2 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600">
+                          {t.metadataSchemaLabel}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">

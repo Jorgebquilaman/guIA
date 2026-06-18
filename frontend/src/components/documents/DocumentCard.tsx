@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { Document } from '../../types'
 import { useAuthStore } from '../../store/authStore'
 import { getGoogleDriveEmbedUrl } from '../../utils/gdrive'
@@ -31,6 +32,8 @@ const typeLabels: Record<string, string> = {
   Software: 'Software',
   Link: 'Enlace',
   Other: 'Otro',
+  ConferenceDocument: 'Conferencia',
+  Book: 'Libro',
 }
 
 const statusLabels: Record<string, string> = {
@@ -47,6 +50,8 @@ const typeColors: Record<string, string> = {
   Software: 'bg-orange-100 text-orange-800',
   Link: 'bg-blue-100 text-blue-800',
   Other: 'bg-gray-100 text-gray-800',
+  ConferenceDocument: 'bg-pink-100 text-pink-800',
+  Book: 'bg-indigo-100 text-indigo-800',
 }
 
 const statusColors: Record<string, string> = {
@@ -154,7 +159,16 @@ export default function DocumentCard({
 
               <div className="mb-2 flex flex-wrap gap-3 text-xs text-iupa-medium">
                 {document.authors.length > 0 && (
-                  <span>{document.authors.map((a) => a.name).join(', ')}</span>
+                  <span>
+                    {document.authors.map((a, i) => (
+                      <span key={a.id}>
+                        {i > 0 && ', '}
+                        <Link to={`/autor/${encodeURIComponent(a.name)}`} className="hover:text-iupa-green hover:underline">
+                          {a.name}
+                        </Link>
+                      </span>
+                    ))}
+                  </span>
                 )}
               </div>
 

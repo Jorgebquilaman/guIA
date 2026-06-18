@@ -49,6 +49,11 @@ namespace GuIA.Infrastructure.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("action");
 
+                    b.Property<string>("Country")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("country");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -156,6 +161,10 @@ namespace GuIA.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("model");
+
+                    b.Property<string>("SystemPrompt")
+                        .HasColumnType("text")
+                        .HasColumnName("system_prompt");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -272,6 +281,11 @@ namespace GuIA.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
+                    b.Property<string>("Icon")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("icon");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -348,6 +362,10 @@ namespace GuIA.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("license");
+
+                    b.Property<string>("MediaLinks")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("media_links");
 
                     b.Property<DateTime?>("PublicationDate")
                         .HasColumnType("timestamp with time zone")
@@ -489,6 +507,45 @@ namespace GuIA.Infrastructure.Migrations
                     b.ToTable("document_files", (string)null);
                 });
 
+            modelBuilder.Entity("GuIA.Domain.Entities.DocumentMetadataValue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MetadataFieldId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("RepeatIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("repeat_index");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("value");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("MetadataFieldId");
+
+                    b.ToTable("document_metadata_values", (string)null);
+                });
+
             modelBuilder.Entity("GuIA.Domain.Entities.DocumentTypeDef", b =>
                 {
                     b.Property<Guid>("Id")
@@ -507,6 +564,10 @@ namespace GuIA.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("label");
 
+                    b.Property<Guid?>("MetadataSchemaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("metadata_schema_id");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -521,6 +582,8 @@ namespace GuIA.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MetadataSchemaId");
 
                     b.ToTable("document_type_defs", (string)null);
                 });
@@ -557,6 +620,176 @@ namespace GuIA.Infrastructure.Migrations
                     b.HasIndex("Value");
 
                     b.ToTable("keywords", (string)null);
+                });
+
+            modelBuilder.Entity("GuIA.Domain.Entities.MetadataField", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DublinCoreElement")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("dublin_core_element");
+
+                    b.Property<string>("FieldType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("field_type");
+
+                    b.Property<string>("HelpText")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("help_text");
+
+                    b.Property<string>("InternalName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("internal_name");
+
+                    b.Property<bool>("IsHidden")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_hidden");
+
+                    b.Property<bool>("IsReadOnly")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_read_only");
+
+                    b.Property<bool>("IsRepeatable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_repeatable");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_required");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("label");
+
+                    b.Property<Guid>("MetadataSchemaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Obligatoriness")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("obligatoriness");
+
+                    b.Property<string>("Qualifier")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("qualifier");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MetadataSchemaId");
+
+                    b.ToTable("metadata_fields", (string)null);
+                });
+
+            modelBuilder.Entity("GuIA.Domain.Entities.MetadataFieldOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_default");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("label");
+
+                    b.Property<Guid>("MetadataFieldId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("value");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MetadataFieldId");
+
+                    b.ToTable("metadata_field_options", (string)null);
+                });
+
+            modelBuilder.Entity("GuIA.Domain.Entities.MetadataSchema", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DocumentTypeName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("document_type_name");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("label");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("metadata_schemas", (string)null);
                 });
 
             modelBuilder.Entity("GuIA.Domain.Entities.PasswordResetToken", b =>
@@ -858,6 +1091,57 @@ namespace GuIA.Infrastructure.Migrations
                     b.Navigation("Document");
                 });
 
+            modelBuilder.Entity("GuIA.Domain.Entities.DocumentMetadataValue", b =>
+                {
+                    b.HasOne("GuIA.Domain.Entities.Document", "Document")
+                        .WithMany("MetadataValues")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GuIA.Domain.Entities.MetadataField", "Field")
+                        .WithMany()
+                        .HasForeignKey("MetadataFieldId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+
+                    b.Navigation("Field");
+                });
+
+            modelBuilder.Entity("GuIA.Domain.Entities.DocumentTypeDef", b =>
+                {
+                    b.HasOne("GuIA.Domain.Entities.MetadataSchema", "MetadataSchema")
+                        .WithMany()
+                        .HasForeignKey("MetadataSchemaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("MetadataSchema");
+                });
+
+            modelBuilder.Entity("GuIA.Domain.Entities.MetadataField", b =>
+                {
+                    b.HasOne("GuIA.Domain.Entities.MetadataSchema", "Schema")
+                        .WithMany("Fields")
+                        .HasForeignKey("MetadataSchemaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Schema");
+                });
+
+            modelBuilder.Entity("GuIA.Domain.Entities.MetadataFieldOption", b =>
+                {
+                    b.HasOne("GuIA.Domain.Entities.MetadataField", "Field")
+                        .WithMany("Options")
+                        .HasForeignKey("MetadataFieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Field");
+                });
+
             modelBuilder.Entity("GuIA.Domain.Entities.PasswordResetToken", b =>
                 {
                     b.HasOne("GuIA.Domain.Entities.User", "User")
@@ -902,6 +1186,18 @@ namespace GuIA.Infrastructure.Migrations
                     b.Navigation("Authors");
 
                     b.Navigation("Files");
+
+                    b.Navigation("MetadataValues");
+                });
+
+            modelBuilder.Entity("GuIA.Domain.Entities.MetadataField", b =>
+                {
+                    b.Navigation("Options");
+                });
+
+            modelBuilder.Entity("GuIA.Domain.Entities.MetadataSchema", b =>
+                {
+                    b.Navigation("Fields");
                 });
 
             modelBuilder.Entity("GuIA.Domain.Entities.User", b =>

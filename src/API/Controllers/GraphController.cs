@@ -21,14 +21,18 @@ public sealed class GraphController : BaseApiController
 
         if (!string.IsNullOrWhiteSpace(tag))
         {
-            var tagLower = tag.Trim().ToLowerInvariant();
-            query = query.Where(d => d.Keywords.Any(k => k.Value.ToLower() == tagLower));
+            var tags = tag.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(t => t.ToLowerInvariant())
+                .ToList();
+            query = query.Where(d => d.Keywords.Any(k => tags.Contains(k.Value.ToLower())));
         }
 
         if (!string.IsNullOrWhiteSpace(author))
         {
-            var authorLower = author.Trim().ToLowerInvariant();
-            query = query.Where(d => d.Authors.Any(a => a.Name.ToLower().Contains(authorLower)));
+            var authors = author.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(a => a.ToLowerInvariant())
+                .ToList();
+            query = query.Where(d => d.Authors.Any(a => authors.Any(au => a.Name.ToLower().Contains(au))));
         }
 
         var documents = await query

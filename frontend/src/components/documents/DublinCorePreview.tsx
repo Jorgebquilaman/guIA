@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import type { Document } from '../../types'
+import type { Document, MetadataValueDisplay } from '../../types'
 
 interface Props {
   document: Document
   onClose: () => void
+  metadataValues?: MetadataValueDisplay[]
 }
 
 const typeLabels: Record<string, string> = {
@@ -14,7 +15,7 @@ const typeLabels: Record<string, string> = {
   Other: 'Otro',
 }
 
-export default function DublinCorePreview({ document, onClose }: Props) {
+export default function DublinCorePreview({ document, onClose, metadataValues }: Props) {
   const [copiedSection, setCopiedSection] = useState<string | null>(null)
 
   const baseUrl = window.location.origin
@@ -161,6 +162,48 @@ export default function DublinCorePreview({ document, onClose }: Props) {
               </table>
             </div>
           </div>
+
+          {metadataValues && metadataValues.length > 0 && (
+            <div>
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-iupa-medium">
+                Metadatos SNRD — {document.type === 'Article' ? 'Artículo científico' : document.type === 'ConferenceDocument' ? 'Documento de conferencia' : document.type === 'Book' ? 'Libro' : 'Tesis'}
+              </h3>
+              <div className="overflow-hidden rounded-lg border border-iupa-light">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-iupa-light/50">
+                      <th className="px-4 py-2 text-left font-medium text-iupa-dark">DC Element</th>
+                      <th className="px-4 py-2 text-left font-medium text-iupa-dark">Campo</th>
+                      <th className="px-4 py-2 text-left font-medium text-iupa-dark">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-iupa-light">
+                    {(() => {
+                      let lastLabel = ''
+                      return metadataValues.map((mv, i) => {
+                        const isSame = mv.fieldLabel === lastLabel
+                        lastLabel = mv.fieldLabel
+                        const dcElement = mv.qualifier ? `${mv.dublinCoreElement}.${mv.qualifier}` : mv.dublinCoreElement
+                        return (
+                          <tr key={i} className={isSame ? 'bg-iupa-light/20' : 'hover:bg-iupa-light/30'}>
+                            {isSame ? (
+                              <td className="px-4 py-2" />
+                            ) : (
+                              <td className="px-4 py-2 font-mono text-xs text-iupa-green">{dcElement}</td>
+                            )}
+                            <td className={`px-4 py-2 text-iupa-dark ${isSame ? 'text-iupa-medium/60 text-xs' : 'font-medium'}`}>
+                              {isSame ? '' : mv.fieldLabel}
+                            </td>
+                            <td className={`px-4 py-2 text-iupa-dark ${mv.value ? '' : 'text-iupa-medium/50 italic'}`}>{mv.value || '—'}</td>
+                          </tr>
+                        )
+                      })
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           <div>
             <div className="flex items-center justify-between mb-3">

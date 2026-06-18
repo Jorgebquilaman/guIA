@@ -171,7 +171,13 @@ public class ProcessDocumentWithAiCommandHandler : IRequestHandler<ProcessDocume
             AbstractEs = doc.AbstractEs,
             License = doc.License,
             Department = doc.Department,
-            DegreeProgram = doc.DegreeProgram
+            DegreeProgram = doc.DegreeProgram,
+            MediaLinks = (doc.MediaLinks ?? []).Select(m => new MediaLinkDto
+            {
+                Url = m.Url,
+                Label = m.Label,
+                Type = m.Type
+            }).ToList()
         };
     }
 }

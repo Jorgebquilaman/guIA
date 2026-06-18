@@ -11,6 +11,7 @@ using GuIA.Domain.Entities;
 using GuIA.Domain.ValueObjects;
 using GuIA.Infrastructure;
 using GuIA.Infrastructure.Persistence;
+using GuIA.Infrastructure.Persistence.SeedData;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -57,7 +58,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = (DbContext)scope.ServiceProvider.GetRequiredService<IAppDbContext>();
-    dbContext.Database.EnsureCreated();
+    dbContext.Database.Migrate();
 
     if (!await dbContext.Set<User>().AnyAsync())
     {
@@ -68,6 +69,9 @@ using (var scope = app.Services.CreateScope())
         await dbContext.SaveChangesAsync();
         Console.WriteLine(">>> Default admin created: admin@guia.app / Admin123!");
     }
+
+    var metadataCtx = scope.ServiceProvider.GetRequiredService<IAppDbContext>();
+    await SeedMetadataSchemas.SeedAsync(metadataCtx);
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

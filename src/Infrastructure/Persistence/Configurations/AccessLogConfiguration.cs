@@ -16,6 +16,10 @@ public class AccessLogConfiguration : IEntityTypeConfiguration<AccessLog>
             .HasMaxLength(45)
             .HasColumnName("ip_address");
 
+        builder.Property(l => l.Country)
+            .HasMaxLength(100)
+            .HasColumnName("country");
+
         builder.Property(l => l.Action)
             .IsRequired()
             .HasConversion<string>()

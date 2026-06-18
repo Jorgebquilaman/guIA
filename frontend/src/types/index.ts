@@ -31,7 +31,7 @@ export interface AiMetadata {
   errorMessage: string | null
 }
 
-export type DocumentType = 'Article' | 'Thesis' | 'Dataset' | 'Software' | 'Link' | 'Other'
+export type DocumentType = 'Article' | 'Thesis' | 'Dataset' | 'Software' | 'Link' | 'Other' | 'ConferenceDocument' | 'Book'
 export type DocumentStatus = 'Draft' | 'Processing' | 'Published' | 'Rejected'
 
 export interface DocumentFile {
@@ -51,6 +51,12 @@ export interface DocumentAuthor {
   email: string | null
   orcid: string | null
   order: number
+}
+
+export interface MediaLink {
+  url: string
+  label: string
+  type: string
 }
 
 export interface Document {
@@ -80,6 +86,9 @@ export interface Document {
   license?: string | null
   department?: string | null
   degreeProgram?: string | null
+  metadataValues?: MetadataValueDisplay[]
+  metadataSchemaName?: string | null
+  mediaLinks?: MediaLink[]
 }
 
 export interface SearchResult {
@@ -128,6 +137,7 @@ export interface AiSettings {
   model: string
   maxTokens: number
   isActive: boolean
+  systemPrompt: string | null
 }
 
 export interface DocumentTypeDef {
@@ -135,6 +145,8 @@ export interface DocumentTypeDef {
   name: string
   label: string
   sortOrder: number
+  metadataSchemaId: string | null
+  metadataSchemaLabel: string | null
 }
 
 export interface DegreeProgram {
@@ -147,6 +159,7 @@ export interface Department {
   id: string
   name: string
   color: string
+  icon: string | null
   degreePrograms: DegreeProgram[]
 }
 
@@ -176,4 +189,58 @@ export interface StatsOverview {
   totalUsers: number
   totalCollections: number
   recentUploads: number
+}
+
+// Metadata schema types
+export interface MetadataFieldOption {
+  id: string
+  metadataFieldId: string
+  value: string
+  label: string
+  isDefault: boolean
+  sortOrder: number
+}
+
+export interface MetadataField {
+  id: string
+  metadataSchemaId: string
+  dublinCoreElement: string
+  qualifier: string | null
+  internalName: string
+  label: string
+  fieldType: 'Text' | 'Textarea' | 'Date' | 'Select' | 'MultiText'
+  isRequired: boolean
+  obligatoriness: 'Mandatory' | 'ConditionallyMandatory' | 'Recommended' | 'Optional' | 'NotApplicable'
+  isRepeatable: boolean
+  isReadOnly: boolean
+  isHidden: boolean
+  sortOrder: number
+  helpText: string | null
+  options: MetadataFieldOption[]
+}
+
+export interface MetadataSchema {
+  id: string
+  documentTypeName: string
+  label: string
+  isActive: boolean
+  sortOrder: number
+  fields: MetadataField[]
+}
+
+export interface DocumentMetadataValue {
+  id: string
+  documentId: string
+  metadataFieldId: string
+  value: string
+  repeatIndex: number
+}
+
+export interface MetadataValueDisplay {
+  fieldLabel: string
+  fieldInternalName: string
+  dublinCoreElement: string
+  qualifier?: string | null
+  value: string
+  repeatIndex: number
 }

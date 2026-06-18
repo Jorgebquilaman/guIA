@@ -23,6 +23,7 @@ public class DocumentTypesController : ControllerBase
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
         var types = await _context.DocumentTypeDefs
+            .Include(t => t.MetadataSchema)
             .OrderBy(t => t.SortOrder)
             .Select(t => DocumentTypeDefDto.FromEntity(t))
             .ToListAsync(ct);
@@ -34,6 +35,7 @@ public class DocumentTypesController : ControllerBase
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         var type = await _context.DocumentTypeDefs
+            .Include(t => t.MetadataSchema)
             .FirstOrDefaultAsync(t => t.Id == id, ct);
 
         if (type == null)
@@ -59,7 +61,13 @@ public class DocumentTypesController : ControllerBase
         _context.DocumentTypeDefs.Add(type);
         await _context.SaveChangesAsync(ct);
 
-        return CreatedAtAction(nameof(GetById), new { id = type.Id }, DocumentTypeDefDto.FromEntity(type));
+        return CreatedAtAction(nameof(GetById), new { id = type.Id }, new DocumentTypeDefDto
+        {
+            Id = type.Id,
+            Name = type.Name,
+            Label = type.Label,
+            SortOrder = type.SortOrder,
+        });
     }
 
     [HttpPut("{id:guid}")]
@@ -67,6 +75,7 @@ public class DocumentTypesController : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] CreateDocumentTypeRequest request, CancellationToken ct)
     {
         var type = await _context.DocumentTypeDefs
+            .Include(t => t.MetadataSchema)
             .FirstOrDefaultAsync(t => t.Id == id, ct);
 
         if (type == null)
@@ -81,7 +90,7 @@ public class DocumentTypesController : ControllerBase
         if (duplicate)
             return BadRequest(new { message = "A type with this name already exists" });
 
-        type.Update(request.Name, request.Label, request.SortOrder);
+        type.Update(request.Name, request.Label, request.SortOrder, request.MetadataSchemaId);
         await _context.SaveChangesAsync(ct);
 
         return Ok(DocumentTypeDefDto.FromEntity(type));
@@ -104,4 +113,4 @@ public class DocumentTypesController : ControllerBase
     }
 }
 
-public sealed record CreateDocumentTypeRequest(string Name, string Label, int SortOrder);
+public sealed record CreateDocumentTypeRequest(string Name, string Label, int SortOrder, Guid? MetadataSchemaId = null);
