@@ -22,3 +22,4 @@ dist/
 .env.local
 *.log
 src/.vite/
+src/API/storage/
