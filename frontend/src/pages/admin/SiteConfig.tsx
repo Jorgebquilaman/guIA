@@ -23,7 +23,7 @@ export default function SiteConfig() {
   }, [config])
 
   const handleSave = async () => {
-    if (!messageText.trim()) return
+    if (showMessage && !messageText.trim()) return
     try {
       await updateMutation.mutateAsync({ showMessage, messageText: messageText.trim(), baseUrl: baseUrl.trim() || null })
       addToast('success', 'Configuración del sitio guardada')
