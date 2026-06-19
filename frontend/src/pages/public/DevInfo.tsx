@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const devs = [
-  { name: 'Jorge B. Quilamán', role: 'Desarrollador Principal', github: 'https://github.com/Jorgebquilaman' },
   { name: 'Carolina Zimmermann', role: 'Product Owner', email: 'czimmermann@iupa.edu.ar' },
+  { name: 'Jorge B. Quilamán', role: 'Desarrollador Principal', github: 'https://github.com/Jorgebquilaman' },
 ]
 
 const stack = [
