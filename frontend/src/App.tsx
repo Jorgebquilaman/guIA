@@ -30,6 +30,7 @@ import SmtpConfig from './pages/admin/SmtpConfig'
 import DocumentTypes from './pages/admin/DocumentTypes'
 import Departments from './pages/admin/Departments'
 import MetadataSchemasAdmin from './pages/admin/MetadataSchemasAdmin'
+import DevInfo from './pages/public/DevInfo'
 
 export default function App() {
   return (
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/solicitar-acceso" element={<RequestAccess />} />
         <Route path="/documentos/:id" element={<DocumentView />} />
+        <Route path="/dev" element={<DevInfo />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/app" element={<Home />} />
