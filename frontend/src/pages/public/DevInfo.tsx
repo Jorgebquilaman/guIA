@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 const devs = [
   { name: 'Jorge B. Quilamán', role: 'Desarrollador Principal', github: 'https://github.com/Jorgebquilaman' },
+  { name: 'Carolina Zimmermann', role: 'Product Owner', email: 'czimmermann@iupa.edu.ar' },
 ]
 
 const stack = [
@@ -108,14 +109,18 @@ export default function DevInfo() {
               <div key={d.name} className="group rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 transition-all duration-500 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 hover:backdrop-blur-sm">
                 <p className="font-medium">{d.name}</p>
                 <p className="mt-0.5 text-sm text-neutral-400">{d.role}</p>
-                <a
-                  href={d.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-block text-xs text-neutral-500 underline underline-offset-2 hover:text-emerald-400"
-                >
-                  {d.github}
-                </a>
+                {'email' in d ? (
+                  <p className="mt-1 text-xs text-neutral-500">{d.email}</p>
+                ) : (
+                  <a
+                    href={d.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-block text-xs text-neutral-500 underline underline-offset-2 hover:text-emerald-400"
+                  >
+                    {d.github}
+                  </a>
+                )}
               </div>
             ))}
           </div>
