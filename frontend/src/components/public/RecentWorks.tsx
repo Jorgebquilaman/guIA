@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FileText, Eye, ArrowRight, Download, FileVideo, Link as LinkIcon } from 'lucide-react'
+import { FileText, ArrowRight, Download, FileVideo, Link as LinkIcon } from 'lucide-react'
 import { useI18n } from '../../i18n/context'
 
 interface Work {

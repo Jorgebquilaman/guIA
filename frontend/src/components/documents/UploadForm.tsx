@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUploadDocument, useUploadLink } from '../../api/documents'
 import { useCollections } from '../../api/collections'
-import { isGoogleDriveUrl, extractGoogleDriveId, getGoogleDriveEmbedUrl } from '../../utils/gdrive'
+import { extractGoogleDriveId, getGoogleDriveEmbedUrl } from '../../utils/gdrive'
 import type { Collection } from '../../types'
 
 type UploadTab = 'files' | 'links'

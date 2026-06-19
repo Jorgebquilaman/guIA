@@ -2,12 +2,12 @@ import { useMemo, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import type { Department } from '../../types'
 import client from '../../api/client'
 import SearchResults from '../../components/search/SearchResults'
 import Navbar from '../../components/public/Navbar'
 import Footer from '../../components/public/Footer'
 import { useState } from 'react'
-import { Menu, X } from 'lucide-react'
 import { useI18n } from '../../i18n/context'
 
 export default function PublicSearchResults() {
@@ -79,8 +79,7 @@ export default function PublicSearchResults() {
   }
 
   // Fetch filter options from API
-  const [departments, setDepartments] = useState([])
-  const [collections, setCollections] = useState([])
+  const [departments, setDepartments] = useState<Department[]>([])
 
   useEffect(() => {
     fetch('/api/stats/departments')
@@ -186,7 +185,7 @@ export default function PublicSearchResults() {
                   <label className="mb-1 block text-xs font-medium text-iupa-medium">{t('search.anio')}</label>
                   <select
                     value={year}
-                    onChange={(e) => updateParams({ year: e.target.value ? parseInt(e.target.value) : undefined, page: '1' })}
+                    onChange={(e) => updateParams({ year: e.target.value || undefined, page: '1' })}
                     className="w-full rounded-lg border border-iupa-light px-3 py-2 text-xs text-iupa-dark outline-none focus:border-iupa-green"
                   >
                     <option value="">{t('search.todosAnios')}</option>

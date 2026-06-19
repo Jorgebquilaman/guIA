@@ -4,7 +4,7 @@ import en from './en.json'
 
 export type Lang = 'es' | 'en'
 
-type Translations = Record<string, string | Record<string, string>>
+type Translations = Record<string, string | string[] | Record<string, string | string[]>>
 
 const LANG_STORAGE_KEY = 'iupa-lang'
 
@@ -34,10 +34,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   const t = useCallback((key: string, vars?: Record<string, string | number>): string => {
     const keys = key.split('.')
-    let value: string | Record<string, string> | undefined = dictionaries[lang]
+    let value: any = dictionaries[lang]
     for (const k of keys) {
-      if (value && typeof value === 'object') {
-        value = (value as Record<string, string | Record<string, string>>)[k] as string | Record<string, string> | undefined
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        value = (value as Record<string, Translations[string]>)[k]
       } else {
         value = undefined
         break

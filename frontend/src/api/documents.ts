@@ -71,6 +71,10 @@ export function useAiSuggestions(documentId: string) {
     suggestedAuthors: { name: string; email?: string | null; orcid?: string | null; order: number }[]
     suggestedType?: string | null
     metadataValues?: Record<string, string>
+    suggestedKeywordsEn?: string[]
+    abstractEn?: string | null
+    publicationVersion?: string | null
+    digitalIdentifier?: string | null
   }>({
     queryKey: ['document', documentId, 'ai-suggestions'],
     queryFn: async () => {

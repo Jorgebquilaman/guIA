@@ -29,7 +29,7 @@ const LANGUAGES = [
   'Japanese',
 ]
 
-export default function SearchFilters({ filters, onChange, collections }: SearchFiltersProps) {
+export default function SearchFilters({ filters, onChange }: SearchFiltersProps) {
   const [localFilters, setLocalFilters] = useState(filters)
   const { data: typeDefs } = useDocumentTypes()
 

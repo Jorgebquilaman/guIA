@@ -2,7 +2,7 @@ export interface User {
   id: string
   email: string
   fullName: string
-  role: 'Admin' | 'Editor' | 'Viewer'
+  role: 'Admin' | 'Editor' | 'Viewer' | 'Reader'
   isActive: boolean
   createdAt: string
 }
@@ -167,6 +167,7 @@ export interface SiteConfig {
   id: string
   showMessage: boolean
   messageText: string
+  baseUrl?: string
 }
 
 export interface SmtpConfig {

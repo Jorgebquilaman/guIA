@@ -5,7 +5,6 @@ import type {
   MetadataSchema,
   DocumentMetadataValue,
   MetadataField,
-  MetadataFieldOption,
 } from '../types'
 
 export function useMetadataSchemas() {

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useStats, useAdminDocuments } from '../../api/admin'
+import { type ReactNode } from 'react'
 import Card from '../../components/ui/Card'
 import Spinner from '../../components/ui/Spinner'
 import Badge from '../../components/ui/Badge'
@@ -30,7 +31,7 @@ function Bar({ value, max, label, color }: { value: number; max: number; label: 
 }
 
 function StatCard({ label, value, icon }: { label: string; value: number; icon: string }) {
-  const iconConfig: Record<string, { svg: JSX.Element; circleBg: string; iconColor: string; borderColor: string }> = {
+  const iconConfig: Record<string, { svg: ReactNode; circleBg: string; iconColor: string; borderColor: string }> = {
     total: {
       circleBg: 'bg-iupa-green-light',
       iconColor: 'text-iupa-green',
@@ -96,13 +97,6 @@ function StatCard({ label, value, icon }: { label: string; value: number; icon: 
       </div>
     </div>
   )
-}
-
-const statusColors: Record<string, string> = {
-  Published: 'bg-emerald-100 text-emerald-800',
-  Draft: 'bg-yellow-100 text-yellow-800',
-  Processing: 'bg-cyan-100 text-cyan-800',
-  Rejected: 'bg-red-100 text-red-800',
 }
 
 const statusLabel: Record<string, string> = {

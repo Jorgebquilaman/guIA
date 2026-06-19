@@ -5,7 +5,6 @@ import { useStats } from '../api/admin'
 import type { Document } from '../types'
 import DocumentCard from '../components/documents/DocumentCard'
 import Card from '../components/ui/Card'
-import Spinner from '../components/ui/Spinner'
 
 const statCardColors: Record<string, { circleBg: string; iconColor: string; borderColor: string }> = {
   green: { circleBg: 'bg-iupa-green-light', iconColor: 'text-iupa-green', borderColor: 'border-l-iupa-green' },

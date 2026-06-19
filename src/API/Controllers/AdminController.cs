@@ -253,7 +253,7 @@ public sealed class AdminController : BaseApiController
     public async Task<IActionResult> UpdateSiteConfig([FromBody] UpdateSiteConfigRequest request, CancellationToken ct)
     {
         var user = HttpContext.User.Identity?.Name;
-        var command = new UpdateSiteConfigCommand(request.ShowMessage, request.MessageText, user);
+        var command = new UpdateSiteConfigCommand(request.ShowMessage, request.MessageText, request.BaseUrl, user);
         var result = await Mediator.Send(command, ct);
         return Ok(result);
     }
@@ -325,5 +325,5 @@ public sealed record DeepSeekBalanceInfo(
 public sealed record CreateUserRequest(string Email, string Password, string FullName, UserRole Role);
 public sealed record UpdateUserRequest(string? FullName, UserRole? Role);
 public sealed record UpdateAiSettingsRequest(string ApiUrl, string ApiKey, string Model, int MaxTokens, string? SystemPrompt = null);
-public sealed record UpdateSiteConfigRequest(bool ShowMessage, string MessageText);
+public sealed record UpdateSiteConfigRequest(bool ShowMessage, string MessageText, string? BaseUrl = null);
 public sealed record UpdateSmtpConfigRequest(string Host, int Port, string Username, string Password, string FromEmail, string FromName, bool UseSsl);

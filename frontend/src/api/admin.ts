@@ -234,7 +234,7 @@ export function useSiteConfig() {
 export function useUpdateSiteConfig() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { showMessage: boolean; messageText: string }) => {
+    mutationFn: async (data: { showMessage: boolean; messageText: string; baseUrl?: string | null }) => {
       const res = await apiClient.put<ApiResponse<SiteConfig>>('/admin/site-config', data)
       return res.data.data
     },

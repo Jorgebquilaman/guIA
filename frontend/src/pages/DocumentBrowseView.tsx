@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore'
 import Spinner from '../components/ui/Spinner'
 import DublinCorePreview from '../components/documents/DublinCorePreview'
 import Button from '../components/ui/Button'
-import { isGoogleDriveUrl, getGoogleDriveEmbedUrl } from '../utils/gdrive'
+import { getGoogleDriveEmbedUrl } from '../utils/gdrive'
 
 const typeLabels: Record<string, string> = {
   Article: 'Artículo',
@@ -217,7 +217,7 @@ export default function DocumentBrowseView() {
             )}
             {hasSourceUrl && (
               <a
-                href={doc.sourceUrl}
+                href={doc.sourceUrl ?? ''}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-blue-700 transition-colors shadow-sm"
@@ -338,7 +338,7 @@ export default function DocumentBrowseView() {
                         <span className="truncate text-sm font-medium text-iupa-dark">{doc.sourceUrl}</span>
                       </div>
                       <a
-                        href={doc.sourceUrl}
+                        href={doc.sourceUrl ?? ''}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors"

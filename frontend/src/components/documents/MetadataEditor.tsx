@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import type { Document, DocumentType, DocumentAuthor, Department, MediaLink } from '../../types'
+import type { Document, DocumentType, DocumentAuthor, MediaLink } from '../../types'
 import { useUpdateMetadata, useAiSuggestions, useDocumentTypes, useDepartments } from '../../api/documents'
 import DynamicMetadataForm from './DynamicMetadataForm'
 import MediaLinkPlayer from '../ui/MediaLinkPlayer'
@@ -86,7 +86,7 @@ export default function MetadataEditor({
     setKeywords(aiSuggestions.suggestedKeywords)
 
   if (aiSuggestions.suggestedKeywordsEn && aiSuggestions.suggestedKeywordsEn.length > 0) {
-    setAiLog((prev) => [...prev, `  ✓ ${aiSuggestions.suggestedKeywordsEn.length} palabras clave en inglés detectadas`])
+    setAiLog((prev) => [...prev, `  ✓ ${aiSuggestions.suggestedKeywordsEn?.length ?? 0} palabras clave en inglés detectadas`])
   }
 
   if (aiSuggestions.suggestedAuthors && authors.length === 0)

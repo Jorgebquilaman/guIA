@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Document } from '../../types'
-import Badge from '../ui/Badge'
-import Button from '../ui/Button'
 import MediaLinkPlayer from '../ui/MediaLinkPlayer'
 
 interface DocumentDetailProps {

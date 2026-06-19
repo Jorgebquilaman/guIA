@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, Settings, Plus, Trash2, BookMarked, Copy } from 'lucide-react'
+import { ChevronDown, ChevronRight, Settings, Plus, Trash2, BookMarked } from 'lucide-react'
 import { useMetadataSchemas, useCreateMetadataField, useUpdateMetadataField, useDeleteMetadataField, useCreateMetadataSchema } from '../../api/metadata'
 import type { MetadataField } from '../../types'
 import Button from '../../components/ui/Button'
@@ -361,7 +361,7 @@ function FieldRow({ field, index }: { field: MetadataField; index: number }) {
           </div>
           <div>
             <label className="text-[11px] font-medium text-gray-500">Obligatoriness</label>
-            <select value={obligatoriness} onChange={(e) => setObligatoriness(e.target.value)}
+            <select value={obligatoriness} onChange={(e) => setObligatoriness(e.target.value as typeof obligatoriness)}
               className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-blue-400">
               <option value="Mandatory">Mandatory</option>
               <option value="ConditionallyMandatory">ConditionallyMandatory</option>

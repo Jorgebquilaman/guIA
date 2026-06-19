@@ -21,6 +21,7 @@ interface AuthState {
   isLoading: boolean
   setAuth: (user: User, accessToken: string, refreshToken: string) => void
   clearAuth: () => void
+  logout: () => void
   updateUser: (user: User) => void
   fetchUser: () => Promise<void>
 }

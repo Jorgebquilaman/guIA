@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace GuIA.Application.UseCases.SiteConfig;
 
 public record UpdateSiteConfigCommand(
-    bool ShowMessage, string MessageText, string? UpdatedBy = null
+    bool ShowMessage, string MessageText, string? BaseUrl = null, string? UpdatedBy = null
 ) : IRequest<SiteConfigDto>;
 
 public class UpdateSiteConfigCommandHandler : IRequestHandler<UpdateSiteConfigCommand, SiteConfigDto>
@@ -20,19 +20,20 @@ public class UpdateSiteConfigCommandHandler : IRequestHandler<UpdateSiteConfigCo
         var config = await _context.SiteConfigs.FirstOrDefaultAsync(ct);
         if (config == null)
         {
-            config = new Domain.Entities.SiteConfig(request.ShowMessage, request.MessageText);
+            config = new Domain.Entities.SiteConfig(request.ShowMessage, request.MessageText, request.BaseUrl);
             _context.SiteConfigs.Add(config);
         }
         else
         {
-            config.Update(request.ShowMessage, request.MessageText, request.UpdatedBy);
+            config.Update(request.ShowMessage, request.MessageText, request.BaseUrl, request.UpdatedBy);
         }
         await _context.SaveChangesAsync(ct);
         return new SiteConfigDto
         {
             Id = config.Id,
             ShowMessage = config.ShowMessage,
-            MessageText = config.MessageText
+            MessageText = config.MessageText,
+            BaseUrl = config.BaseUrl
         };
     }
 }

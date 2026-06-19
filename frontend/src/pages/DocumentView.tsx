@@ -1,5 +1,6 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { useDocument, useSearchDocuments } from '../api/documents'
 import { useAuthStore } from '../store/authStore'
 import type { Document } from '../types'
@@ -11,6 +12,7 @@ import Navbar from '../components/public/Navbar'
 import Footer from '../components/public/Footer'
 import { getGoogleDriveEmbedUrl } from '../utils/gdrive'
 import MediaLinkPlayer from '../components/ui/MediaLinkPlayer'
+import { generateCitation, type CitationFormat } from '../utils/citation'
 
 const typeLabels: Record<string, string> = {
   Article: 'Artículo',
@@ -141,85 +143,87 @@ function AuthorsSection({ authors }: { authors: Document['authors'] }) {
   )
 }
 
-function useDocumentMetaTags(doc: Document | null) {
-  useEffect(() => {
-    if (!doc) return
+function DocumentMetaTags({ doc }: { doc: Document }) {
+  const baseUrl = window.location.origin
+  const docUrl = `${baseUrl}/documentos/${doc.id}`
+  const pubDate = doc.publicationDate
+    ? new Date(doc.publicationDate).toISOString().split('T')[0]
+    : doc.publishedAt
+    ? new Date(doc.publishedAt).toISOString().split('T')[0]
+    : ''
 
-    const baseUrl = window.location.origin
-    const docUrl = `${baseUrl}/documentos/${doc.id}`
-    const pubDate = doc.publicationDate
-      ? new Date(doc.publicationDate).toISOString().split('T')[0]
-      : doc.publishedAt
-      ? new Date(doc.publishedAt).toISOString().split('T')[0]
-      : ''
+  const authorNames = doc.authors
+    .sort((a, b) => a.order - b.order)
+    .map((a) => {
+      const parts = a.name.trim().split(' ')
+      const lastName = parts.length > 1 ? parts[parts.length - 1] : ''
+      const firstNames = parts.length > 1 ? parts.slice(0, -1).join(' ') : parts[0]
+      return lastName ? `${lastName}, ${firstNames}` : a.name
+    })
 
-    const authorNames = doc.authors
-      .sort((a, b) => a.order - b.order)
-      .map((a) => {
-        const parts = a.name.trim().split(' ')
-        const lastName = parts.length > 1 ? parts[parts.length - 1] : ''
-        const firstNames = parts.length > 1 ? parts.slice(0, -1).join(' ') : parts[0]
-        return lastName ? `${lastName}, ${firstNames}` : a.name
-      })
+  const primary = doc.files[0]
+  const pdfUrl = primary && primary.originalFileName.endsWith('.pdf')
+    ? `${baseUrl}/api/documents/${doc.id}/download/${primary.id}`
+    : null
 
-    const tags: HTMLMetaElement[] = []
-    const addMeta = (name: string, content: string) => {
-      const meta = document.createElement('meta')
-      meta.name = name
-      meta.content = content
-      document.head.appendChild(meta)
-      tags.push(meta)
-    }
+  const abstractText = doc.abstractEs || doc.description || ''
+  const language = (doc.aiMetadata?.language || 'es').toLowerCase().substring(0, 2)
 
-    // Google Scholar
-    addMeta('citation_title', doc.title)
-    authorNames.forEach((n) => addMeta('citation_author', n))
-    if (pubDate) addMeta('citation_publication_date', pubDate)
-    if (doc.files[0]?.originalFileName.endsWith('.pdf')) {
-      addMeta('citation_pdf_url', docUrl)
-    }
-    addMeta('citation_institution', doc.institution || 'IUPA')
-    addMeta('citation_language', (doc.aiMetadata?.language || 'es').toLowerCase().substring(0, 2))
-    if (doc.keywords.length > 0) addMeta('citation_keywords', doc.keywords.join('; '))
+  const jsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'ScholarlyArticle',
+    headline: doc.title,
+    author: authorNames.map((name) => ({ '@type': 'Person', name })),
+    datePublished: pubDate || undefined,
+    publisher: { '@type': 'Organization', name: doc.institution || 'IUPA' },
+    inLanguage: language,
+    license: 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
+    isAccessibleForFree: true,
+  }
+  if (doc.description) jsonLd.description = doc.description
+  if (doc.keywords.length > 0) jsonLd.keywords = doc.keywords.join(', ')
+  if (pdfUrl) jsonLd.url = pdfUrl
 
-    // Dublin Core
-    addMeta('dc.title', doc.title)
-    authorNames.forEach((n) => addMeta('dc.creator', n))
-    if (doc.advisorName) addMeta('dc.contributor.advisor', doc.advisorName)
-    addMeta('dc.publisher', doc.institution || 'IUPA')
-    if (pubDate) addMeta('dc.date.issued', pubDate)
-    addMeta('dc.type', doc.type)
-    const abstractText = doc.abstractEs || doc.description || ''
-    if (abstractText) addMeta('dc.description.abstract', abstractText)
-    doc.keywords.forEach((kw) => addMeta('dc.subject', kw))
-    addMeta('dc.rights.license', doc.license || 'CC BY-NC-ND 4.0')
-    addMeta('dc.identifier.uri', docUrl)
+  return (
+    <Helmet>
+      <title>{doc.title} — GuIA</title>
+      <link rel="canonical" href={docUrl} />
 
-    // JSON-LD
-    const jsonObj: Record<string, unknown> = {
-      '@context': 'https://schema.org',
-      '@type': 'ScholarlyArticle',
-      headline: doc.title,
-      author: authorNames.map((name) => ({ '@type': 'Person', name })),
-      datePublished: pubDate,
-      publisher: { '@type': 'Organization', name: doc.institution || 'IUPA' },
-      inLanguage: (doc.aiMetadata?.language || 'es').toLowerCase().substring(0, 2),
-      license: 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
-      isAccessibleForFree: true,
-    }
-    if (doc.description) jsonObj.description = doc.description
-    if (doc.keywords.length > 0) jsonObj.keywords = doc.keywords.join(', ')
+      {/* Google Scholar Highwire */}
+      <meta name="citation_title" content={doc.title} />
+      {authorNames.map((name) => (
+        <meta key={name} name="citation_author" content={name} />
+      ))}
+      {pubDate && <meta name="citation_publication_date" content={pubDate} />}
+      {doc.type === 'Article' && <meta name="citation_journal_title" content={doc.collectionName || doc.institution || 'IUPA'} />}
+      {doc.type === 'Thesis' && doc.institution && <meta name="citation_dissertation_institution" content={doc.institution} />}
+      {pdfUrl && <meta name="citation_pdf_url" content={pdfUrl} />}
+      <meta name="citation_abstract_html_url" content={`${baseUrl}/api/crawl/documents/${doc.id}`} />
+      <meta name="citation_institution" content={doc.institution || 'IUPA'} />
+      <meta name="citation_language" content={language} />
+      {doc.keywords.length > 0 && <meta name="citation_keywords" content={doc.keywords.join('; ')} />}
 
-    const script = document.createElement('script')
-    script.type = 'application/ld+json'
-    script.textContent = JSON.stringify(jsonObj)
-    document.head.appendChild(script)
+      {/* Dublin Core */}
+      <meta name="dc.title" content={doc.title} />
+      {authorNames.map((name) => (
+        <meta key={`dc-${name}`} name="dc.creator" content={name} />
+      ))}
+      {doc.advisorName && <meta name="dc.contributor.advisor" content={doc.advisorName} />}
+      <meta name="dc.publisher" content={doc.institution || 'IUPA'} />
+      {pubDate && <meta name="dc.date.issued" content={pubDate} />}
+      <meta name="dc.type" content={doc.type} />
+      {abstractText && <meta name="dc.description.abstract" content={abstractText} />}
+      {doc.keywords.map((kw) => (
+        <meta key={`dc-subject-${kw}`} name="dc.subject" content={kw} />
+      ))}
+      <meta name="dc.rights.license" content={doc.license || 'CC BY-NC-ND 4.0'} />
+      <meta name="dc.identifier.uri" content={docUrl} />
+      <meta name="dc.format" content={primary?.mimeType || 'application/pdf'} />
 
-    return () => {
-      tags.forEach((t) => t.remove())
-      script.remove()
-    }
-  }, [doc])
+      {/* JSON-LD */}
+      <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+    </Helmet>
+  )
 }
 
 export default function DocumentView() {
@@ -250,9 +254,24 @@ export default function DocumentView() {
     [relatedDocs, doc?.id],
   )
 
-  useDocumentMetaTags(doc ?? null)
+  {doc && <DocumentMetaTags doc={doc} />}
 
   const [exporting, setExporting] = useState(false)
+  const [showCitation, setShowCitation] = useState(false)
+  const [citationFormat, setCitationFormat] = useState<CitationFormat>('apa')
+  const [copied, setCopied] = useState(false)
+  const citationRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showCitation) return
+    const handleClick = (e: MouseEvent) => {
+      if (citationRef.current && !citationRef.current.contains(e.target as Node)) {
+        setShowCitation(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showCitation])
 
   const exportPdf = useCallback(async () => {
     if (!doc) return
@@ -354,7 +373,6 @@ export default function DocumentView() {
         y += 2
 
         const colW = [35, 55, 100]
-        const headerY = y
         pdf.setFillColor('#f5f5f5')
         pdf.rect(margin, y - 3, colW.reduce((a, b) => a + b, 0), 6, 'F')
         pdf.setFontSize(8)
@@ -497,7 +515,7 @@ export default function DocumentView() {
             )}
             {hasSourceUrl && (
               <a
-                href={doc.sourceUrl}
+                href={doc.sourceUrl ?? ''}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-blue-700 transition-colors shadow-sm"
@@ -536,6 +554,66 @@ export default function DocumentView() {
               )}
               EXPORTAR PDF
             </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowCitation(!showCitation)}
+                className="flex items-center gap-1.5 rounded-lg border border-iupa-light px-3 py-1.5 text-xs font-medium text-iupa-medium hover:border-iupa-green hover:text-iupa-green transition-colors"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                CITAR
+              </button>
+              {showCitation && (
+                <div className="absolute right-0 top-full mt-2 z-50 w-96">
+                  <div className="overflow-hidden rounded-xl border border-iupa-light bg-white shadow-lg" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-1 border-b border-iupa-light bg-iupa-light/30 p-1">
+                      <button
+                        onClick={() => setCitationFormat('apa')}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${citationFormat === 'apa' ? 'bg-white text-iupa-dark shadow-sm' : 'text-iupa-medium hover:text-iupa-dark'}`}
+                      >
+                        APA
+                      </button>
+                      <button
+                        onClick={() => setCitationFormat('bibtex')}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${citationFormat === 'bibtex' ? 'bg-white text-iupa-dark shadow-sm' : 'text-iupa-medium hover:text-iupa-dark'}`}
+                      >
+                        BibTeX
+                      </button>
+                    </div>
+                    <div className="p-3">
+                      <pre className="max-h-48 overflow-y-auto whitespace-pre-wrap break-all rounded-lg bg-neutral-900 p-3 font-mono text-[11px] leading-relaxed text-gray-100">
+                        {doc && generateCitation(doc, citationFormat)}
+                      </pre>
+                    </div>
+                    <div className="flex justify-end border-t border-iupa-light px-3 py-2">
+                      <button
+                        onClick={() => {
+                          if (!doc) return
+                          const text = generateCitation(doc, citationFormat)
+                          navigator.clipboard.writeText(text).then(() => {
+                            setCopied(true)
+                            setTimeout(() => setCopied(false), 2000)
+                          })
+                        }}
+                        className="flex items-center gap-1.5 rounded-lg bg-iupa-green px-3 py-1.5 text-xs font-bold text-white hover:bg-iupa-green-secondary transition-colors"
+                      >
+                        {copied ? (
+                          <>COPIADO</>
+                        ) : (
+                          <>
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                            </svg>
+                            COPIAR
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -557,7 +635,7 @@ export default function DocumentView() {
               <div className="relative bg-gradient-to-br from-[#2D7A6B] to-iupa-green px-8 py-10 text-white">
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.1)_0%,transparent_60%)]" />
                 <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
-                <div className="relative">
+            <div className="relative" ref={citationRef}>
                   <div className="mb-4 flex flex-wrap items-center gap-2">
                     <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${status.class.includes('emerald') ? 'border-emerald-400/50 bg-emerald-500/20 text-white' : status.class.includes('amber') ? 'border-amber-400/50 bg-amber-500/20 text-white' : status.class.includes('sky') ? 'border-sky-400/50 bg-sky-500/20 text-white' : 'border-red-400/50 bg-red-500/20 text-white'}`}>
                       <span className={`h-1.5 w-1.5 rounded-full ${status.class.includes('emerald') ? 'bg-emerald-400' : status.class.includes('amber') ? 'bg-amber-400' : status.class.includes('sky') ? 'bg-sky-400' : 'bg-red-400'}`} />
@@ -647,7 +725,7 @@ export default function DocumentView() {
                         <span className="truncate text-sm font-medium text-iupa-dark">{doc.sourceUrl}</span>
                       </div>
                       <a
-                        href={doc.sourceUrl}
+                        href={doc.sourceUrl ?? ''}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors"

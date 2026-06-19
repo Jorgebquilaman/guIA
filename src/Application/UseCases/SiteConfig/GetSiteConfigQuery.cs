@@ -21,7 +21,8 @@ public class GetSiteConfigQueryHandler : IRequestHandler<GetSiteConfigQuery, Sit
         {
             Id = config.Id,
             ShowMessage = config.ShowMessage,
-            MessageText = config.MessageText
+            MessageText = config.MessageText,
+            BaseUrl = config.BaseUrl
         };
     }
 }

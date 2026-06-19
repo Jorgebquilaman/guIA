@@ -23,7 +23,7 @@ const roleAvatarColors: Record<string, string> = {
 
 export default function UsersAdmin() {
   const { data: users, isLoading, isError, error } = useUsers()
-  const { data: pendingUsers, isLoading: pendingLoading } = usePendingUsers()
+  const { data: pendingUsers } = usePendingUsers()
   const createMutation = useCreateUser()
   const updateMutation = useUpdateUser()
   const deactivateMutation = useDeactivateUser()

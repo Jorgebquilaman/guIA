@@ -22,7 +22,8 @@ public sealed class SiteConfigController : BaseApiController
         return Ok(new
         {
             showMessage = config.ShowMessage,
-            messageText = config.MessageText
+            messageText = config.MessageText,
+            baseUrl = config.BaseUrl
         });
     }
 }

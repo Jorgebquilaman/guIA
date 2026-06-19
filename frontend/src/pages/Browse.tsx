@@ -68,7 +68,7 @@ export default function Browse() {
   const [page, setPage] = useState(1)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const { data: collections, isLoading: collectionsLoading } = useCollections()
+  const { isLoading: collectionsLoading } = useCollections()
   const { data: selectedCollection, isLoading: collectionLoading } = useCollection(selectedCollectionId ?? undefined)
 
   const searchParams = useMemo(() => ({

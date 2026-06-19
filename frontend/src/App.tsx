@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
 import AppLayout from './components/layout/AppLayout'
 import ProtectedRoute from './components/layout/ProtectedRoute'
 import AdminGuard from './components/layout/AdminGuard'
@@ -32,40 +33,42 @@ import MetadataSchemasAdmin from './pages/admin/MetadataSchemasAdmin'
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<PublicHome />} />
-      <Route path="/buscar" element={<PublicSearchResults />} />
-      <Route path="/acerca-del-repositorio" element={<AcercaDelRepositorio />} />
-      <Route path="/relaciones" element={<Relaciones />} />
-      <Route path="/estadisticas" element={<Estadisticas />} />
-      <Route path="/descargas" element={<DescargasStats />} />
-      <Route path="/autor/:name" element={<AuthorStats />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/olvide-mi-contrasena" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/solicitar-acceso" element={<RequestAccess />} />
-      <Route path="/documentos/:id" element={<DocumentView />} />
-      <Route element={<ProtectedRoute />}>
-        <Route element={<AppLayout />}>
-          <Route path="/app" element={<Home />} />
-          <Route path="/app/search" element={<Search />} />
-          <Route path="/app/browse" element={<Browse />} />
-          <Route path="/app/browse/:id" element={<DocumentBrowseView />} />
-          <Route path="/app/documents/:id" element={<DocumentView />} />
-          <Route path="/app/upload" element={<Upload />} />
-          <Route path="/app/admin" element={<AdminGuard><Dashboard /></AdminGuard>} />
-          <Route path="/app/admin/documents" element={<AdminGuard><DocumentsAdmin /></AdminGuard>} />
-          <Route path="/app/admin/collections" element={<AdminGuard><CollectionsAdmin /></AdminGuard>} />
-          <Route path="/app/admin/users" element={<AdminGuard><UsersAdmin /></AdminGuard>} />
-          <Route path="/app/admin/ai-settings" element={<AdminGuard><AiSettings /></AdminGuard>} />
-          <Route path="/app/admin/site-config" element={<AdminGuard><SiteConfig /></AdminGuard>} />
-          <Route path="/app/admin/smtp-config" element={<AdminGuard><SmtpConfig /></AdminGuard>} />
-          <Route path="/app/admin/document-types" element={<AdminGuard><DocumentTypes /></AdminGuard>} />
-          <Route path="/app/admin/departments" element={<AdminGuard><Departments /></AdminGuard>} />
-          <Route path="/app/admin/metadata-schemas" element={<AdminGuard><MetadataSchemasAdmin /></AdminGuard>} />
+    <HelmetProvider>
+      <Routes>
+        <Route path="/" element={<PublicHome />} />
+        <Route path="/buscar" element={<PublicSearchResults />} />
+        <Route path="/acerca-del-repositorio" element={<AcercaDelRepositorio />} />
+        <Route path="/relaciones" element={<Relaciones />} />
+        <Route path="/estadisticas" element={<Estadisticas />} />
+        <Route path="/descargas" element={<DescargasStats />} />
+        <Route path="/autor/:name" element={<AuthorStats />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/olvide-mi-contrasena" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/solicitar-acceso" element={<RequestAccess />} />
+        <Route path="/documentos/:id" element={<DocumentView />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            <Route path="/app" element={<Home />} />
+            <Route path="/app/search" element={<Search />} />
+            <Route path="/app/browse" element={<Browse />} />
+            <Route path="/app/browse/:id" element={<DocumentBrowseView />} />
+            <Route path="/app/documents/:id" element={<DocumentView />} />
+            <Route path="/app/upload" element={<Upload />} />
+            <Route path="/app/admin" element={<AdminGuard><Dashboard /></AdminGuard>} />
+            <Route path="/app/admin/documents" element={<AdminGuard><DocumentsAdmin /></AdminGuard>} />
+            <Route path="/app/admin/collections" element={<AdminGuard><CollectionsAdmin /></AdminGuard>} />
+            <Route path="/app/admin/users" element={<AdminGuard><UsersAdmin /></AdminGuard>} />
+            <Route path="/app/admin/ai-settings" element={<AdminGuard><AiSettings /></AdminGuard>} />
+            <Route path="/app/admin/site-config" element={<AdminGuard><SiteConfig /></AdminGuard>} />
+            <Route path="/app/admin/smtp-config" element={<AdminGuard><SmtpConfig /></AdminGuard>} />
+            <Route path="/app/admin/document-types" element={<AdminGuard><DocumentTypes /></AdminGuard>} />
+            <Route path="/app/admin/departments" element={<AdminGuard><Departments /></AdminGuard>} />
+            <Route path="/app/admin/metadata-schemas" element={<AdminGuard><MetadataSchemasAdmin /></AdminGuard>} />
+          </Route>
         </Route>
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </HelmetProvider>
   )
 }

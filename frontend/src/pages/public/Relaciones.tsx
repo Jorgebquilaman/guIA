@@ -68,7 +68,7 @@ export default function Relaciones() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const { data, isLoading, error, refetch } = useGraph(
+  const { data, isLoading, error } = useGraph(
     searchMode === 'tag' && submitted ? query : undefined,
     searchMode === 'author' && submitted ? query : undefined
   )

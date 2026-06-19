@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Plus, X, HelpCircle, AlertCircle, Check } from 'lucide-react'
 import { useMetadataSchemaByType, useDocumentMetadata, useSaveDocumentMetadata } from '../../api/metadata'
-import type { MetadataField, MetadataFieldOption, DocumentMetadataValue } from '../../types'
+import type { MetadataField } from '../../types'
 
 interface DynamicMetadataFormProps {
   documentType: string
@@ -10,22 +10,6 @@ interface DynamicMetadataFormProps {
   aiMetadataValues?: Record<string, string>
   aiVersion?: number
   onLog?: (msg: string) => void
-}
-
-const OBLIGATORINESS_LABELS: Record<string, string> = {
-  Mandatory: 'Obligatorio',
-  ConditionallyMandatory: 'Obligatorio si es aplicable',
-  Recommended: 'Recomendado',
-  Optional: 'Opcional',
-  NotApplicable: 'Automático',
-}
-
-function getDefaultValue(field: MetadataField): string {
-  if (field.fieldType === 'Select') {
-    const defaultOption = field.options.find((o) => o.isDefault)
-    return defaultOption?.value ?? ''
-  }
-  return ''
 }
 
 function stripAccents(s: string): string {

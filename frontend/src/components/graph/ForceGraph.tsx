@@ -35,20 +35,20 @@ export default function ForceGraph({ data, width = 900, height = 600, onTagClick
   const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null)
   const [fullscreen, setFullscreen] = useState(false)
 
-  const zoomBehaviorRef = useRef<ReturnType<typeof d3Zoom> | null>(null)
+  const zoomBehaviorRef = useRef<any>(null)
 
   function applyZoom(k: number) {
     const svg = select(svgRef.current!)
     const behavior = zoomBehaviorRef.current
     if (!behavior) return
-    svg.transition().duration(300).call(behavior.scaleBy, k)
+    ;(svg as any).transition().duration(300).call(behavior.scaleBy, k)
   }
 
   function resetZoom() {
     const svg = select(svgRef.current!)
     const behavior = zoomBehaviorRef.current
     if (!behavior) return
-    svg.transition().duration(400).call(behavior.transform, zoomIdentity)
+    ;(svg as any).transition().duration(400).call(behavior.transform, zoomIdentity)
   }
 
   const toggleFullscreen = useCallback(async () => {
@@ -97,7 +97,7 @@ export default function ForceGraph({ data, width = 900, height = 600, onTagClick
       .force('link', forceLink<SimNode, SimEdge>(edges).distance(80).strength(0.3))
       .force('charge', forceManyBody().strength(-200))
       .force('center', forceCenter(w / 2, h / 2))
-      .force('collide', forceCollide().radius((d) => NODE_RADIUS[d.type] + 8))
+      .force('collide', forceCollide().radius((d: any) => NODE_RADIUS[d.type as keyof typeof NODE_RADIUS] + 8))
       .alphaDecay(0.02)
 
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
