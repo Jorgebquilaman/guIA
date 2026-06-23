@@ -168,6 +168,7 @@ export interface SiteConfig {
   showMessage: boolean
   messageText: string
   baseUrl?: string
+  maxFileSizeBytes?: number | null
 }
 
 export interface SmtpConfig {

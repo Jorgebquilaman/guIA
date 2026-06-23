@@ -1,4 +1,6 @@
+using GuIA.Application.Common;
 using GuIA.Application.Ports;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SkiaSharp;
 
@@ -7,17 +9,24 @@ namespace GuIA.Infrastructure.Adapters;
 public class LocalFileStorageAdapter : IFileStoragePort
 {
     private readonly FileStorageSettings _settings;
+    private readonly IAppDbContext _dbContext;
 
-    public LocalFileStorageAdapter(IOptions<FileStorageSettings> settings)
+    public LocalFileStorageAdapter(IOptions<FileStorageSettings> settings, IAppDbContext dbContext)
     {
         _settings = settings.Value;
+        _dbContext = dbContext;
         Directory.CreateDirectory(_settings.BasePath);
     }
 
     public async Task<StoredFileInfo> SaveAsync(Stream content, string fileName, string mimeType, CancellationToken ct = default)
     {
-        if (content.Length > _settings.MaxFileSizeBytes)
-            throw new InvalidOperationException($"File exceeds maximum allowed size of {_settings.MaxFileSizeBytes} bytes.");
+        long maxSize = _settings.MaxFileSizeBytes;
+        var siteConfig = await _dbContext.SiteConfigs.FirstOrDefaultAsync(ct);
+        if (siteConfig?.MaxFileSizeBytes > 0)
+            maxSize = siteConfig.MaxFileSizeBytes.Value;
+
+        if (content.Length > maxSize)
+            throw new InvalidOperationException($"File exceeds maximum allowed size of {maxSize} bytes.");
 
         if (_settings.AllowedMimeTypes.Count > 0 && !_settings.AllowedMimeTypes.Contains(mimeType))
             throw new InvalidOperationException($"MIME type '{mimeType}' is not allowed.");

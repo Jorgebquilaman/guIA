@@ -20,6 +20,9 @@ public class SiteConfigConfiguration : IEntityTypeConfiguration<SiteConfig>
         builder.Property(c => c.ShowMessage)
             .HasColumnName("show_message");
 
+        builder.Property(c => c.MaxFileSizeBytes)
+            .HasColumnName("max_file_size_bytes");
+
         builder.Property(c => c.UpdatedBy)
             .HasMaxLength(200)
             .HasColumnName("updated_by");

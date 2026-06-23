@@ -6,4 +6,5 @@ public class SiteConfigDto
     public bool ShowMessage { get; set; }
     public string MessageText { get; set; } = string.Empty;
     public string? BaseUrl { get; set; }
+    public long? MaxFileSizeBytes { get; set; }
 }

@@ -3,6 +3,7 @@ import type { Document, DocumentType, DocumentAuthor, MediaLink } from '../../ty
 import { useUpdateMetadata, useAiSuggestions, useDocumentTypes, useDepartments } from '../../api/documents'
 import DynamicMetadataForm from './DynamicMetadataForm'
 import MediaLinkPlayer from '../ui/MediaLinkPlayer'
+import { generateId } from '../../utils/id'
 
 interface MetadataEditorProps {
   document: Document
@@ -92,7 +93,7 @@ export default function MetadataEditor({
   if (aiSuggestions.suggestedAuthors && authors.length === 0)
       setAuthors(
         aiSuggestions.suggestedAuthors.map((a, i) => ({
-          id: crypto.randomUUID(),
+          id: generateId(),
           name: a.name,
           email: a.email ?? null,
           orcid: a.orcid ?? null,
@@ -158,7 +159,7 @@ export default function MetadataEditor({
     setAuthors([
       ...authors,
       {
-        id: crypto.randomUUID(),
+        id: generateId(),
         name: newAuthorName.trim(),
         email: null,
         orcid: null,

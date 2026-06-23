@@ -13,19 +13,26 @@ export default function SiteConfig() {
   const [showMessage, setShowMessage] = useState(true)
   const [messageText, setMessageText] = useState('')
   const [baseUrl, setBaseUrl] = useState('')
+  const [maxFileSizeMb, setMaxFileSizeMb] = useState<number>(50)
 
   useEffect(() => {
     if (config) {
       setShowMessage(config.showMessage)
       setMessageText(config.messageText)
       setBaseUrl(config.baseUrl || '')
+      setMaxFileSizeMb(config.maxFileSizeBytes ? Math.round(config.maxFileSizeBytes / (1024 * 1024)) : 50)
     }
   }, [config])
 
   const handleSave = async () => {
     if (showMessage && !messageText.trim()) return
     try {
-      await updateMutation.mutateAsync({ showMessage, messageText: messageText.trim(), baseUrl: baseUrl.trim() || null })
+      await updateMutation.mutateAsync({
+        showMessage,
+        messageText: messageText.trim(),
+        baseUrl: baseUrl.trim() || null,
+        maxFileSizeBytes: maxFileSizeMb * 1024 * 1024,
+      })
       addToast('success', 'Configuración del sitio guardada')
     } catch {
       addToast('error', 'Error al guardar la configuración')
@@ -81,7 +88,7 @@ export default function SiteConfig() {
             />
           </div>
 
-          <div>
+            <div>
             <label className="mb-1 block text-sm font-medium text-iupa-dark">
               URL base del sitio (canonical)
             </label>
@@ -97,6 +104,23 @@ export default function SiteConfig() {
             </p>
           </div>
 
+          <div>
+            <label className="mb-1 block text-sm font-medium text-iupa-dark">
+              Tamaño máximo de archivo (MB)
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={1024}
+              value={maxFileSizeMb}
+              onChange={(e) => setMaxFileSizeMb(Math.max(1, parseInt(e.target.value) || 1))}
+              className="w-full rounded-lg border border-iupa-light px-3 py-2 text-sm focus:border-iupa-green focus:outline-none"
+            />
+            <p className="mt-1 text-xs text-iupa-medium">
+              Límite de tamaño para archivos subidos al repositorio. Valor por defecto: 50 MB.
+            </p>
+          </div>
+
           <div className="flex items-center gap-3 pt-2">
             {showMessage && messageText.trim() && (
               <div className="flex-1 rounded-lg border border-iupa-light bg-iupa-light p-3 text-xs text-iupa-medium">
@@ -108,7 +132,7 @@ export default function SiteConfig() {
 
           <div className="flex justify-end gap-3 pt-2">
             {config && (
-              <Button variant="ghost" onClick={() => { setShowMessage(config.showMessage); setMessageText(config.messageText); setBaseUrl(config.baseUrl || '') }}>
+              <Button variant="ghost" onClick={() => { setShowMessage(config.showMessage); setMessageText(config.messageText); setBaseUrl(config.baseUrl || ''); setMaxFileSizeMb(config.maxFileSizeBytes ? Math.round(config.maxFileSizeBytes / (1024 * 1024)) : 50) }}>
                 Restaurar
               </Button>
             )}

@@ -22,7 +22,8 @@ public class GetSiteConfigQueryHandler : IRequestHandler<GetSiteConfigQuery, Sit
             Id = config.Id,
             ShowMessage = config.ShowMessage,
             MessageText = config.MessageText,
-            BaseUrl = config.BaseUrl
+            BaseUrl = config.BaseUrl,
+            MaxFileSizeBytes = config.MaxFileSizeBytes
         };
     }
 }

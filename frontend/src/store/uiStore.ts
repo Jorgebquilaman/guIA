@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { generateId } from '../utils/id'
 
 interface Toast {
   id: string
@@ -19,7 +20,7 @@ export const useUiStore = create<UiState>((set) => ({
   toasts: [],
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   addToast: (type, message) => {
-    const id = crypto.randomUUID()
+    const id = generateId()
     set((s) => ({ toasts: [...s.toasts, { id, type, message }] }))
     setTimeout(() => {
       set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }))
