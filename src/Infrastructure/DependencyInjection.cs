@@ -6,6 +6,7 @@ using GuIA.Infrastructure.Services;
 using GuIA.Infrastructure.Persistence;
 using GuIA.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,7 +22,8 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString, npgsql =>
-                npgsql.EnableRetryOnFailure(3)));
+                npgsql.EnableRetryOnFailure(3))
+            .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
         services.AddScoped<IAppDbContext>(sp =>
             sp.GetRequiredService<AppDbContext>());

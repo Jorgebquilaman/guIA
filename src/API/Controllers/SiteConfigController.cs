@@ -23,7 +23,8 @@ public sealed class SiteConfigController : BaseApiController
         {
             showMessage = config.ShowMessage,
             messageText = config.MessageText,
-            baseUrl = config.BaseUrl
+            baseUrl = config.BaseUrl,
+            maxFileSizeBytes = config.MaxFileSizeBytes
         });
     }
 }
