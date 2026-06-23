@@ -110,7 +110,7 @@ export default function Estadisticas() {
           <StatCard icon={Search} label="Búsquedas" value={stats.totals.searches} color="text-cyan-600" bg="bg-cyan-50" />
           <StatCard icon={UserCheck} label="Visitas" value={stats.totals.visits} sub={`${stats.totals.uniqueVisitors} visitantes únicos`} color="text-pink-600" bg="bg-pink-50" />
           <StatCard icon={BookOpen} label="Colecciones" value={stats.totals.collections} color="text-rose-600" bg="bg-rose-50" />
-          <StatCard icon={Layers} label="Carreras" value={stats.totals.degreePrograms} color="text-indigo-600" bg="bg-indigo-50" />
+          <StatCard icon={Layers} label="Secciones Temáticas" value={stats.totals.degreePrograms} color="text-indigo-600" bg="bg-indigo-50" />
           <StatCard icon={Award} label="Usuarios" value={stats.totals.users} color="text-teal-600" bg="bg-teal-50" />
           <StatCard icon={Sparkles} label="Con IA" value={stats.totals.documentsWithAi} sub={stats.totals.aiFailed > 0 ? `${stats.totals.aiFailed} fallaron` : undefined} color="text-amber-600" bg="bg-amber-50" />
           <StatCard icon={Hash} label="Palabras clave" value={stats.topKeywords.length} sub="únicas" color="text-sky-600" bg="bg-sky-50" />
@@ -212,7 +212,7 @@ export default function Estadisticas() {
             <div className="rounded-xl bg-white p-5 shadow-sm">
               <div className="mb-4 flex items-center gap-2">
                 <Layers className="h-5 w-5 text-iupa-green" />
-                <h2 className="text-sm font-bold text-iupa-dark">Documentos por departamento</h2>
+                <h2 className="text-sm font-bold text-iupa-dark">Documentos por red de conocimiento</h2>
               </div>
               <div className="space-y-2">
                 {(() => {
@@ -364,7 +364,7 @@ export default function Estadisticas() {
           <div className="mt-6 rounded-xl bg-white p-5 shadow-sm">
             <div className="mb-4 flex items-center gap-2">
               <Award className="h-5 w-5 text-iupa-green" />
-              <h2 className="text-sm font-bold text-iupa-dark">Documentos por carrera</h2>
+              <h2 className="text-sm font-bold text-iupa-dark">Documentos por sección temática</h2>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {(() => {

@@ -509,7 +509,7 @@ export default function MetadataEditor({
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-iupa-dark">
-              Departamento <span className="text-xs text-iupa-medium font-normal">(dc.coverage.spatial)</span>
+              Red de Conocimiento <span className="text-xs text-iupa-medium font-normal">(dc.coverage.spatial)</span>
             </label>
             <select
               value={department}
@@ -519,7 +519,7 @@ export default function MetadataEditor({
               }}
               className="w-full rounded-lg border border-iupa-light bg-white px-3.5 py-2.5 text-sm text-iupa-dark transition-colors focus:border-iupa-green focus:outline-none focus:ring-1 focus:ring-iupa-green/20"
             >
-              <option value="">Seleccionar departamento</option>
+              <option value="">Seleccionar red de conocimiento</option>
               {(departments ?? []).map((d) => (
                 <option key={d.id} value={d.name}>{d.name}</option>
               ))}
@@ -527,14 +527,14 @@ export default function MetadataEditor({
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-iupa-dark">
-              Carrera <span className="text-xs text-iupa-medium font-normal">(dc.relation.ispartofseries)</span>
+              Sección Temática <span className="text-xs text-iupa-medium font-normal">(dc.relation.ispartofseries)</span>
             </label>
             <select
               value={degreeProgram}
               onChange={(e) => setDegreeProgram(e.target.value)}
               className="w-full rounded-lg border border-iupa-light bg-white px-3.5 py-2.5 text-sm text-iupa-dark transition-colors focus:border-iupa-green focus:outline-none focus:ring-1 focus:ring-iupa-green/20"
             >
-              <option value="">Seleccionar carrera</option>
+              <option value="">Seleccionar sección temática</option>
               {(departments ?? [])
                 .filter((d) => d.name === department)
                 .flatMap((d) => d.degreePrograms)

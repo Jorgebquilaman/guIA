@@ -18,7 +18,7 @@
     "descripcion": "Repositorio institucional del IUPA que reúne, preserva y difunde la producción académica, artística y científica de nuestra comunidad.",
     "cta": "CONOCÉ MÁS SOBRE EL REPOSITORIO",
     "trabajos": "Trabajos disponibles",
-    "carreras": "Carreras de grado",
+    "carreras": "Secciones Temáticas de grado",
     "autores": "Autores",
     "descargas": "Descargas totales"
   },
@@ -30,9 +30,9 @@
     "verDescargar": "VER / DESCARGAR"
   },
   "departments": {
-    "titulo": "Explorá por departamento",
+    "titulo": "Explorá por red de conocimiento",
     "verTrabajos": "Ver trabajos",
-    "carreras": "Carreras"
+    "carreras": "Secciones Temáticas"
   },
   "footer": {
     "copyright": "© {year} Instituto Universitario Patagónico de las Artes. Todos los derechos reservados.",
@@ -42,7 +42,7 @@
     "buscadorAvanzado": "Buscador Avanzado",
     "todosTipos": "Todos los tipos",
     "todosAutores": "Todos los autores",
-    "todasCarreras": "Todas las carreras",
+    "todasCarreras": "Todas las secciones temáticas",
     "todosAnios": "Todos los años",
     "buscar": "BUSCAR",
     "nubeEtiquetas": "Nube de Etiquetas",
@@ -55,12 +55,12 @@
     "filtros": "Filtros",
     "tipo": "Tipo",
     "todos": "Todos",
-    "departamento": "Departamento",
-    "todosDepartamentos": "Todos los departamentos",
+    "departamento": "Red de Conocimiento",
+    "todosDepartamentos": "Todas las redes de conocimiento",
     "autor": "Autor",
     "todosAutores": "Todos los autores",
-    "carrera": "Carrera",
-    "todasCarreras": "Todas las carreras",
+    "carrera": "Sección Temática",
+    "todasCarreras": "Todas las secciones temáticas",
     "anio": "Año",
     "todosAnios": "Todos los años",
     "buscar": "BUSCAR",
@@ -173,7 +173,7 @@
     "visitas": "Visitas",
     "visitantesUnicos": "{n} visitantes únicos",
     "colecciones": "Colecciones",
-    "carreras": "Carreras",
+    "carreras": "Secciones Temáticas",
     "usuarios": "Usuarios",
     "conIa": "Con IA",
     "fallaron": "{n} fallaron",
@@ -185,13 +185,13 @@
     "porAnio": "Publicaciones por año",
     "autoresProlificos": "Autores más prolíficos",
     "sinDatos": "Sin datos",
-    "porDepartamento": "Documentos por departamento",
+    "porDepartamento": "Documentos por red de conocimiento",
     "keywordsMasUsadas": "Palabras clave más usadas",
     "porColeccion": "Documentos por colección",
     "busquedasFrecuentes": "Búsquedas más frecuentes",
     "vistasPorPais": "Vistas por país",
     "descargasPorPais": "Descargas por país",
-    "porCarrera": "Documentos por carrera"
+    "porCarrera": "Documentos por sección temática"
   },
   "descargasStats": {
     "titulo": "Estadísticas de Descargas",

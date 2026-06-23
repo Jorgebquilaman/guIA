@@ -65,7 +65,7 @@ export default function DepartmentSection() {
                   {dept.name}
                 </h3>
                 <p className="mt-1 text-[11px] leading-tight text-white/80">
-                  {dept.degreePrograms.length} carrera{dept.degreePrograms.length !== 1 ? 's' : ''}
+                  {dept.degreePrograms.length} sección temática{dept.degreePrograms.length !== 1 ? 's' : ''}
                 </p>
                 <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-white/90 transition-colors group-hover:text-white">
                   {t('departments.verTrabajos')}
@@ -120,7 +120,7 @@ export default function DepartmentSection() {
                           {dept.name}
                         </h3>
                         <p className="text-xs text-white/70">
-                          {dept.degreePrograms.length} carrera{dept.degreePrograms.length !== 1 ? 's' : ''}
+                          {dept.degreePrograms.length} sección temática{dept.degreePrograms.length !== 1 ? 's' : ''}
                         </p>
                       </div>
                     </div>

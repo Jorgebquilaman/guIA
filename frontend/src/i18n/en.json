@@ -18,7 +18,7 @@
     "descripcion": "Institutional repository of IUPA that gathers, preserves and disseminates the academic, artistic and scientific production of our community.",
     "cta": "LEARN MORE ABOUT THE REPOSITORY",
     "trabajos": "Available works",
-    "carreras": "Degree programs",
+    "carreras": "Thematic Sections",
     "autores": "Authors",
     "descargas": "Total downloads"
   },
@@ -30,9 +30,9 @@
     "verDescargar": "VIEW / DOWNLOAD"
   },
   "departments": {
-    "titulo": "Browse by department",
+    "titulo": "Browse by knowledge network",
     "verTrabajos": "View works",
-    "carreras": "Programs"
+    "carreras": "Thematic Sections"
   },
   "footer": {
     "copyright": "© {year} Instituto Universitario Patagónico de las Artes. All rights reserved.",
@@ -42,7 +42,7 @@
     "buscadorAvanzado": "Advanced Search",
     "todosTipos": "All types",
     "todosAutores": "All authors",
-    "todasCarreras": "All programs",
+    "todasCarreras": "All Thematic Sections",
     "todosAnios": "All years",
     "buscar": "SEARCH",
     "nubeEtiquetas": "Tag Cloud",
@@ -55,12 +55,12 @@
     "filtros": "Filters",
     "tipo": "Type",
     "todos": "All",
-    "departamento": "Department",
-    "todosDepartamentos": "All departments",
+    "departamento": "Knowledge Network",
+    "todosDepartamentos": "All Knowledge Networks",
     "autor": "Author",
     "todosAutores": "All authors",
-    "carrera": "Program",
-    "todasCarreras": "All programs",
+    "carrera": "Thematic Section",
+    "todasCarreras": "All Thematic Sections",
     "anio": "Year",
     "todosAnios": "All years",
     "buscar": "SEARCH",
@@ -173,7 +173,7 @@
     "visitas": "Visits",
     "visitantesUnicos": "{n} unique visitors",
     "colecciones": "Collections",
-    "carreras": "Programs",
+    "carreras": "Thematic Sections",
     "usuarios": "Users",
     "conIa": "With AI",
     "fallaron": "{n} failed",
@@ -185,13 +185,13 @@
     "porAnio": "Publications by year",
     "autoresProlificos": "Most prolific authors",
     "sinDatos": "No data",
-    "porDepartamento": "Documents by department",
+    "porDepartamento": "Documents by knowledge network",
     "keywordsMasUsadas": "Most used keywords",
     "porColeccion": "Documents by collection",
     "busquedasFrecuentes": "Most frequent searches",
     "vistasPorPais": "Views by country",
     "descargasPorPais": "Downloads by country",
-    "porCarrera": "Documents by program"
+    "porCarrera": "Documents by Thematic Section"
   },
   "descargasStats": {
     "titulo": "Download Statistics",

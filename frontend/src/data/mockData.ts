@@ -1,6 +1,6 @@
 export const heroStats = [
   { value: '482', label: 'Trabajos disponibles', icon: 'FileText' },
-  { value: '12', label: 'Carreras de grado', icon: 'GraduationCap' },
+  { value: '12', label: 'Secciones Temáticas de grado', icon: 'GraduationCap' },
   { value: '356', label: 'Autores', icon: 'Users' },
   { value: '24.751', label: 'Descargas totales', icon: 'Download' },
 ]
@@ -89,7 +89,7 @@ export const tags = [
 
 export const newsItem = {
   title: 'Nueva convocatoria para publicaciones 2026',
-  text: 'El IUPA abre la convocatoria para la presentación de trabajos académicos y artísticos correspondientes al ciclo 2026. Podrán participar docentes, estudiantes y egresados de todas las carreras.',
+  text: 'El IUPA abre la convocatoria para la presentación de trabajos académicos y artísticos correspondientes al ciclo 2026. Podrán participar docentes, estudiantes y egresados de todas las secciones temáticas.',
 }
 
 export const menuItems = [
@@ -118,7 +118,7 @@ export const authorOptions = [
 ]
 
 export const careerOptions = [
-  { value: '', label: 'Carrera' },
+  { value: '', label: 'Sección Temática' },
   { value: 'visuales', label: 'Artes Visuales' },
   { value: 'danza', label: 'Danza' },
   { value: 'teatro', label: 'Teatro' },
