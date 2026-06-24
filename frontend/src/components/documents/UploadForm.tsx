@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUploadDocument, useUploadLink } from '../../api/documents'
 import { useCollections } from '../../api/collections'
+import { useSiteConfig } from '../../api/admin'
 import { extractGoogleDriveId, getGoogleDriveEmbedUrl } from '../../utils/gdrive'
 import type { Collection } from '../../types'
 
@@ -187,6 +188,8 @@ export default function UploadForm() {
 
   const { data: collections } = useCollections()
   const flatCollections = useMemo(() => collections ? flattenCollections(collections) : [], [collections])
+  const { data: siteConfig } = useSiteConfig()
+  const maxFileSizeMb = siteConfig?.maxFileSizeBytes ? Math.round(siteConfig.maxFileSizeBytes / (1024 * 1024)) : 50
   const uploadMutation = useUploadDocument()
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -309,6 +312,9 @@ export default function UploadForm() {
             </svg>
             <p className="text-sm text-iupa-medium">
               Arrastrá tus archivos acá, o hacé clic para seleccionar
+            </p>
+            <p className="mt-1 text-xs text-iupa-medium">
+              Tamaño máximo por archivo: {maxFileSizeMb} MB
             </p>
             <input
               ref={inputRef}
