@@ -57,14 +57,14 @@ export default function DepartmentSection() {
                   backgroundImage: `url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='2' r='1' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='12' cy='6' r='0.8' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='22' cy='2' r='1.2' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='6' cy='14' r='1' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='18' cy='16' r='0.8' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='28' cy='12' r='1' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='4' cy='24' r='0.8' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='14' cy='26' r='1' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='24' cy='22' r='0.8' fill='%23ffffff' fill-opacity='0.07'/%3E%3C/svg%3E")`,
                 }}
               >
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 shadow-inner">
+                <div className="mb-3 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/20 shadow-inner">
                   {Icon && <Icon className="h-6 w-6" />}
                 </div>
                 <div className="mb-3 w-8 border-b border-white/30" />
-                <h3 className="text-sm font-bold leading-tight" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                <h3 className="w-full text-center text-sm font-bold leading-tight" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                   {dept.name}
                 </h3>
-                <p className="mt-1 text-[11px] leading-tight text-white/80">
+                <p className="mt-1 w-full text-center text-[11px] leading-tight text-white/80">
                   {dept.degreePrograms.length} sección temática{dept.degreePrograms.length !== 1 ? 's' : ''}
                 </p>
                 <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-white/90 transition-colors group-hover:text-white">
