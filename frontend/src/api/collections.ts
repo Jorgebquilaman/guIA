@@ -2,12 +2,22 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import client from './client'
 import type { Collection } from '../types'
 
+function sortTree(collections: Collection[]): Collection[] {
+  return collections
+    .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+    .map((c) => ({
+      ...c,
+      subCollections: c.subCollections ? sortTree(c.subCollections) : [],
+    }))
+}
+
 export function useCollections() {
   return useQuery<Collection[]>({
     queryKey: ['collections'],
     queryFn: async () => {
       const { data } = await client.get('/collections')
-      return data.data ?? data
+      const items: Collection[] = data.data ?? data
+      return sortTree(items)
     },
   })
 }

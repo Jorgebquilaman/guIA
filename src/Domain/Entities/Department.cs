@@ -36,7 +36,6 @@ public class Department : BaseEntity
 
     public void RemoveDegreeProgram(DegreeProgram program)
     {
-        _degreePrograms.Remove(program);
         program.Delete();
         MarkAsUpdated();
     }

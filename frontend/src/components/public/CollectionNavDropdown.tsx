@@ -87,7 +87,9 @@ export default function CollectionNavDropdown() {
     navigate(`/buscar?collectionId=${id}`)
   }
 
-  const roots = collections.filter((c) => !c.parentCollectionId)
+  const roots = collections
+    .filter((c) => !c.parentCollectionId)
+    .sort((a, b) => a.name.localeCompare(b.name, 'es'))
 
   return (
     <div ref={ref} className="relative hidden sm:block">

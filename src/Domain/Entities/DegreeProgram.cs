@@ -23,4 +23,13 @@ public class DegreeProgram : BaseEntity
         Name = name;
         MarkAsUpdated();
     }
+
+    public void Delete()
+    {
+        if (Department != null)
+        {
+            Department.RemoveDegreeProgram(this);
+        }
+        base.Delete();
+    }
 }

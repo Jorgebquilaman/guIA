@@ -24,7 +24,7 @@ export default function DepartmentSection() {
       .then((res) => res.json())
       .then((data) => {
         const d = data.data ?? data
-        setDepartments(d ?? [])
+        setDepartments((d ?? []).sort((a: Department, b: Department) => a.name.localeCompare(b.name, 'es')))
         if (d?.[0]) setActiveId(d[0].id)
       })
       .catch(() => {})
@@ -51,23 +51,23 @@ export default function DepartmentSection() {
               <a
                 key={dept.id}
                 href={`/buscar?department=${encodeURIComponent(dept.name)}`}
-                className="group relative flex flex-col items-center rounded-xl p-6 text-center text-white shadow-lg transition-all duration-200 hover:-translate-y-1.5 hover:shadow-xl"
+                className="group relative flex flex-col items-center justify-center rounded-xl p-6 text-center text-white shadow-lg transition-all duration-200 hover:-translate-y-1.5 hover:shadow-xl"
                 style={{
                   backgroundColor: dept.color,
                   backgroundImage: `url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='2' r='1' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='12' cy='6' r='0.8' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='22' cy='2' r='1.2' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='6' cy='14' r='1' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='18' cy='16' r='0.8' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='28' cy='12' r='1' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='4' cy='24' r='0.8' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='14' cy='26' r='1' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='24' cy='22' r='0.8' fill='%23ffffff' fill-opacity='0.07'/%3E%3C/svg%3E")`,
                 }}
               >
-                <div className="mb-3 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/20 shadow-inner">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/20 shadow-inner">
                   {Icon && <Icon className="h-6 w-6" />}
                 </div>
-                <div className="mb-3 w-8 border-b border-white/30" />
+                <div className="my-2 w-8 border-b border-white/30" />
                 <h3 className="w-full text-center text-sm font-bold leading-tight" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                   {dept.name}
                 </h3>
-                <p className="mt-1 w-full text-center text-[11px] leading-tight text-white/80">
+                <p className="w-full text-center text-[11px] leading-tight text-white/80">
                   {dept.degreePrograms.length} sección temática{dept.degreePrograms.length !== 1 ? 's' : ''}
                 </p>
-                <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-white/90 transition-colors group-hover:text-white">
+                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-white/90 transition-colors group-hover:text-white">
                   {t('departments.verTrabajos')}
                   <ArrowRight className="h-3 w-3" />
                 </span>

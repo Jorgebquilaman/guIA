@@ -95,24 +95,30 @@ public class DepartmentsController : ControllerBase
 
         department.Update(request.Name, request.Color ?? "#1B4D3E", request.Icon);
 
-        // Sync degree programs
-        if (request.DegreePrograms != null)
+        // Sync degree programs via explicit DbSet operations
+        var incomingNames = request.DegreePrograms?
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .Select(n => n.Trim())
+            .ToHashSet() ?? new HashSet<string>();
+
+        // Soft-delete programs no longer in the list
+        foreach (var program in department.DegreePrograms.ToList())
         {
-            var existingNames = department.DegreePrograms.Select(p => p.Name).ToHashSet();
-            var incomingNames = request.DegreePrograms.Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => n.Trim()).ToHashSet();
-
-            // Remove programs not in incoming list
-            foreach (var program in department.DegreePrograms.ToList())
+            if (!incomingNames.Contains(program.Name))
             {
-                if (!incomingNames.Contains(program.Name))
-                    department.RemoveDegreeProgram(program);
+                _context.DegreePrograms.Remove(program);
             }
+        }
 
-            // Add programs not in existing list
-            foreach (var name in incomingNames)
+        // Add new programs
+        var existingNames = department.DegreePrograms.Select(p => p.Name).ToHashSet();
+        foreach (var name in incomingNames)
+        {
+            if (!existingNames.Contains(name))
             {
-                if (!existingNames.Contains(name))
-                    department.AddDegreeProgram(name);
+                var program = new DegreeProgram(name);
+                program.SetDepartmentId(department.Id);
+                _context.DegreePrograms.Add(program);
             }
         }
 

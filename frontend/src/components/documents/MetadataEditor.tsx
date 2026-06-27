@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { Document, DocumentType, DocumentAuthor, MediaLink } from '../../types'
 import { useUpdateMetadata, useAiSuggestions, useDocumentTypes, useDepartments } from '../../api/documents'
-import DynamicMetadataForm from './DynamicMetadataForm'
+import DynamicMetadataForm, { type DynamicMetadataFormHandle } from './DynamicMetadataForm'
 import MediaLinkPlayer from '../ui/MediaLinkPlayer'
 import { generateId } from '../../utils/id'
 
@@ -66,6 +66,7 @@ export default function MetadataEditor({
   const aiLogEndRef = useRef<HTMLDivElement>(null)
   const aiPendingRef = useRef(false)
 
+  const dynamicFormRef = useRef<DynamicMetadataFormHandle>(null)
   const mutation = useUpdateMetadata(document.id)
   const { data: aiSuggestions, refetch: fetchAiSuggestions } = useAiSuggestions(document.id)
   const { data: typeDefs } = useDocumentTypes()
@@ -223,6 +224,7 @@ export default function MetadataEditor({
       language: language !== 'Español' ? language : null,
       mediaLinks: mediaLinks.map((ml) => ({ url: ml.url, label: ml.label, type: ml.type })),
     })
+    await dynamicFormRef.current?.save()
     onSaved()
   }
 
@@ -636,7 +638,7 @@ export default function MetadataEditor({
       </div>
 
       <div className="border-t border-iupa-light pt-6">
-        <DynamicMetadataForm key={document.id} documentType={type} documentId={document.id} aiMetadataValues={aiMetadataValues} aiVersion={aiVersion} onLog={logCallback} />
+        <DynamicMetadataForm ref={dynamicFormRef} key={document.id} documentType={type} documentId={document.id} aiMetadataValues={aiMetadataValues} aiVersion={aiVersion} onLog={logCallback} />
       </div>
 
       <div className="flex justify-end gap-3 border-t border-iupa-light pt-5">

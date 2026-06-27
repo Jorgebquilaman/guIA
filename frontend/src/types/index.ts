@@ -33,6 +33,8 @@ export interface AiMetadata {
 
 export type DocumentType = 'Article' | 'Thesis' | 'Dataset' | 'Software' | 'Link' | 'Other' | 'ConferenceDocument' | 'Book'
 export type DocumentStatus = 'Draft' | 'Processing' | 'Published' | 'Rejected'
+export type LanguageCode = 'Español' | 'English' | 'Português' | 'Français' | 'Deutsch' | 'Italiano' | '中文' | '日本語'
+export type ThesaurusType = 'Concept' | 'Subject' | 'Genre' | 'Format' | 'Identifier' | 'Classification' | 'Vocabulary' | 'Descriptor' | 'Other'
 
 export interface DocumentFile {
   id: string

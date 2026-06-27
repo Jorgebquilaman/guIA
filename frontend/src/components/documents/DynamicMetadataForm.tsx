@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react'
 import { Plus, X, HelpCircle, AlertCircle, Check } from 'lucide-react'
 import { useMetadataSchemaByType, useDocumentMetadata, useSaveDocumentMetadata } from '../../api/metadata'
 import type { MetadataField } from '../../types'
@@ -12,17 +12,20 @@ interface DynamicMetadataFormProps {
   onLog?: (msg: string) => void
 }
 
+export interface DynamicMetadataFormHandle {
+  save: () => Promise<void>
+}
+
 function stripAccents(s: string): string {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
-export default function DynamicMetadataForm({ documentType, documentId, onSaved, aiMetadataValues, aiVersion, onLog }: DynamicMetadataFormProps) {
+const DynamicMetadataForm = forwardRef<DynamicMetadataFormHandle, DynamicMetadataFormProps>(function DynamicMetadataForm({ documentType, documentId, onSaved, aiMetadataValues, aiVersion, onLog }, ref) {
   const { data: schema, isLoading: schemaLoading } = useMetadataSchemaByType(documentType)
   const { data: existingValues, isLoading: valuesLoading } = useDocumentMetadata(documentId)
   const saveMutation = useSaveDocumentMetadata(documentId)
 
   const [values, setValues] = useState<Record<string, string[]>>({})
-  const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
@@ -163,6 +166,10 @@ export default function DynamicMetadataForm({ documentType, documentId, onSaved,
     setValues(initial)
   }, [schema, existingValues, aiMetadataValues, aiVersion])
 
+  useImperativeHandle(ref, () => ({
+    save: handleSave,
+  }), [handleSave])
+
   const setFieldValue = useCallback((fieldId: string, index: number, value: string) => {
     setValues((prev) => {
       const arr = [...(prev[fieldId] || [''])];
@@ -191,7 +198,6 @@ export default function DynamicMetadataForm({ documentType, documentId, onSaved,
 
   async function handleSave() {
     if (!schema) return
-    setSaving(true)
     try {
       const payload: { fieldId: string; value: string; repeatIndex: number }[] = []
       for (const field of schema.fields) {
@@ -209,8 +215,6 @@ export default function DynamicMetadataForm({ documentType, documentId, onSaved,
       onSaved?.()
     } catch {
       // handled by query client
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -408,22 +412,15 @@ export default function DynamicMetadataForm({ documentType, documentId, onSaved,
         ))}
       </div>
 
-      <div className="flex items-center justify-between border-t border-gray-200 pt-4">
-        <div className="flex items-center gap-2 text-[11px] text-gray-400">
-          <span className="text-red-500">*</span> Obligatorio
-          <span className="ml-2 inline-flex items-center gap-0.5 rounded bg-orange-50 px-1.5 py-0.5 text-[10px] font-medium text-orange-600">
-            <AlertCircle className="h-2.5 w-2.5" />
-            si aplica
-          </span>
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="rounded-lg bg-iupa-green px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-iupa-green/90 disabled:opacity-50"
-        >
-          {saving ? 'Guardando...' : 'Guardar metadatos'}
-        </button>
+      <div className="flex items-center gap-2 text-[11px] text-gray-400">
+        <span className="text-red-500">*</span> Obligatorio
+        <span className="ml-2 inline-flex items-center gap-0.5 rounded bg-orange-50 px-1.5 py-0.5 text-[10px] font-medium text-orange-600">
+          <AlertCircle className="h-2.5 w-2.5" />
+          si aplica
+        </span>
       </div>
     </div>
   )
-}
+})
+
+export default DynamicMetadataForm

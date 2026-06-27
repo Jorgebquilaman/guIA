@@ -86,7 +86,7 @@ export default function PublicSearchResults() {
       .then((res) => res.json())
       .then((data) => {
         const d = data.data ?? data
-        setDepartments(d ?? [])
+        setDepartments((d ?? []).sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name, 'es')))
       })
       .catch(() => {})
   }, [])
