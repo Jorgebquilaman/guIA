@@ -40,7 +40,7 @@ El sistema sigue los principios de **Clean Architecture** con **Domain-Driven De
 - **FluentValidation** (request validation)
 - **JWT Bearer** authentication (access + refresh tokens)
 - **Serilog** (structured logging)
-- **Swagger / OpenAPI** (API documentation)
+- **Swagger / OpenAPI** (dev only)
 
 ### Frontend
 - **React 19** + **TypeScript 6**
@@ -53,44 +53,110 @@ El sistema sigue los principios de **Clean Architecture** con **Domain-Driven De
 - **Lucide React** (icons)
 
 ### Database
-- **PostgreSQL** (relational database)
-- Full-text search (Spanish configuration)
+- **PostgreSQL 16** (relational database)
+- Full-text search with Spanish configuration
 
 ### AI Integration
-- **DeepSeek API** (chat model)
+- **DeepSeek API** (chat model, default)
 - **Anthropic Claude API** (configurable)
+- Análisis automatizado de documentos con reglas AACR2
+
+---
+
+## Roles de Usuario y Permisos
+
+El sistema define tres roles con niveles crecientes de acceso:
+
+| Rol | Acceso público | Subir y editar documentos propios | Publicar / Rechazar / Despublicar | Admin de usuarios | Admin de colecciones | Admin de esquemas metadatos | Admin de tesauro | Configuración del sitio |
+|---|---|---|---|---|---|---|---|---|
+| **Viewer** | ✓ | ✓ | | | | | | |
+| **Editor** | ✓ | ✓ | | | | | | |
+| **Admin** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+### Viewer
+- Buscar y visualizar documentos públicos y privados
+- Subir documentos (borrador), editar metadatos propios
+- Solicitar acceso a la plataforma
+- Acceder al dashboard personal
+
+### Editor
+- Todo lo que puede hacer Viewer
+- Editar cualquier documento (sin publicar)
+
+### Admin
+- Todo lo que pueden hacer Viewer y Editor
+- **Publicar / Rechazar / Despublicar** documentos
+- **CRUD de usuarios** y aprobar solicitudes de registro
+- **CRUD de colecciones** (árbol jerárquico)
+- **CRUD de departamentos** y programas ("Redes de Conocimiento")
+- **CRUD de tipos documentales**
+- **CRUD de esquemas de metadatos Dublin Core SNRD**
+- **CRUD de términos del tesauro**
+- **Configuración**: proveedores IA, sitio, SMTP, tipos documentales
+
+### Usuario por defecto (seed)
+| Campo | Valor |
+|---|---|
+| Email | `admin@guia.app` |
+| Contraseña | `Admin123!` |
+| Nombre | Administrador |
+| Rol | Admin |
 
 ---
 
 ## Funcionalidades
 
-### Públicas
+### Públicas (sin autenticación)
 - Landing page con estadísticas en tiempo real, departamentos y documentos recientes
-- Búsqueda con filtros por tipo, departamento, autor, carrera, año y palabras clave
-- Vista de documentos Dublin Core
+- Búsqueda full-text con filtros por tipo, colección, autor, departamento, carrera, año y palabras clave
+- Vista de detalle de documentos con metadatos Dublin Core
+- Mapa de conocimiento (grafo force-directed de documentos, autores y palabras clave)
+- Estadísticas públicas de documentos y descargas
+- Página de perfil de autor con métricas individuales
+- Tesauro público navegable (términos jerárquicos TG/TE)
+- Vista optimizada para crawlers (Google Scholar, meta tags, JSON-LD, sitemap.xml)
 - Página "Acerca del Repositorio"
 - Solicitud de acceso a la plataforma
 - Restablecimiento de contraseña por email
 
-### Privadas (requieren autenticación)
+### Requieren autenticación (Viewer / Editor / Admin)
 - Dashboard con estadísticas del sistema
-- Subida de documentos con drag & drop
-- Procesamiento automático con IA (resumen, palabras clave, clasificación)
-- Gestión de colecciones (árbol jerárquico)
-- Gestión de usuarios y roles (Admin / User)
-- Aprobación de documentos con workflow de revisión
-- Editor de metadatos Dublin Core
-- Vista previa de documentos (PDF, imágenes)
+- Subida de documentos con drag & drop (archivos y enlaces multimedia)
+- Procesamiento automático con IA: resumen, palabras clave, clasificación AACR2
+- Editor de metadatos completo: título, autores, palabras clave, fecha, licencia, departamento
+- Metadatos SNRD por tipo documental (Article, ConferenceDocument, Book, Thesis) con campos Dublin Core
+- Gestión de colecciones (árbol jerárquico ordenado alfabéticamente)
 - Exploración por colecciones
+- Vista previa de documentos (PDF, imágenes)
+- Enlaces multimedia (YouTube, Vimeo, Google Drive, audio embebido)
+- Vista de documento con citas APA y BibTeX
 
-### Administración
-- Panel de administración con métricas
-- Configuración del sitio (mensaje informativo)
+### Solo Administración (Admin)
+- Panel de administración con métricas del sistema
+- CRUD de usuarios + aprobación de solicitudes de registro
+- Listado y filtro de documentos por estado (Draft, Processing, Published, Rejected)
+- Aprobar, rechazar (con motivo) y despublicar documentos
+- Gestión de tipos documentales (DocumentTypeDef)
+- Gestión de departamentos académicos y secciones temáticas
+- Editor visual de esquemas de metadatos SNRD (fields, options, obligatoriness)
+- Gestión completa del tesauro (CRUD de términos jerárquicos por tipo)
+- Configuración del sitio (mensaje informativo, base URL, tamaño máximo de archivos)
+- Configuración de proveedores de IA (DeepSeek / Claude, prompts editables)
 - Configuración SMTP para envío de emails
-- Configuración de proveedores de IA
-- Gestión de tipos documentales
-- Gestión de departamentos académicos
-- Aprobación de solicitudes de registro
+
+---
+
+## Flujo de Publicación
+
+```
+1. Viewer/Editor sube documento → Estado: Draft
+2. Completa metadatos (manual o con IA)
+3. Admin recibe documento en panel de administración
+4. Admin puede:
+   - Publicar → Estado: Published (visible al público)
+   - Rechazar → Estado: Rejected (con motivo)
+5. Admin puede despublicar en cualquier momento
+```
 
 ---
 
@@ -100,17 +166,16 @@ El sistema sigue los principios de **Clean Architecture** con **Domain-Driven De
 GuIA/
 ├── frontend/                    # Aplicación React
 │   ├── src/
-│   │   ├── api/                 # Hooks y cliente HTTP
+│   │   ├── api/                 # Hooks y cliente HTTP (React Query)
 │   │   ├── components/          # Componentes reutilizables
-│   │   │   ├── documents/       # Documentos, cards, upload
-│   │   │   ├── layout/          # AppLayout, Sidebar, Header
-│   │   │   ├── public/          # Navbar, Footer, Hero
-│   │   │   ├── search/          # SearchResults, Pagination
-│   │   │   └── ui/              # Button, Input, Card, Modal, etc.
+│   │   │   ├── documents/       # MetadataEditor, DynamicMetadataForm, upload
+│   │   │   ├── layout/          # AppLayout, Sidebar, Header, AdminGuard
+│   │   │   ├── public/          # Navbar, Footer, Hero, SearchFilters
+│   │   │   └── ui/              # Button, Input, Card, Modal, MediaLinkPlayer
 │   │   ├── pages/               # Páginas de la aplicación
-│   │   │   ├── admin/           # Panel de administración
-│   │   │   ├── auth/            # Login
-│   │   │   └── public/          # Landing, búsqueda pública
+│   │   │   ├── admin/           # Dashboard, Documents, Users, Collections, etc.
+│   │   │   ├── auth/            # Login, ForgotPassword, ResetPassword
+│   │   │   └── public/          # Landing, búsqueda, About, Thesaurus
 │   │   ├── store/               # Estado global (Zustand)
 │   │   └── types/               # Tipos TypeScript
 │   ├── package.json
@@ -118,37 +183,55 @@ GuIA/
 │
 ├── src/
 │   ├── API/                     # Web API (ASP.NET Core)
-│   │   ├── Controllers/         # Endpoints REST
-│   │   ├── Middleware/          # Exception handling, logging
-│   │   ├── Services/            # CurrentUserService
-│   │   └── Program.cs           # Punto de entrada
+│   │   ├── Controllers/         # REST endpoints
+│   │   ├── Middleware/          # ExceptionHandling, RequestLogging
+│   │   └── Program.cs           # Entry point
 │   │
-│   ├── Application/             # Capa de aplicación
-│   │   ├── Common/              # Interfaces y utilidades
+│   ├── Application/             # Application layer (CQRS)
+│   │   ├── Common/              # Interfaces, PasswordHelper
 │   │   ├── DTOs/                # Data Transfer Objects
-│   │   ├── Ports/               # Puertos (interfaces externas)
+│   │   ├── Ports/               # IEmailPort, IFileStoragePort, ILlmPort, etc.
 │   │   └── UseCases/            # Commands, Queries, Handlers
-│   │       ├── Auth/            # Login, registro, reset password
-│   │       ├── Documents/       # Upload, AI, publicación
-│   │       ├── Collections/     # CRUD de colecciones
-│   │       ├── Search/          # Búsqueda full-text
-│   │       └── SiteConfig/      # Configuración del sitio
+│   │       ├── Auth/            # Login, Register, ResetPassword
+│   │       ├── Documents/       # Upload, Publish, AISuggestions, Metadata
+│   │       ├── Collections/
+│   │       ├── Search/          # Full-text search
+│   │       └── SiteConfig/
 │   │
-│   ├── Domain/                  # Capa de dominio
-│   │   ├── Entities/            # Document, User, Collection, etc.
-│   │   ├── Enums/               # UserRole, DocumentStatus, etc.
-│   │   ├── Events/              # Eventos de dominio
-│   │   ├── Exceptions/          # Excepciones de dominio
-│   │   └── ValueObjects/        # Email, LlmAnalysisResult
+│   ├── Domain/                  # Domain layer
+│   │   ├── Entities/            # Document, User, Collection, MetadataSchema, etc.
+│   │   ├── Enums/               # UserRole, DocumentStatus, DocumentType, FieldType, etc.
+│   │   ├── ValueObjects/        # Email, MediaLink, LlmAnalysisResult
+│   │   └── Events/
 │   │
-│   └── Infrastructure/          # Capa de infraestructura
-│       ├── Adapters/            # SmtpEmailAdapter, ClaudeLlmAdapter, etc.
-│       ├── Persistence/         # EF Core DbContext, configs, migrations
+│   └── Infrastructure/          # Infrastructure layer
+│       ├── Adapters/            # LocalFileStorage, SmtpEmail, DeepSeekLlm, etc.
+│       ├── Persistence/         # EF Core DbContext, configs, migrations, seed
 │       └── DependencyInjection.cs
 │
-├── GuIA.sln                     # Solución .NET
+├── GuIA.sln                     # .NET solution
 └── README.md
 ```
+
+---
+
+## Modelo de Datos (Entidades Principales)
+
+| Entidad | Descripción |
+|---|---|
+| **User** | Usuarios del sistema con email, password hash, rol (Admin/Editor/Viewer) |
+| **Document** | Documento principal con tipo, estado, metadatos Dublin Core, archivos asociados |
+| **Collection** | Árbol jerárquico de colecciones |
+| **Department** | Departamentos académicos con programas/secciones temáticas |
+| **DocumentTypeDef** | Definiciones de tipos documentales |
+| **MetadataSchema** | Esquemas de metadatos SNRD por tipo documental |
+| **MetadataField** | Campos dentro de un esquema (con tipo: Text, Select, Date, MultiText, etc.) |
+| **MetadataFieldOption** | Opciones para campos tipo Select |
+| **MetadataValue** | Valores de metadatos por documento y campo |
+| **ThesaurusTerm** | Términos jerárquicos del tesauro (TG/TE) con tipo (Concept, Subject, Genre, etc.) |
+| **AiAnalysisResult** | Resultados de análisis de IA por documento |
+| **RefreshToken** | Tokens de refresco JWT |
+| **DownloadLog** | Registro de descargas con geo-IP |
 
 ---
 
@@ -166,7 +249,7 @@ GuIA/
 # Opción A: Con Docker
 docker run -d --name guia-db -e POSTGRES_USER=guia -e POSTGRES_PASSWORD=guia123 -e POSTGRES_DB=guia -p 5433:5432 postgres:16
 
-# Opción B: Usar una instancia existente (ajustar connection string en appsettings.json)
+# Opción B: Usar una instancia existente (ajustar connection string)
 ```
 
 ### 2. Backend
@@ -175,9 +258,9 @@ docker run -d --name guia-db -e POSTGRES_USER=guia -e POSTGRES_PASSWORD=guia123 
 cd src/API
 dotnet restore
 dotnet run
-# API disponible en http://localhost:5050
+# API en http://localhost:5050
 # Swagger en http://localhost:5050/swagger
-# Admin por defecto: admin@guia.app / Admin123!
+# Admin default: admin@guia.app / Admin123!
 ```
 
 ### 3. Frontend
@@ -186,100 +269,9 @@ dotnet run
 cd frontend
 npm install
 npm run dev
-# App disponible en http://localhost:5173
-# El proxy de Vite redirige /api → http://localhost:5050
+# App en http://localhost:5173
+# Proxy Vite redirige /api → http://localhost:5050
 ```
-
----
-
-## Rutas
-
-### Públicas
-| Ruta | Página |
-|---|---|
-| `/` | Landing page |
-| `/buscar` | Búsqueda pública |
-| `/documentos/:id` | Vista de documento |
-| `/login` | Inicio de sesión |
-| `/olvide-mi-contrasena` | Recuperar contraseña |
-| `/reset-password` | Restablecer contraseña |
-| `/solicitar-acceso` | Solicitar registro |
-| `/acerca-del-repositorio` | Información institucional |
-
-### App (autenticadas)
-| Ruta | Página |
-|---|---|
-| `/app` | Dashboard |
-| `/app/upload` | Subir documentos |
-| `/app/search` | Buscar documentos |
-| `/app/browse` | Explorar colecciones |
-| `/app/documents/:id` | Vista de documento (solo lectura) |
-| `/app/admin/*` | Panel de administración |
-
----
-
-## API Endpoints
-
-### Autenticación
-- `POST /api/auth/login` — Iniciar sesión
-- `POST /api/auth/refresh` — Refrescar token
-- `POST /api/auth/forgot-password` — Solicitar restablecimiento
-- `POST /api/auth/reset-password` — Restablecer contraseña
-- `POST /api/auth/request-access` — Solicitar acceso
-
-### Documentos
-- `GET /api/search` — Búsqueda full-text con filtros
-- `GET /api/documents/{id}` — Obtener documento
-- `POST /api/documents/upload` — Subir documento (multipart)
-- `PUT /api/documents/{id}/metadata` — Actualizar metadatos
-- `POST /api/documents/{id}/publish` — Publicar
-- `POST /api/documents/{id}/reject` — Rechazar
-- `DELETE /api/documents/{id}` — Eliminar
-- `GET /api/documents/{id}/preview/{fileId}` — Vista previa
-- `GET /api/documents/{id}/download/{fileId}` — Descargar archivo
-- `GET /api/documents/{id}/ai-suggestions` — Sugerencias IA
-
-### Estadísticas
-- `GET /api/stats/overview` — Estadísticas generales
-- `GET /api/stats/departments` — Documentos por departamento
-
-### Colecciones
-- `GET /api/collections` — Árbol de colecciones
-- `GET /api/collections/{id}` — Colección con documentos
-- `POST /api/collections` — Crear colección
-- `PUT /api/collections/{id}` — Actualizar colección
-- `DELETE /api/collections/{id}` — Eliminar colección
-
-### Administración
-- `GET /api/admin/users` — Listar usuarios
-- `GET /api/admin/users/pending` — Solicitudes pendientes
-- `POST /api/admin/users/{id}/approve` — Aprobar usuario
-- `GET /api/admin/stats` — Estadísticas del sistema
-- `GET/PUT /api/admin/site-config` — Configuración del sitio
-- `GET/PUT /api/admin/smtp-config` — Configuración SMTP
-- `GET/PUT /api/admin/ai-settings` — Configuración IA
-- `GET/PUT /api/admin/departments` — Departamentos
-- `GET/PUT /api/admin/document-types` — Tipos documentales
-
-### Configuración pública
-- `GET /api/site-config` — Configuración del sitio (público)
-
----
-
-## Variables de Entorno / Configuración
-
-Archivo `src/API/appsettings.json`:
-
-| Sección | Descripción |
-|---|---|
-| `ConnectionStrings:DefaultConnection` | Conexión a PostgreSQL |
-| `Jwt:Secret` | Clave secreta para JWT (32+ caracteres) |
-| `Jwt:AccessTokenExpirationMinutes` | Expiración del token de acceso |
-| `Jwt:RefreshTokenExpiryDays` | Expiración del refresh token |
-| `DeepSeek:ApiKey` | API Key de DeepSeek (para IA) |
-| `Anthropic:ApiKey` | API Key de Anthropic/Claude (para IA) |
-| `FileStorage:BasePath` | Ruta de almacenamiento de archivos |
-| `Cors:Origins` | Orígenes permitidos para CORS |
 
 ---
 
@@ -299,4 +291,4 @@ Archivo `src/API/appsettings.json`:
 
 ## Licencia
 
-Desarrollado para el Instituto Universitario Patagónico de las Artes (IUPA).
+Desarrollado para el **Instituto Universitario Patagónico de las Artes (IUPA)**.
