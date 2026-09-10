@@ -27,6 +27,7 @@ public interface IAppDbContext
     DbSet<MetadataField> MetadataFields { get; }
     DbSet<MetadataFieldOption> MetadataFieldOptions { get; }
     DbSet<DocumentMetadataValue> DocumentMetadataValues { get; }
+    DbSet<ThesaurusTerm> ThesaurusTerms { get; }
 
     ChangeTracker ChangeTracker { get; }
     DatabaseFacade Database { get; }

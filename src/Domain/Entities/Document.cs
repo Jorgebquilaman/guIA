@@ -9,6 +9,8 @@ public class Document : BaseEntity
     public string Title { get; private set; } = null!;
     public string? Description { get; private set; }
     public DocumentType Type { get; private set; }
+    public Guid? DocumentTypeId { get; private set; }
+    public DocumentTypeDef? DocumentType_ { get; private set; }
     public DocumentStatus Status { get; private set; }
     public Guid CollectionId { get; private set; }
     public Collection? Collection { get; private set; }
@@ -79,8 +81,13 @@ public class Document : BaseEntity
     }
 
     public void SetType(DocumentType type)
+    {        Type = type;
+    }
+
+    public void SetDocumentType(Guid? documentTypeId)
     {
-        Type = type;
+        DocumentTypeId = documentTypeId;
+        MarkAsUpdated();
     }
 
     public void SetCollection(Guid collectionId)
@@ -102,6 +109,16 @@ public class Document : BaseEntity
             throw new DomainValidationException("Cannot publish a document with no files and no source URL.");
         Status = DocumentStatus.Published;
         PublishedAt = publishedAt;
+    }
+
+    public void Unpublish()
+    {
+        if (Status != DocumentStatus.Published)
+            throw new DomainValidationException(
+                "Only published documents can be unpublished.");
+        Status = DocumentStatus.Draft;
+        PublishedAt = null;
+        IsPublic = false;
     }
 
     public void Reject()

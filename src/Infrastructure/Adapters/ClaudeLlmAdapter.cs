@@ -97,7 +97,7 @@ public class ClaudeLlmAdapter : ILlmPort
 
             systemPrompt += "\n\nDevuelve SOLO un objeto JSON válido sin formato adicional ni markdown. No incluyas bloques ```json ni explicaciones.";
 
-            var userMessage = $"Analyze the following document text from file \"{fileName}\":\n\n{extractedText}";
+            var userMessage = $"Analyze the following document text (converted to Markdown format) from file \"{fileName}\". The Markdown preserves the document's original structure: headers indicate sections, tables are formatted with pipes/dashes, lists use bullet points or numbers, and links appear as [text](url).\n\n---\n\n{extractedText}";
 
             var requestBody = new
             {

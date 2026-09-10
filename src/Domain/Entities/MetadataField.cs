@@ -18,6 +18,7 @@ public class MetadataField : BaseEntity
     public bool IsRepeatable { get; private set; }
     public bool IsReadOnly { get; private set; }
     public bool IsHidden { get; private set; }
+    public bool IsSimpleView { get; private set; }
     public int SortOrder { get; private set; }
     public string? HelpText { get; private set; }
 
@@ -36,6 +37,7 @@ public class MetadataField : BaseEntity
         bool isRepeatable,
         bool isReadOnly,
         bool isHidden,
+        bool isSimpleView,
         int sortOrder,
         string? helpText)
     {
@@ -50,11 +52,25 @@ public class MetadataField : BaseEntity
         IsRepeatable = isRepeatable;
         IsReadOnly = isReadOnly;
         IsHidden = isHidden;
+        IsSimpleView = isSimpleView;
         SortOrder = sortOrder;
         HelpText = helpText;
     }
 
-    public void Update(string label, bool isRequired, ObligatorinessLevel obligatoriness, int sortOrder, bool isHidden, string? helpText)
+    public void Update(
+        string label,
+        bool isRequired,
+        ObligatorinessLevel obligatoriness,
+        int sortOrder,
+        bool isHidden,
+        string? helpText,
+        string? dublinCoreElement = null,
+        string? qualifier = null,
+        string? internalName = null,
+        FieldType? fieldType = null,
+        bool? isRepeatable = null,
+        bool? isReadOnly = null,
+        bool? isSimpleView = null)
     {
         Label = label;
         IsRequired = isRequired;
@@ -62,6 +78,15 @@ public class MetadataField : BaseEntity
         SortOrder = sortOrder;
         IsHidden = isHidden;
         HelpText = helpText;
+
+        if (!string.IsNullOrWhiteSpace(dublinCoreElement)) DublinCoreElement = dublinCoreElement;
+        Qualifier = string.IsNullOrWhiteSpace(qualifier) ? null : qualifier;
+        if (!string.IsNullOrWhiteSpace(internalName)) InternalName = internalName;
+        if (fieldType.HasValue) FieldType = fieldType.Value;
+        if (isRepeatable.HasValue) IsRepeatable = isRepeatable.Value;
+        if (isReadOnly.HasValue) IsReadOnly = isReadOnly.Value;
+        if (isSimpleView.HasValue) IsSimpleView = isSimpleView.Value;
+
         MarkAsUpdated();
     }
 }

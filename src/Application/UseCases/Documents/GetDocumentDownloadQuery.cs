@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GuIA.Application.UseCases.Documents;
 
-public record GetDocumentDownloadQuery(Guid DocumentId, Guid FileId, string? IpAddress = null, string? Country = null) : IRequest<FileResponse>;
+public record GetDocumentDownloadQuery(Guid DocumentId, Guid FileId, string? IpAddress = null, string? Country = null, bool SkipLogging = false) : IRequest<FileResponse>;
 
 public class GetDocumentDownloadQueryHandler : IRequestHandler<GetDocumentDownloadQuery, FileResponse>
 {
@@ -32,13 +32,15 @@ public class GetDocumentDownloadQueryHandler : IRequestHandler<GetDocumentDownlo
 
         Stream content = await _fileStorage.GetAsync(file.StoredPath, ct);
 
-        _context.AccessLogs.Add(new AccessLog(
-            AccessAction.Download,
-            document.Id,
-            ipAddress: request.IpAddress,
-            country: request.Country));
-
-        await _context.SaveChangesAsync(ct);
+        if (!request.SkipLogging)
+        {
+            _context.AccessLogs.Add(new AccessLog(
+                AccessAction.Download,
+                document.Id,
+                ipAddress: request.IpAddress,
+                country: request.Country));
+            await _context.SaveChangesAsync(ct);
+        }
 
         return new FileResponse(content, file.MimeType, file.OriginalFileName);
     }

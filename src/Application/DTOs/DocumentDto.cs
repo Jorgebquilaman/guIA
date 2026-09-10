@@ -8,6 +8,8 @@ public class DocumentDto
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public DocumentType Type { get; set; }
+    public Guid? DocumentTypeId { get; set; }
+    public string? DocumentTypeName { get; set; }
     public DocumentStatus Status { get; set; }
     public Guid CollectionId { get; set; }
     public string CollectionName { get; set; } = string.Empty;
@@ -48,6 +50,7 @@ public class DocumentMetadataDisplayDto
     public string? Qualifier { get; set; }
     public string Value { get; set; } = string.Empty;
     public int RepeatIndex { get; set; }
+    public bool IsSimpleView { get; set; }
 }
 
 public sealed record AuthorDto(string Name, string? Email, string? Orcid, int Order);

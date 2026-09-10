@@ -167,13 +167,126 @@ public class DeepSeekLlmAdapter : ILlmPort
                     content = content[start..(end + 1)];
             }
 
-            var result = JsonSerializer.Deserialize<LlmAnalysisResult>(content, JsonOptions);
-            return result ?? EmptyResult();
+            return ParseLlmContent(content);
         }
-        catch
+        catch (Exception ex)
         {
+            Console.Error.WriteLine($"[DeepSeekLlmAdapter] Error parsing response: {ex.Message}");
             return EmptyResult();
         }
+    }
+
+    private static LlmAnalysisResult ParseLlmContent(string content)
+    {
+        var result = EmptyResult();
+
+        try
+        {
+            using var doc = JsonDocument.Parse(content);
+            var root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+                return result;
+
+            result.Summary = GetStringOrJoin(root, "summary");
+            result.Description = GetStringOrJoin(root, "description");
+            result.ExtractedEntities = GetStringOrJoin(root, "extractedEntities");
+            result.AbstractEn = GetStringOrNull(root, "abstractEn");
+            result.PublicationVersion = GetStringOrNull(root, "publicationVersion");
+            result.DigitalIdentifier = GetStringOrNull(root, "digitalIdentifier");
+
+            result.Keywords = GetStringArray(root, "keywords");
+            if (result.Keywords.Count == 0)
+                result.Keywords = GetStringArray(root, "subjects");
+            result.KeywordsEn = GetStringArray(root, "keywordsEn");
+
+            result.Authors = GetStringArray(root, "authors");
+            if (result.Authors.Count == 0)
+            {
+                // RDA-style prompt: creators as array of objects with "name"
+                result.Authors = GetNameArray(root, "creators");
+            }
+
+            if (root.TryGetProperty("confidence", out var confidenceEl))
+            {
+                if (confidenceEl.ValueKind == JsonValueKind.Number && confidenceEl.TryGetDouble(out var dd))
+                    result.Confidence = dd;
+                else if (confidenceEl.ValueKind == JsonValueKind.String
+                         && double.TryParse(confidenceEl.GetString(), System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+                    result.Confidence = parsed;
+            }
+
+            if (root.TryGetProperty("metadataValues", out var mvEl) && mvEl.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var prop in mvEl.EnumerateObject())
+                {
+                    var value = prop.Value.ValueKind switch
+                    {
+                        JsonValueKind.String => prop.Value.GetString(),
+                        JsonValueKind.Number => prop.Value.GetRawText(),
+                        JsonValueKind.True => "true",
+                        JsonValueKind.False => "false",
+                        JsonValueKind.Array => string.Join(" ; ", prop.Value.EnumerateArray()
+                            .Where(e => e.ValueKind == JsonValueKind.String)
+                            .Select(e => e.GetString())),
+                        _ => null,
+                    };
+                    if (!string.IsNullOrWhiteSpace(value))
+                        result.MetadataValues[prop.Name] = value;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[DeepSeekLlmAdapter] Error parsing LLM content: {ex.Message}");
+        }
+
+        return result;
+    }
+
+    private static string? GetStringOrNull(JsonElement root, string name)
+        => root.TryGetProperty(name, out var el) && el.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(el.GetString())
+            ? el.GetString()
+            : null;
+
+    private static string? GetStringOrJoin(JsonElement root, string name)
+    {
+        if (!root.TryGetProperty(name, out var el)) return null;
+        return el.ValueKind switch
+        {
+            JsonValueKind.String when !string.IsNullOrWhiteSpace(el.GetString()) => el.GetString(),
+            JsonValueKind.Array => string.Join(" ; ", el.EnumerateArray()
+                .Where(e => e.ValueKind == JsonValueKind.String)
+                .Select(e => e.GetString())
+                .Where(s => !string.IsNullOrWhiteSpace(s))),
+            _ => null,
+        };
+    }
+
+    private static List<string> GetStringArray(JsonElement root, string name)
+    {
+        if (!root.TryGetProperty(name, out var el) || el.ValueKind != JsonValueKind.Array)
+            return new List<string>();
+        return el.EnumerateArray()
+            .Where(e => e.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(e.GetString()))
+            .Select(e => e.GetString()!)
+            .ToList();
+    }
+
+    private static List<string> GetNameArray(JsonElement root, string name)
+    {
+        if (!root.TryGetProperty(name, out var el) || el.ValueKind != JsonValueKind.Array)
+            return new List<string>();
+        return el.EnumerateArray()
+            .Select(e =>
+            {
+                if (e.ValueKind == JsonValueKind.String) return e.GetString();
+                if (e.ValueKind == JsonValueKind.Object && e.TryGetProperty("name", out var nameEl) && nameEl.ValueKind == JsonValueKind.String)
+                    return nameEl.GetString();
+                return null;
+            })
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => s!)
+            .ToList();
     }
 
     private static LlmAnalysisResult EmptyResult()

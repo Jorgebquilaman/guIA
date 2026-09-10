@@ -9,10 +9,19 @@ namespace GuIA.API.Controllers;
 
 public sealed class StatsController : BaseApiController
 {
+    private async Task<List<Guid>> GetAdminUserIds(IAppDbContext context, CancellationToken ct)
+    {
+        return await context.Users
+            .Where(u => u.Role == UserRole.Admin)
+            .Select(u => u.Id)
+            .ToListAsync(ct);
+    }
+
     [HttpGet("overview")]
     public async Task<IActionResult> GetOverview(CancellationToken ct)
     {
         var context = HttpContext.RequestServices.GetRequiredService<IAppDbContext>();
+        var adminIds = await GetAdminUserIds(context, ct);
 
         int totalDocuments = await context.Documents.CountAsync(d => d.DeletedAt == null, ct);
         int draftCount = await context.Documents.CountAsync(d => d.DeletedAt == null && d.Status == DocumentStatus.Draft, ct);
@@ -23,9 +32,10 @@ public sealed class StatsController : BaseApiController
         int totalUsers = await context.Users.CountAsync(u => u.IsActive, ct);
         int totalDegreePrograms = await context.DegreePrograms.CountAsync(ct);
         int totalAuthors = await context.DocumentAuthors.CountAsync(ct);
-        int totalDownloads = await context.AccessLogs.CountAsync(a => a.Action == AccessAction.Download, ct);
+        int totalDownloads = await context.AccessLogs.CountAsync(a => a.Action == AccessAction.Download && (a.UserId == null || !adminIds.Contains(a.UserId.Value)), ct);
 
         var recentActivity = await context.AccessLogs
+            .Where(a => (a.UserId == null || !adminIds.Contains(a.UserId.Value)) && a.OccurredAt >= DateTime.UtcNow.AddDays(-30))
             .Where(a => a.OccurredAt >= DateTime.UtcNow.AddDays(-30))
             .GroupBy(a => a.OccurredAt.Date)
             .Select(g => new { Date = g.Key, Count = g.Count() })
@@ -95,6 +105,11 @@ public sealed class StatsController : BaseApiController
     [HttpPost("visit")]
     public async Task<IActionResult> LogVisit([FromServices] IGeoIpService geoIp, CancellationToken ct)
     {
+        var isAdmin = HttpContext.User.Identity?.IsAuthenticated == true
+            && HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value == "Admin";
+        if (isAdmin)
+            return Ok(new { success = true });
+
         var context = HttpContext.RequestServices.GetRequiredService<IAppDbContext>();
 
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -139,7 +154,8 @@ public sealed class StatsController : BaseApiController
     public async Task<IActionResult> GetDownloadStats(CancellationToken ct)
     {
         var context = HttpContext.RequestServices.GetRequiredService<IAppDbContext>();
-        var downloadLogs = context.AccessLogs.Where(a => a.Action == AccessAction.Download);
+        var adminIds = await GetAdminUserIds(context, ct);
+        var downloadLogs = context.AccessLogs.Where(a => a.Action == AccessAction.Download && (a.UserId == null || !adminIds.Contains(a.UserId.Value)));
 
         // ── Total downloads ──
         var totalDownloads = await downloadLogs.CountAsync(ct);
@@ -263,6 +279,8 @@ public sealed class StatsController : BaseApiController
     public async Task<IActionResult> GetAuthorStats(string name, CancellationToken ct)
     {
         var context = HttpContext.RequestServices.GetRequiredService<IAppDbContext>();
+        var adminIds = await GetAdminUserIds(context, ct);
+        var nonAdminAccessLogs = context.AccessLogs.Where(a => a.UserId == null || !adminIds.Contains(a.UserId.Value));
 
         var decodedName = Uri.UnescapeDataString(name);
 
@@ -313,7 +331,7 @@ public sealed class StatsController : BaseApiController
             .ToListAsync(ct);
 
         // ── Downloads ──
-        var downloadLogs = context.AccessLogs
+        var downloadLogs = nonAdminAccessLogs
             .Where(a => a.Action == AccessAction.Download && a.DocumentId != null && docIds.Contains(a.DocumentId.Value));
 
         var totalDownloads = await downloadLogs.CountAsync(ct);
@@ -332,11 +350,11 @@ public sealed class StatsController : BaseApiController
             .ToListAsync(ct);
 
         // ── Views ──
-        var totalViews = await context.AccessLogs
+        var totalViews = await nonAdminAccessLogs
             .CountAsync(a => a.Action == AccessAction.View && a.DocumentId != null && docIds.Contains(a.DocumentId.Value), ct);
 
         // ── Activity last 30 days ──
-        var activity30d = await context.AccessLogs
+        var activity30d = await nonAdminAccessLogs
             .Where(a => a.DocumentId != null && docIds.Contains(a.DocumentId.Value) && a.OccurredAt >= DateTime.UtcNow.AddDays(-30))
             .GroupBy(a => a.OccurredAt.Date)
             .Select(g => new { Date = g.Key, Count = g.Count() })
@@ -363,7 +381,9 @@ public sealed class StatsController : BaseApiController
     public async Task<IActionResult> GetComprehensive(CancellationToken ct)
     {
         var context = HttpContext.RequestServices.GetRequiredService<IAppDbContext>();
+        var adminIds = await GetAdminUserIds(context, ct);
         var published = context.Documents.Where(d => d.DeletedAt == null && d.Status == DocumentStatus.Published);
+        var nonAdminAccessLogs = context.AccessLogs.Where(a => a.UserId == null || !adminIds.Contains(a.UserId.Value));
 
         // ── General ──
         var totalDocs = await context.Documents.CountAsync(d => d.DeletedAt == null, ct);
@@ -402,18 +422,18 @@ public sealed class StatsController : BaseApiController
             .CountAsync(ct);
 
         // ── Access logs breakdown ──
-        var totalViews = await context.AccessLogs.CountAsync(a => a.Action == AccessAction.View, ct);
-        var totalDownloads = await context.AccessLogs.CountAsync(a => a.Action == AccessAction.Download, ct);
-        var totalSearches = await context.AccessLogs.CountAsync(a => a.Action == AccessAction.Search, ct);
-        var totalVisits = await context.AccessLogs.CountAsync(a => a.Action == AccessAction.PageView, ct);
-        var uniqueVisitors = await context.AccessLogs
+        var totalViews = await nonAdminAccessLogs.CountAsync(a => a.Action == AccessAction.View, ct);
+        var totalDownloads = await nonAdminAccessLogs.CountAsync(a => a.Action == AccessAction.Download, ct);
+        var totalSearches = await nonAdminAccessLogs.CountAsync(a => a.Action == AccessAction.Search, ct);
+        var totalVisits = await nonAdminAccessLogs.CountAsync(a => a.Action == AccessAction.PageView, ct);
+        var uniqueVisitors = await nonAdminAccessLogs
             .Where(a => a.Action == AccessAction.PageView && a.IpAddress != null)
             .Select(a => a.IpAddress)
             .Distinct()
             .CountAsync(ct);
 
         // ── Geographic data for views ──
-        var viewsByCountry = await context.AccessLogs
+        var viewsByCountry = await nonAdminAccessLogs
             .Where(a => a.Action == AccessAction.View && a.Country != null)
             .GroupBy(a => a.Country)
             .Select(g => new { Country = g.Key, Count = g.Count() })
@@ -421,7 +441,7 @@ public sealed class StatsController : BaseApiController
             .ToListAsync(ct);
 
         // ── Geographic data for downloads ──
-        var downloadsByCountry = await context.AccessLogs
+        var downloadsByCountry = await nonAdminAccessLogs
             .Where(a => a.Action == AccessAction.Download && a.Country != null)
             .GroupBy(a => a.Country)
             .Select(g => new { Country = g.Key, Count = g.Count() })
@@ -429,7 +449,7 @@ public sealed class StatsController : BaseApiController
             .ToListAsync(ct);
 
         // ── Activity last 30 days ──
-        var activity30d = await context.AccessLogs
+        var activity30d = await nonAdminAccessLogs
             .Where(a => a.OccurredAt >= DateTime.UtcNow.AddDays(-30))
             .GroupBy(a => a.OccurredAt.Date)
             .Select(g => new { Date = g.Key, Count = g.Count() })
@@ -477,7 +497,7 @@ public sealed class StatsController : BaseApiController
         var totalDegreePrograms = await context.DegreePrograms.CountAsync(ct);
 
         // ── Top searched queries ──
-        var topSearches = await context.AccessLogs
+        var topSearches = await nonAdminAccessLogs
             .Where(a => a.Action == AccessAction.Search && a.SearchQuery != null)
             .GroupBy(a => a.SearchQuery!.ToLower())
             .Select(g => new { Query = g.Key, Count = g.Count() })

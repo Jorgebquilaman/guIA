@@ -12,6 +12,7 @@ import Navbar from '../components/public/Navbar'
 import Footer from '../components/public/Footer'
 import { getGoogleDriveEmbedUrl } from '../utils/gdrive'
 import MediaLinkPlayer from '../components/ui/MediaLinkPlayer'
+import Modal from '../components/ui/Modal'
 import { generateCitation, type CitationFormat } from '../utils/citation'
 
 const typeLabels: Record<string, string> = {
@@ -233,6 +234,8 @@ export default function DocumentView() {
   const { data: doc, isLoading, isError, error } = useDocument(id)
   const [editing, setEditing] = useState(false)
   const [showDublinCore, setShowDublinCore] = useState(false)
+  const [showAllMetadata, setShowAllMetadata] = useState(false)
+  const [metadataExpanded, setMetadataExpanded] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
 
   const relatedParams = useMemo(() => ({
@@ -248,6 +251,16 @@ export default function DocumentView() {
 
   const isOwner = user?.id === doc?.uploadedByUserId
   const isAdmin = user?.role === 'Admin'
+
+  const filledMetadata = useMemo(
+    () => doc?.metadataValues?.filter((mv) => mv.value?.trim()) ?? [],
+    [doc?.metadataValues],
+  )
+  const simpleMetadata = useMemo(
+    () => filledMetadata.filter((mv) => mv.isSimpleView),
+    [filledMetadata],
+  )
+  const hasSimpleFields = simpleMetadata.length > 0
 
   const relatedList = useMemo(
     () => doc ? ((Array.isArray(relatedDocs) ? relatedDocs : []) as Document[]).filter((d) => d.id !== doc.id) : [],
@@ -554,7 +567,7 @@ export default function DocumentView() {
               )}
               EXPORTAR PDF
             </button>
-            <div className="relative">
+            <div className="relative" ref={citationRef}>
               <button
                 onClick={() => setShowCitation(!showCitation)}
                 className="flex items-center gap-1.5 rounded-lg border border-iupa-light px-3 py-1.5 text-xs font-medium text-iupa-medium hover:border-iupa-green hover:text-iupa-green transition-colors"
@@ -635,14 +648,14 @@ export default function DocumentView() {
               <div className="relative bg-gradient-to-br from-[#2D7A6B] to-iupa-green px-8 py-10 text-white">
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.1)_0%,transparent_60%)]" />
                 <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
-            <div className="relative" ref={citationRef}>
-                  <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="relative">
+                   <div className="mb-4 flex flex-wrap items-center gap-2">
                     <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${status.class.includes('emerald') ? 'border-emerald-400/50 bg-emerald-500/20 text-white' : status.class.includes('amber') ? 'border-amber-400/50 bg-amber-500/20 text-white' : status.class.includes('sky') ? 'border-sky-400/50 bg-sky-500/20 text-white' : 'border-red-400/50 bg-red-500/20 text-white'}`}>
                       <span className={`h-1.5 w-1.5 rounded-full ${status.class.includes('emerald') ? 'bg-emerald-400' : status.class.includes('amber') ? 'bg-amber-400' : status.class.includes('sky') ? 'bg-sky-400' : 'bg-red-400'}`} />
                       {status.label}
                     </span>
                     <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
-                      {typeLabels[doc.type] || doc.type}
+                      {doc.documentTypeName ?? typeLabels[doc.type] ?? doc.type}
                     </span>
                     <span className="ml-auto text-xs text-white/50">
                       ID: {doc.id.slice(0, 8)}...
@@ -851,108 +864,140 @@ export default function DocumentView() {
 
                   <AuthorsSection authors={doc.authors} />
 
-                  {doc.metadataValues && doc.metadataValues.length > 0 && (
-                    <div>
-                      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-iupa-medium">Metadatos SNRD{doc.metadataSchemaName ? ` — ${doc.metadataSchemaName}` : ''}</h3>
+                  {doc.metadataValues && doc.metadataValues.length > 0 && (() => {
+                    const rows = hasSimpleFields ? simpleMetadata : filledMetadata
+                    const renderRows = (showDc: boolean, all: boolean) => {
+                      let lastLabel = ''
+                      return rows.map((mv, i) => {
+                        const isSame = mv.fieldLabel === lastLabel
+                        lastLabel = mv.fieldLabel
+                        const dcElement = mv.qualifier ? `${mv.dublinCoreElement}.${mv.qualifier}` : mv.dublinCoreElement
+                        return (
+                          <tr key={i} className={isSame ? 'bg-iupa-light/20' : ''}>
+                            {showDc && (isSame ? (
+                              <td className="px-4 py-2.5" />
+                            ) : (
+                              <td className="px-4 py-2.5 font-mono text-xs text-iupa-green">{dcElement}</td>
+                            ))}
+                            <td className={`px-4 py-2.5 text-iupa-dark ${isSame ? 'text-iupa-medium/60 text-xs' : 'font-medium'}`}>
+                              {isSame ? '' : mv.fieldLabel}
+                            </td>
+                            <td className="px-4 py-2.5 text-iupa-dark">{all && !mv.value?.trim() ? <span className="text-iupa-medium/50">—</span> : mv.value}</td>
+                          </tr>
+                        )
+                      })
+                    }
+                    return (
                       <div className="overflow-hidden rounded-xl border border-iupa-light bg-white shadow-sm">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="bg-iupa-light/50">
-                              <th className="px-4 py-2 text-left font-medium text-iupa-dark">DC Element</th>
-                              <th className="px-4 py-2 text-left font-medium text-iupa-dark">Campo</th>
-                              <th className="px-4 py-2 text-left font-medium text-iupa-dark">Valor</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-iupa-light">
-                            {(() => {
-                              let lastLabel = ''
-                              return doc.metadataValues.map((mv, i) => {
-                                const isSame = mv.fieldLabel === lastLabel
-                                lastLabel = mv.fieldLabel
-                                const dcElement = mv.qualifier ? `${mv.dublinCoreElement}.${mv.qualifier}` : mv.dublinCoreElement
-                                return (
-                                  <tr key={i} className={isSame ? 'bg-iupa-light/20' : ''}>
-                                    {isSame ? (
-                                      <td className="px-4 py-2.5" />
-                                    ) : (
-                                      <td className="px-4 py-2.5 font-mono text-xs text-iupa-green">{dcElement}</td>
-                                    )}
-                                    <td className={`px-4 py-2.5 text-iupa-dark ${isSame ? 'text-iupa-medium/60 text-xs' : 'font-medium'}`}>
-                                      {isSame ? '' : mv.fieldLabel}
-                                    </td>
-                                    <td className={`px-4 py-2.5 text-iupa-dark ${mv.value ? '' : 'text-iupa-medium/50 italic'}`}>{mv.value || '—'}</td>
-                                  </tr>
-                                )
-                              })
-                            })()}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold uppercase tracking-wider text-iupa-medium">Metadatos Dublin Core</h3>
-                      <span className="text-xs text-iupa-medium">Estándar DCMI — Ley 26.899</span>
-                    </div>
-                    {(() => {
-                      const typeLabels: Record<string, string> = {
-                        Article: 'Artículo', Thesis: 'Tesis de Licenciatura', Dataset: 'Dataset',
-                        Software: 'Software', Other: 'Otro',
-                      }
-                      const pubDate = doc.publicationDate
-                        ? new Date(doc.publicationDate).toISOString().split('T')[0]
-                        : doc.publishedAt ? new Date(doc.publishedAt).toISOString().split('T')[0] : ''
-                      const authorNames = (doc.authors || [])
-                        .sort((a, b) => a.order - b.order)
-                        .map((a) => { const p = a.name.trim().split(' '); return p.length > 1 ? `${p[p.length-1]}, ${p.slice(0,-1).join(' ')}` : a.name })
-                      const dcMapping = [
-                        { dc: 'dc.title', value: doc.title, required: true },
-                        { dc: 'dc.creator', value: authorNames.join('; ') || '—', required: true },
-                        { dc: 'dc.contributor.advisor', value: doc.advisorName || '—', required: true },
-                        { dc: 'dc.publisher', value: doc.institution || 'IUPA', required: true },
-                        { dc: 'dc.date.issued', value: pubDate || '—', required: true },
-                        { dc: 'dc.type', value: typeLabels[doc.type] || doc.type, required: true },
-                        { dc: 'dc.description.abstract', value: doc.abstractEs || doc.description || '—', required: true },
-                        { dc: 'dc.subject', value: (doc.keywords || []).join('; ') || '—', required: true },
-                        { dc: 'dc.language', value: doc.aiMetadata?.language || 'Español', required: true },
-                        { dc: 'dc.rights.license', value: doc.license || 'CC BY-NC-ND 4.0', required: true },
-                        { dc: 'dc.identifier.uri', value: `${window.location.origin}/documentos/${doc.id}`, required: true },
-                        { dc: 'dc.coverage.spatial', value: doc.department || '—', required: false },
-                        { dc: 'dc.relation.ispartofseries', value: doc.degreeProgram || '—', required: false },
-                      ]
-                      return (
-                        <div className="overflow-hidden rounded-xl border border-iupa-light bg-white shadow-sm">
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className="bg-iupa-light/50">
-                                <th className="px-4 py-2 text-left font-medium text-iupa-dark">Campo DCMI</th>
-                                <th className="px-4 py-2 text-left font-medium text-iupa-dark">Valor</th>
-                                <th className="px-4 py-2 text-center font-medium text-iupa-dark w-16">Ley</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-iupa-light">
-                              {dcMapping.map((row) => (
-                                <tr key={row.dc} className="hover:bg-iupa-light/30">
-                                  <td className="px-4 py-2 font-mono text-xs text-iupa-green">{row.dc}</td>
-                                  <td className={`px-4 py-2 text-iupa-dark ${row.value === '—' ? 'text-iupa-medium/50 italic' : ''}`}>{row.value}</td>
-                                  <td className="px-4 py-2 text-center">
-                                    {row.required
-                                      ? <span className="text-xs font-medium text-emerald-600">Sí</span>
-                                      : <span className="text-xs text-iupa-medium">Rec.</span>}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                        <div
+                          onClick={() => setMetadataExpanded((p) => !p)}
+                          className="flex cursor-pointer items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-iupa-light/30"
+                        >
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-iupa-medium">
+                              Metadatos SNRD{hasSimpleFields ? ' — vista sencilla' : ''}{doc.metadataSchemaName ? ` — ${doc.metadataSchemaName}` : ''}
+                            </h3>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className="text-xs text-iupa-medium">{rows.length} campos</span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setShowAllMetadata(true) }}
+                              className="rounded-lg border border-iupa-green-light bg-iupa-green-light/40 px-3 py-1.5 text-xs font-medium text-iupa-green transition-colors hover:bg-iupa-green-light"
+                            >
+                              Ver todos los metadatos
+                            </button>
+                            {metadataExpanded ? (
+                              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                            ) : (
+                              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                            )}
+                          </div>
                         </div>
-                      )
-                    })()}
-                  </div>
+                        {metadataExpanded && (
+                          <div className="border-t border-iupa-light">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="bg-iupa-light/50">
+                                  {hasSimpleFields ? (
+                                    <>
+                                      <th className="px-4 py-2 text-left font-medium text-iupa-dark">Campo</th>
+                                      <th className="px-4 py-2 text-left font-medium text-iupa-dark">Valor</th>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <th className="px-4 py-2 text-left font-medium text-iupa-dark">DC Element</th>
+                                      <th className="px-4 py-2 text-left font-medium text-iupa-dark">Campo</th>
+                                      <th className="px-4 py-2 text-left font-medium text-iupa-dark">Valor</th>
+                                    </>
+                                  )}
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-iupa-light">
+                                {renderRows(!hasSimpleFields, false)}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
+
+                  {isAdmin && <DublinCoreSection doc={doc} />}
                 </div>
               </div>
             </div>
+
+            <Modal open={showAllMetadata} onClose={() => setShowAllMetadata(false)} title={`Todos los metadatos${doc.metadataSchemaName ? ` — ${doc.metadataSchemaName}` : ''}`} size="lg">
+              <div className="max-h-[70vh] overflow-y-auto">
+                {hasSimpleFields && (
+                  <div className="mb-6">
+                    <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-iupa-medium">
+                      Vista sencilla
+                    </h4>
+                    <table className="w-full text-sm overflow-hidden rounded-lg ring-1 ring-iupa-green-light">
+                      <thead>
+                        <tr className="bg-iupa-green-light/30">
+                          <th className="px-3 py-2 text-left font-medium text-iupa-dark">Campo</th>
+                          <th className="px-3 py-2 text-left font-medium text-iupa-dark">Valor</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-iupa-light">
+                        {simpleMetadata.map((mv, i) => (
+                          <tr key={i}>
+                            <td className="px-3 py-2 font-medium text-iupa-dark">{mv.fieldLabel}</td>
+                            <td className="px-3 py-2 text-iupa-dark">{mv.value}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-iupa-medium">
+                  Todos los campos (DC Element)
+                </h4>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-iupa-light/50">
+                      <th className="px-3 py-2 text-left font-medium text-iupa-dark">DC Element</th>
+                      <th className="px-3 py-2 text-left font-medium text-iupa-dark">Campo</th>
+                      <th className="px-3 py-2 text-left font-medium text-iupa-dark">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-iupa-light">
+                    {doc.metadataValues?.map((mv, i) => {
+                      const dcElement = mv.qualifier ? `${mv.dublinCoreElement}.${mv.qualifier}` : mv.dublinCoreElement
+                      return (
+                        <tr key={i}>
+                          <td className="px-3 py-2 font-mono text-xs text-iupa-green">{dcElement}</td>
+                          <td className="px-3 py-2 font-medium text-iupa-dark">{mv.fieldLabel}</td>
+                          <td className="px-3 py-2 text-iupa-dark">{mv.value?.trim() ? mv.value : <span className="text-iupa-medium/50">—</span>}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Modal>
 
             {relatedList.length > 0 && (
               <div className="mt-8 overflow-hidden rounded-2xl border border-iupa-light bg-white shadow-sm">
@@ -993,6 +1038,75 @@ export default function DocumentView() {
       )}
 
       <Footer />
+    </div>
+  )
+}
+
+function DublinCoreSection({ doc }: { doc: Document }) {
+  const [expanded, setExpanded] = useState(false)
+  const typeLabels: Record<string, string> = {
+    Article: 'Artículo', Thesis: 'Tesis de Licenciatura', Dataset: 'Dataset',
+    Software: 'Software', Other: 'Otro',
+  }
+  const pubDate = doc.publicationDate
+    ? new Date(doc.publicationDate).toISOString().split('T')[0]
+    : doc.publishedAt ? new Date(doc.publishedAt).toISOString().split('T')[0] : ''
+  const authorNames = (doc.authors || [])
+    .sort((a, b) => a.order - b.order)
+    .map((a) => { const p = a.name.trim().split(' '); return p.length > 1 ? `${p[p.length-1]}, ${p.slice(0,-1).join(' ')}` : a.name })
+  const dcMapping = [
+    { dc: 'dc.title', value: doc.title },
+    { dc: 'dc.creator', value: authorNames.join('; ') },
+    { dc: 'dc.contributor.advisor', value: doc.advisorName },
+    { dc: 'dc.publisher', value: doc.institution || 'IUPA' },
+    { dc: 'dc.date.issued', value: pubDate },
+    { dc: 'dc.type', value: typeLabels[doc.type] || doc.type },
+    { dc: 'dc.description.abstract', value: doc.abstractEs || doc.description },
+    { dc: 'dc.subject', value: (doc.keywords || []).join('; ') },
+    { dc: 'dc.language', value: doc.aiMetadata?.language || 'Español' },
+    { dc: 'dc.rights.license', value: doc.license || 'CC BY-NC-ND 4.0' },
+    { dc: 'dc.identifier.uri', value: `${window.location.origin}/documentos/${doc.id}` },
+    { dc: 'dc.coverage.spatial', value: doc.department },
+    { dc: 'dc.relation.ispartofseries', value: doc.degreeProgram },
+  ].filter(row => row.value?.trim())
+
+  return (
+    <div className="rounded-xl border border-iupa-light bg-white shadow-sm overflow-hidden">
+      <button
+        onClick={() => setExpanded(p => !p)}
+        className="flex w-full items-center justify-between px-5 py-3 hover:bg-iupa-light/30 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-iupa-medium">Metadatos Dublin Core</h3>
+          <span className="text-xs text-iupa-medium">Estándar DCMI — Ley 26.899</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-iupa-medium">{dcMapping.length} campos</span>
+          {expanded
+            ? <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+            : <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>}
+        </div>
+      </button>
+      {expanded && (
+        <div className="border-t border-iupa-light">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-iupa-light/50">
+                <th className="px-4 py-2 text-left font-medium text-iupa-dark">Campo DCMI</th>
+                <th className="px-4 py-2 text-left font-medium text-iupa-dark">Valor</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-iupa-light">
+              {dcMapping.map((row) => (
+                <tr key={row.dc} className="hover:bg-iupa-light/30">
+                  <td className="px-4 py-2 font-mono text-xs text-iupa-green">{row.dc}</td>
+                  <td className="px-4 py-2 text-iupa-dark">{row.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

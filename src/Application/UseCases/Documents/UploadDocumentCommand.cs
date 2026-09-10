@@ -14,6 +14,7 @@ public record UploadDocumentCommand(
     Guid CollectionId,
     string? Title,
     bool IsPublic,
+    Guid? DocumentTypeId = null,
     (Stream Content, string FileName, string MimeType)? CoverImage = null,
     List<MediaLink>? MediaLinks = null
 ) : IRequest<Guid>;
@@ -61,6 +62,7 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
         };
 
         var document = new Document(title, docType, request.CollectionId, _currentUser.UserId, request.IsPublic);
+        document.SetDocumentType(request.DocumentTypeId);
 
         foreach (var (stream, fileName, mimeType) in request.Files)
         {

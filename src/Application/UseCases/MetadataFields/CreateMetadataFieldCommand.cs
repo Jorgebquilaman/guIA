@@ -16,8 +16,10 @@ public record CreateMetadataFieldCommand(
     bool IsRepeatable,
     bool IsReadOnly,
     bool IsHidden,
+    bool IsSimpleView,
     int SortOrder,
-    string? HelpText
+    string? HelpText,
+    string? OptionsPipe = null
 ) : IRequest<Guid>;
 
 public class CreateMetadataFieldCommandHandler : IRequestHandler<CreateMetadataFieldCommand, Guid>
@@ -52,11 +54,26 @@ public class CreateMetadataFieldCommandHandler : IRequestHandler<CreateMetadataF
             request.IsRepeatable,
             request.IsReadOnly,
             request.IsHidden,
+            request.IsSimpleView,
             request.SortOrder,
             request.HelpText);
 
         _context.MetadataFields.Add(field);
         await _context.SaveChangesAsync(ct);
+
+        if (fieldType == FieldType.Select && !string.IsNullOrWhiteSpace(request.OptionsPipe))
+        {
+            var values = request.OptionsPipe
+                .Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Distinct()
+                .ToList();
+
+            for (var i = 0; i < values.Count; i++)
+                _context.MetadataFieldOptions.Add(new MetadataFieldOption(field.Id, values[i], values[i], false, i));
+
+            await _context.SaveChangesAsync(ct);
+        }
+
         return field.Id;
     }
 }

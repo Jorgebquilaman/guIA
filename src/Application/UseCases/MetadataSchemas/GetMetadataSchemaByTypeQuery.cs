@@ -18,11 +18,30 @@ public class GetMetadataSchemaByTypeQueryHandler : IRequestHandler<GetMetadataSc
 
     public async Task<MetadataSchemaDto?> Handle(GetMetadataSchemaByTypeQuery request, CancellationToken ct)
     {
-        var schema = await _context.MetadataSchemas
-            .Where(s => s.DocumentTypeName == request.DocumentTypeName && s.IsActive)
+        var query = _context.MetadataSchemas
             .Include(s => s.Fields.OrderBy(f => f.SortOrder))
-                .ThenInclude(f => f.Options.OrderBy(o => o.SortOrder))
+                .ThenInclude(f => f.Options.OrderBy(o => o.SortOrder));
+
+        // Try direct match by DocumentTypeName first
+        var schema = await query
+            .Where(s => s.DocumentTypeName == request.DocumentTypeName && s.IsActive)
             .FirstOrDefaultAsync(ct);
+
+        // Fallback: resolve schema through DocumentTypeDef.MetadataSchemaId FK
+        if (schema == null)
+        {
+            var schemaId = await _context.DocumentTypeDefs
+                .Where(t => t.Name == request.DocumentTypeName && t.MetadataSchemaId != null)
+                .Select(t => t.MetadataSchemaId!.Value)
+                .FirstOrDefaultAsync(ct);
+
+            if (schemaId != default)
+            {
+                schema = await query
+                    .Where(s => s.Id == schemaId && s.IsActive)
+                    .FirstOrDefaultAsync(ct);
+            }
+        }
 
         if (schema == null) return null;
 
@@ -47,6 +66,7 @@ public class GetMetadataSchemaByTypeQueryHandler : IRequestHandler<GetMetadataSc
                 IsRepeatable = f.IsRepeatable,
                 IsReadOnly = f.IsReadOnly,
                 IsHidden = f.IsHidden,
+                IsSimpleView = f.IsSimpleView,
                 SortOrder = f.SortOrder,
                 HelpText = f.HelpText,
                 Options = f.Options.Select(o => new MetadataFieldOptionDto

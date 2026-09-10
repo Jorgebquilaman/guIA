@@ -33,7 +33,8 @@ export default function MetadataEditor({
 }: MetadataEditorProps) {
   const [title, setTitle] = useState(document.title)
   const [description, setDescription] = useState(document.description ?? '')
-  const [type, setType] = useState<DocumentType>(document.type)
+  const [type, setType] = useState<DocumentType>((document.documentTypeName ?? document.type) as DocumentType)
+  const typeChangedByUser = useRef(false)
   const [language, setLanguage] = useState(
     document.aiMetadata?.language ?? 'Español',
   )
@@ -68,7 +69,7 @@ export default function MetadataEditor({
 
   const dynamicFormRef = useRef<DynamicMetadataFormHandle>(null)
   const mutation = useUpdateMetadata(document.id)
-  const { data: aiSuggestions, refetch: fetchAiSuggestions } = useAiSuggestions(document.id)
+  const { data: aiSuggestions, refetch: fetchAiSuggestions } = useAiSuggestions(document.id, type)
   const { data: typeDefs } = useDocumentTypes()
   const { data: departments } = useDepartments()
   const isLink = !!document.sourceUrl
@@ -76,6 +77,14 @@ export default function MetadataEditor({
   useEffect(() => {
     aiLogEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [aiLog])
+
+  useEffect(() => {
+    if (!typeDefs || typeDefs.length === 0) return
+    if (!typeDefs.some((t) => t.name === type)) {
+      typeChangedByUser.current = true
+      setType(typeDefs[0].name as DocumentType)
+    }
+  }, [typeDefs])
 
   useEffect(() => {
     if (!aiSuggestions || !aiPendingRef.current) return
@@ -101,10 +110,9 @@ export default function MetadataEditor({
           order: a.order || i + 1,
         })),
       )
-    if (aiSuggestions.suggestedType) {
-      const validTypes: DocumentType[] = ['Article', 'Thesis', 'Dataset', 'Software', 'Other', 'ConferenceDocument', 'Book']
-      if (validTypes.includes(aiSuggestions.suggestedType as DocumentType))
-        setType(aiSuggestions.suggestedType as DocumentType)
+    if (aiSuggestions.suggestedType && !typeChangedByUser.current) {
+      const isValidType = (typeDefs ?? []).some((t) => t.name === aiSuggestions.suggestedType)
+      if (isValidType) setType(aiSuggestions.suggestedType as DocumentType)
     }
     if (aiSuggestions.metadataValues && Object.keys(aiSuggestions.metadataValues).length > 0) {
       const merged = { ...aiSuggestions.metadataValues }
@@ -126,6 +134,7 @@ export default function MetadataEditor({
       setAiLog((prev) => [...prev, `✓ Recibidos ${Object.keys(merged).length} campos de metadatos SNRD (${extraCount} desde campos multilingüe)`])
     }
 
+    console.log('IA JSON:', JSON.stringify(aiSuggestions, null, 2))
     const jsonPreview = JSON.stringify(aiSuggestions, null, 2)
     if (jsonPreview.length < 5000) {
       setAiLog((prev) => [...prev, '', '── JSON de respuesta ──', jsonPreview, '── Fin JSON ──', ''])
@@ -137,7 +146,8 @@ export default function MetadataEditor({
   }, [aiSuggestions])
 
   const handleAiFill = async () => {
-    setAiLog(['▶ Iniciando análisis con IA...', '  Extrayendo texto del documento...'])
+    setAiMetadataValues({})
+    setAiLog([`▶ Analizando como "${typeDefs?.find(t => t.name === type)?.label ?? type}"...`, '  Extrayendo texto del documento...'])
     setAiLoading(true)
     aiPendingRef.current = true
     const start = Date.now()
@@ -212,6 +222,7 @@ export default function MetadataEditor({
       title,
       description: description || null,
       type,
+      documentTypeId: typeDefs?.find((t) => t.name === type)?.id ?? null,
       authors: authors.map((a) => ({ name: a.name, email: a.email, orcid: a.orcid, order: a.order })),
       keywords,
       advisorName: advisorName || null,
@@ -301,7 +312,7 @@ export default function MetadataEditor({
             </label>
             <select
               value={type}
-              onChange={(e) => setType(e.target.value as DocumentType)}
+              onChange={(e) => { setType(e.target.value as DocumentType); typeChangedByUser.current = true; setAiMetadataValues({}); setAiLog([]); }}
               className="w-full rounded-lg border border-iupa-light bg-white px-3.5 py-2.5 text-sm text-iupa-dark transition-colors focus:border-iupa-green focus:outline-none focus:ring-1 focus:ring-iupa-green/20"
             >
               {(typeDefs ?? []).map((t) => (
@@ -638,7 +649,11 @@ export default function MetadataEditor({
       </div>
 
       <div className="border-t border-iupa-light pt-6">
-        <DynamicMetadataForm ref={dynamicFormRef} key={document.id} documentType={type} documentId={document.id} aiMetadataValues={aiMetadataValues} aiVersion={aiVersion} onLog={logCallback} />
+        {typeDefs && typeDefs.some((t) => t.name === type) ? (
+          <DynamicMetadataForm ref={dynamicFormRef} key={`${document.id}-${type}`} documentType={type} documentId={document.id} aiMetadataValues={aiMetadataValues} aiVersion={aiVersion} onLog={logCallback} schemaId={typeDefs?.find(t => t.name === type)?.metadataSchemaId ?? undefined} />
+        ) : (
+          <p className="text-sm text-gray-400">Cargando esquema de metadatos...</p>
+        )}
       </div>
 
       <div className="flex justify-end gap-3 border-t border-iupa-light pt-5">

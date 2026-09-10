@@ -20,6 +20,7 @@ const adminLinks = [
   { to: '/app/admin/document-types', label: 'Tipos de documento', icon: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' },
   { to: '/app/admin/departments', label: 'Redes de Conocimiento', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' },
   { to: '/app/admin/metadata-schemas', label: 'Esquemas Metadatos', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
+  { to: '/app/admin/thesaurus', label: 'Tesauro', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
 ]
 
 function Sidebar() {
@@ -67,6 +68,28 @@ function Sidebar() {
                 </NavLink>
               </li>
             ))}
+          </ul>
+
+          <div className="my-4 border-t border-iupa-green-secondary" />
+          <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-iupa-green-light/60">
+            Cuenta
+          </p>
+          <ul className="space-y-1">
+            <li>
+              <NavLink
+                to="/app/change-password"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                    isActive ? 'bg-iupa-green-secondary text-white' : 'text-iupa-green-light hover:bg-iupa-green-secondary/50 hover:text-white'
+                  }`
+                }
+              >
+                <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+                Cambiar contraseña
+              </NavLink>
+            </li>
           </ul>
 
           {user?.role === 'Admin' && (

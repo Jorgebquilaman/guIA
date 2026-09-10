@@ -62,7 +62,7 @@ export function useUploadLink() {
   })
 }
 
-export function useAiSuggestions(documentId: string) {
+export function useAiSuggestions(documentId: string, type?: string) {
   return useQuery<{
     title?: string | null
     description?: string | null
@@ -76,9 +76,10 @@ export function useAiSuggestions(documentId: string) {
     publicationVersion?: string | null
     digitalIdentifier?: string | null
   }>({
-    queryKey: ['document', documentId, 'ai-suggestions'],
+    queryKey: ['document', documentId, 'ai-suggestions', type],
     queryFn: async () => {
-      const { data } = await client.get(`/documents/${documentId}/ai-suggestions`)
+      const params = type ? `?type=${encodeURIComponent(type)}` : ''
+      const { data } = await client.get(`/documents/${documentId}/ai-suggestions${params}`)
       return data.data ?? data
     },
     enabled: false,

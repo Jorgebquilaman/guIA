@@ -31,6 +31,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<MetadataField> MetadataFields => Set<MetadataField>();
     public DbSet<MetadataFieldOption> MetadataFieldOptions => Set<MetadataFieldOption>();
     public DbSet<DocumentMetadataValue> DocumentMetadataValues => Set<DocumentMetadataValue>();
+    public DbSet<ThesaurusTerm> ThesaurusTerms => Set<ThesaurusTerm>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

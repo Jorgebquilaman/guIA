@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, Settings, Plus, Trash2, BookMarked } from 'lucide-react'
-import { useMetadataSchemas, useCreateMetadataField, useUpdateMetadataField, useDeleteMetadataField, useCreateMetadataSchema } from '../../api/metadata'
+import { ChevronDown, ChevronRight, Settings, Plus, Trash2, BookMarked, Copy, List } from 'lucide-react'
+import { useMetadataSchemas, useCreateMetadataField, useUpdateMetadataField, useDeleteMetadataField, useCreateMetadataSchema, useDeleteMetadataSchema, useUpdateFieldOptions } from '../../api/metadata'
 import type { MetadataField } from '../../types'
 import Button from '../../components/ui/Button'
 
 export default function MetadataSchemasAdmin() {
   const { data: schemas, isLoading } = useMetadataSchemas()
   const createSchemaMutation = useCreateMetadataSchema()
+  const deleteSchemaMutation = useDeleteMetadataSchema()
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const [cloneForm, setCloneForm] = useState<{ schemaId: string; documentTypeName: string; label: string } | null>(null)
   const [addingSchemaId, setAddingSchemaId] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -68,7 +70,95 @@ export default function MetadataSchemasAdmin() {
                 </span>
               </div>
               <span className="text-xs text-gray-400">{schema.fields.length} campos</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setCloneForm({ schemaId: schema.id, documentTypeName: schema.documentTypeName + '_copia', label: schema.label + ' (copia)' })
+                }}
+                className="ml-2 inline-flex items-center gap-1 rounded-lg border border-blue-200 px-2.5 py-1 text-xs font-medium text-blue-500 hover:bg-blue-50"
+                title="Clonar este esquema"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                Clonar
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (window.confirm(`¿Eliminar el esquema "${schema.label}" y todos sus campos?`))
+                    deleteSchemaMutation.mutate({ id: schema.id })
+                }}
+                disabled={deleteSchemaMutation.isPending}
+                className="ml-2 inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-50"
+                title="Eliminar todo el esquema"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Eliminar
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (window.confirm(
+                    `ELIMINAR FORZADO del esquema "${schema.label}".\n\nSe borrarán también TODOS los valores de metadatos asociados en los documentos.\n\n¿Continuar?`
+                  ))
+                    deleteSchemaMutation.mutate({ id: schema.id, force: true })
+                }}
+                disabled={deleteSchemaMutation.isPending}
+                className="ml-2 inline-flex items-center gap-1 rounded-lg border border-red-300 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-50 bg-red-500"
+                title="Eliminar el esquema junto con sus valores de metadatos en documentos"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Eliminar forzado
+              </button>
             </button>
+
+            {cloneForm?.schemaId === schema.id && (
+              <div className="border-t border-blue-100 bg-blue-50 px-5 py-3">
+                <div className="flex flex-wrap items-end gap-3">
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="mb-0.5 block text-[11px] font-medium text-gray-500">DocumentTypeName *</label>
+                    <input
+                      type="text"
+                      value={cloneForm.documentTypeName}
+                      onChange={(e) => setCloneForm({ ...cloneForm, documentTypeName: e.target.value })}
+                      className="w-full rounded border border-gray-200 px-2.5 py-1.5 text-xs outline-none focus:border-blue-400"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="mb-0.5 block text-[11px] font-medium text-gray-500">Label *</label>
+                    <input
+                      type="text"
+                      value={cloneForm.label}
+                      onChange={(e) => setCloneForm({ ...cloneForm, label: e.target.value })}
+                      className="w-full rounded border border-gray-200 px-2.5 py-1.5 text-xs outline-none focus:border-blue-400"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 pb-0.5">
+                    <button
+                      onClick={() => setCloneForm(null)}
+                      className="rounded px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-200"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      disabled={createSchemaMutation.isPending || !cloneForm.documentTypeName.trim() || !cloneForm.label.trim()}
+                      onClick={async () => {
+                        await createSchemaMutation.mutateAsync({
+                          documentTypeName: cloneForm.documentTypeName.trim(),
+                          label: cloneForm.label.trim(),
+                          isActive: true,
+                          sortOrder: 0,
+                          cloneFromSchemaId: cloneForm.schemaId,
+                        })
+                        setCloneForm(null)
+                      }}
+                      className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {createSchemaMutation.isPending ? 'Clonando...' : 'Clonar'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {expanded[schema.id] && (
               <div className="border-t border-gray-100 px-5 pb-4 pt-3">
@@ -209,11 +299,19 @@ function AddFieldForm({ schemaId, onDone }: { schemaId: string; onDone: () => vo
   const [isRepeatable, setIsRepeatable] = useState(false)
   const [isReadOnly, setIsReadOnly] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
+  const [isSimpleView, setIsSimpleView] = useState(false)
   const [sortOrder, setSortOrder] = useState(0)
   const [helpText, setHelpText] = useState('')
+  const [optionsPipe, setOptionsPipe] = useState('')
+
+  const parsedOptions = optionsPipe
+    .split('|')
+    .map((v) => v.trim())
+    .filter(Boolean)
 
   async function handleCreate() {
     if (!dublinCoreElement.trim() || !internalName.trim() || !label.trim()) return
+    if (fieldType === 'Select' && parsedOptions.length === 0) return
     await createMutation.mutateAsync({
       dublinCoreElement: dublinCoreElement.trim(),
       qualifier: qualifier.trim() || null,
@@ -224,8 +322,10 @@ function AddFieldForm({ schemaId, onDone }: { schemaId: string; onDone: () => vo
       isRepeatable,
       isReadOnly,
       isHidden,
+      isSimpleView,
       sortOrder,
       helpText: helpText.trim() || null,
+      optionsPipe: fieldType === 'Select' ? parsedOptions.join('|') : null,
     } as unknown as Partial<MetadataField>)
     onDone()
   }
@@ -264,7 +364,7 @@ function AddFieldForm({ schemaId, onDone }: { schemaId: string; onDone: () => vo
             <option value="Text">Text</option>
             <option value="Textarea">Textarea</option>
             <option value="Date">Date</option>
-            <option value="Select">Select</option>
+            <option value="Select">Combo (lista de valores)</option>
             <option value="MultiText">MultiText</option>
           </select>
         </div>
@@ -279,6 +379,30 @@ function AddFieldForm({ schemaId, onDone }: { schemaId: string; onDone: () => vo
             <option value="NotApplicable">NotApplicable</option>
           </select>
         </div>
+        {fieldType === 'Select' && (
+          <div className="col-span-2">
+            <label className="text-[11px] font-medium text-gray-500">
+              Valores posibles (separados por |) <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              value={optionsPipe}
+              onChange={(e) => setOptionsPipe(e.target.value)}
+              placeholder="ej: Artículo|Tesis|Informe|Ponencia"
+              className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-green-400"
+            />
+            {parsedOptions.length > 0 && (
+              <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                <span className="text-[10px] text-gray-400">{parsedOptions.length} valor(es):</span>
+                {parsedOptions.map((opt) => (
+                  <span key={opt} className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                    {opt}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <div>
           <label className="text-[11px] font-medium text-gray-500">Sort order</label>
           <input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))}
@@ -302,11 +426,15 @@ function AddFieldForm({ schemaId, onDone }: { schemaId: string; onDone: () => vo
             <input type="checkbox" checked={isHidden} onChange={(e) => setIsHidden(e.target.checked)} className="rounded" />
             Oculto
           </label>
+          <label className="flex items-center gap-1.5 text-xs text-gray-600" title="Marca el campo para la vista sencilla">
+            <input type="checkbox" checked={isSimpleView} onChange={(e) => setIsSimpleView(e.target.checked)} className="rounded" />
+            Vista Sencilla
+          </label>
         </div>
         <div className="flex items-center justify-end gap-2">
           <button onClick={onDone}
             className="rounded px-3 py-1 text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
-          <button onClick={handleCreate} disabled={createMutation.isPending || !dublinCoreElement.trim() || !internalName.trim() || !label.trim()}
+          <button onClick={handleCreate} disabled={createMutation.isPending || !dublinCoreElement.trim() || !internalName.trim() || !label.trim() || (fieldType === 'Select' && parsedOptions.length === 0)}
             className="rounded bg-iupa-green px-3 py-1 text-xs font-medium text-white hover:bg-iupa-green/90 disabled:opacity-50">
             {createMutation.isPending ? 'Creando...' : 'Crear campo'}
           </button>
@@ -319,12 +447,36 @@ function AddFieldForm({ schemaId, onDone }: { schemaId: string; onDone: () => vo
 function FieldRow({ field, index }: { field: MetadataField; index: number }) {
   const deleteMutation = useDeleteMetadataField()
   const updateMutation = useUpdateMetadataField()
+  const updateOptionsMutation = useUpdateFieldOptions(field.id)
   const [editing, setEditing] = useState(false)
+  const [editingOptions, setEditingOptions] = useState(false)
+  const [optionsPipeText, setOptionsPipeText] = useState('')
+  const [dublinCoreElement, setDublinCoreElement] = useState(field.dublinCoreElement)
+  const [qualifier, setQualifier] = useState(field.qualifier ?? '')
+  const [internalName, setInternalName] = useState(field.internalName)
+  const [fieldType, setFieldType] = useState(field.fieldType)
+  const [isRepeatable, setIsRepeatable] = useState(field.isRepeatable)
+  const [isReadOnly, setIsReadOnly] = useState(field.isReadOnly)
+  const [isSimpleView, setIsSimpleView] = useState(field.isSimpleView)
   const [label, setLabel] = useState(field.label)
   const [helpText, setHelpText] = useState(field.helpText ?? '')
   const [obligatoriness, setObligatoriness] = useState(field.obligatoriness)
   const [isHidden, setIsHidden] = useState(field.isHidden)
   const [sortOrder, setSortOrder] = useState(field.sortOrder)
+
+  function openOptionsEditor() {
+    setOptionsPipeText(field.options.map((o) => o.value).join('|'))
+    setEditingOptions(true)
+  }
+
+  async function handleSaveOptions() {
+    const values = optionsPipeText
+      .split('|')
+      .map((v) => v.trim())
+      .filter(Boolean)
+    await updateOptionsMutation.mutateAsync(values.map((v, i) => ({ value: v, label: v, isDefault: false, sortOrder: i })))
+    setEditingOptions(false)
+  }
 
   async function handleSave() {
     await updateMutation.mutateAsync({
@@ -335,6 +487,13 @@ function FieldRow({ field, index }: { field: MetadataField; index: number }) {
       sortOrder,
       isHidden,
       helpText: helpText || null,
+      dublinCoreElement: dublinCoreElement.trim(),
+      qualifier: qualifier.trim() || null,
+      internalName: internalName.trim(),
+      fieldType,
+      isRepeatable,
+      isReadOnly,
+      isSimpleView,
     })
     setEditing(false)
   }
@@ -350,9 +509,35 @@ function FieldRow({ field, index }: { field: MetadataField; index: number }) {
       <div className="mb-2 rounded-lg border border-blue-100 bg-blue-50 p-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-[11px] font-medium text-gray-500">Label</label>
+            <label className="text-[11px] font-medium text-gray-500">DC Element *</label>
+            <input type="text" value={dublinCoreElement} onChange={(e) => setDublinCoreElement(e.target.value)}
+              className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-blue-400" />
+          </div>
+          <div>
+            <label className="text-[11px] font-medium text-gray-500">Qualifier</label>
+            <input type="text" value={qualifier} onChange={(e) => setQualifier(e.target.value)}
+              className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-blue-400" />
+          </div>
+          <div>
+            <label className="text-[11px] font-medium text-gray-500">InternalName *</label>
+            <input type="text" value={internalName} onChange={(e) => setInternalName(e.target.value)}
+              className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-blue-400" />
+          </div>
+          <div>
+            <label className="text-[11px] font-medium text-gray-500">Label *</label>
             <input type="text" value={label} onChange={(e) => setLabel(e.target.value)}
               className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-blue-400" />
+          </div>
+          <div>
+            <label className="text-[11px] font-medium text-gray-500">Field type</label>
+            <select value={fieldType} onChange={(e) => setFieldType(e.target.value as MetadataField['fieldType'])}
+              className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-blue-400">
+              <option value="Text">Texto</option>
+              <option value="Textarea">Área de texto</option>
+              <option value="Date">Fecha</option>
+              <option value="Select">Combo (lista de valores)</option>
+              <option value="MultiText">Multi-texto</option>
+            </select>
           </div>
           <div>
             <label className="text-[11px] font-medium text-gray-500">Help text</label>
@@ -375,17 +560,30 @@ function FieldRow({ field, index }: { field: MetadataField; index: number }) {
             <input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))}
               className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-blue-400" />
           </div>
-          <div className="flex items-center gap-4">
+          <div className="col-span-2 flex flex-wrap items-center gap-x-5 gap-y-2">
+            <label className="flex items-center gap-1.5 text-xs text-gray-600">
+              <input type="checkbox" checked={isRepeatable} onChange={(e) => setIsRepeatable(e.target.checked)} className="rounded" />
+              Repetible
+            </label>
+            <label className="flex items-center gap-1.5 text-xs text-gray-600">
+              <input type="checkbox" checked={isReadOnly} onChange={(e) => setIsReadOnly(e.target.checked)} className="rounded" />
+              Sólo lectura
+            </label>
             <label className="flex items-center gap-1.5 text-xs text-gray-600">
               <input type="checkbox" checked={isHidden} onChange={(e) => setIsHidden(e.target.checked)} className="rounded" />
               Oculto
             </label>
+            <label className="flex items-center gap-1.5 text-xs text-gray-600" title="Marca el campo para la vista sencilla">
+              <input type="checkbox" checked={isSimpleView} onChange={(e) => setIsSimpleView(e.target.checked)} className="rounded" />
+              Vista Sencilla
+            </label>
           </div>
-          <div className="flex items-center justify-end gap-2">
+          <div className="col-span-2 flex items-center justify-end gap-2">
             <button onClick={() => setEditing(false)}
               className="rounded px-3 py-1 text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
             <button onClick={handleSave}
-              className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700">Guardar</button>
+              disabled={!dublinCoreElement.trim() || !internalName.trim() || !label.trim()}
+              className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">Guardar</button>
           </div>
         </div>
       </div>
@@ -393,18 +591,61 @@ function FieldRow({ field, index }: { field: MetadataField; index: number }) {
   }
 
   return (
-    <div className="mb-1 flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-gray-50">
+    <>
+      {editingOptions && (
+        <div className="mb-2 rounded-lg border border-blue-100 bg-blue-50 p-3">
+          <label className="text-[11px] font-medium text-gray-500">
+            Valores posibles de "{field.label}" (separados por |)
+          </label>
+          <input
+            type="text"
+            value={optionsPipeText}
+            onChange={(e) => setOptionsPipeText(e.target.value)}
+            placeholder="ej: Artículo|Tesis|Informe|Ponencia"
+            className="mt-1 w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-blue-400"
+          />
+          {optionsPipeText
+            .split('|')
+            .map((v) => v.trim())
+            .filter(Boolean).length > 0 && (
+              <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                {optionsPipeText.split('|').map((v) => v.trim()).filter(Boolean).map((opt) => (
+                  <span key={opt} className="rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-blue-700 ring-1 ring-blue-200">
+                    {opt}
+                  </span>
+                ))}
+              </div>
+            )}
+          <div className="mt-2 flex justify-end gap-2">
+            <button onClick={() => setEditingOptions(false)}
+              className="rounded px-3 py-1 text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
+            <button onClick={handleSaveOptions} disabled={updateOptionsMutation.isPending}
+              className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+              {updateOptionsMutation.isPending ? 'Guardando...' : 'Guardar opciones'}
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="mb-1 flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-gray-50">
       <span className="w-8 text-gray-300">{index + 1}</span>
       <span className="w-32 font-mono text-gray-500">{field.dublinCoreElement}</span>
       <div className="flex-1">
         <span className="text-gray-800">{field.label}</span>
         {field.qualifier && <span className="ml-1 text-gray-400">— {field.qualifier}</span>}
         {field.isHidden && <span className="ml-1.5 rounded bg-gray-100 px-1 py-0.5 text-[10px] text-gray-400">oculto</span>}
+        {field.isSimpleView && <span className="ml-1.5 rounded bg-blue-50 px-1 py-0.5 text-[10px] font-medium text-blue-500">sencilla</span>}
       </div>
-      <span className="w-20 text-gray-400">{field.fieldType}</span>
+      <span className="w-20 text-gray-400">{fieldTypeLabel(field.fieldType)}</span>
       <span className="w-20">{obligatorinessBadge(field.obligatoriness)}</span>
       <span className="w-24 text-gray-400">{field.options.length > 0 ? `${field.options.length} opciones` : '—'}</span>
-      <div className="flex w-10 items-center gap-0.5">
+      <div className={`flex items-center gap-0.5 ${field.fieldType === 'Select' ? 'w-14' : 'w-10'}`}>
+        {field.fieldType === 'Select' && (
+          <button onClick={openOptionsEditor}
+            className="rounded p-0.5 text-gray-300 hover:text-blue-600"
+            title="Editar valores posibles">
+            <List className="h-3.5 w-3.5" />
+          </button>
+        )}
         <button onClick={() => setEditing(true)}
           className="rounded p-0.5 text-gray-300 hover:text-blue-600">
           <Settings className="h-3.5 w-3.5" />
@@ -415,7 +656,19 @@ function FieldRow({ field, index }: { field: MetadataField; index: number }) {
         </button>
       </div>
     </div>
+    </>
   )
+}
+
+function fieldTypeLabel(type: string) {
+  const labels: Record<string, string> = {
+    Text: 'Texto',
+    Textarea: 'Área de texto',
+    Date: 'Fecha',
+    Select: 'Combo',
+    MultiText: 'Multi-texto',
+  }
+  return labels[type] ?? type
 }
 
 function obligatorinessBadge(level: string) {

@@ -60,9 +60,22 @@ function getBibtexType(docType: string): string {
   }
 }
 
+/* Documentos institucionales/legales (Resolución, Ordenanza, Disposición...)
+   que se cargan con un tipo base genérico pero tienen documentTypeName propio */
+function isInstitutionalDoc(doc: Document): boolean {
+  const name = (doc.documentTypeName || '').toLowerCase()
+  return (
+    name.includes('resoluc') ||
+    name.includes('ordenanza') ||
+    name.includes('disposic') ||
+    name.includes('circul')
+  )
+}
+
 export function generateBibtex(doc: Document): string {
   const key = generateBibtexKey(doc)
-  const type = getBibtexType(doc.type)
+  const institutional = isInstitutionalDoc(doc)
+  const type = institutional ? '@techreport' : getBibtexType(doc.type)
   const year = getYear(doc.publicationDate) || getYear(doc.publishedAt)
   const url = `${window.location.origin}/documentos/${doc.id}`
   const authorStr = formatAuthorsBibtex(doc.authors)
@@ -74,11 +87,12 @@ export function generateBibtex(doc: Document): string {
 
   if (doc.abstractEs) fields.push(`  abstract = {${doc.abstractEs}}`)
   if (year) fields.push(`  year = {${year}}`)
+  if (institutional && doc.documentTypeName) fields.push(`  type = {${doc.documentTypeName}}`)
   if (doc.institution) {
-    if (doc.type === 'Thesis') fields.push(`  school = {${doc.institution}}`)
+    if (doc.type === 'Thesis' || institutional) fields.push(`  institution = {${doc.institution || 'IUPA'}}`)
     else fields.push(`  publisher = {${doc.institution}}`)
   }
-  if (doc.collectionName) fields.push(`  journal = {${doc.collectionName}}`)
+  if (doc.collectionName && !institutional) fields.push(`  journal = {${doc.collectionName}}`)
   if (doc.keywords.length > 0) fields.push(`  keywords = {${doc.keywords.join(', ')}}`)
   if (doc.advisorName) fields.push(`  advisor = {${doc.advisorName}}`)
   fields.push(`  url = {${url}}`)
@@ -91,6 +105,15 @@ export function generateApa(doc: Document): string {
   const year = getDateApa(doc.publicationDate) || getDateApa(doc.publishedAt)
   const url = `${window.location.origin}/documentos/${doc.id}`
   const title = doc.title
+
+  if (isInstitutionalDoc(doc)) {
+    const parts = [`${authorStr || `${doc.institution || 'IUPA'}.`} (${year || 's.f.'}).`]
+    parts.push(`*${title}*`)
+    parts.push(`[${doc.documentTypeName || 'Documento institucional'}].`)
+    if (doc.institution) parts.push(`${doc.institution}.`)
+    parts.push(url)
+    return parts.join(' ')
+  }
 
   switch (doc.type) {
     case 'Article': {

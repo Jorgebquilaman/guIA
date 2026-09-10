@@ -69,7 +69,7 @@ export default function DocumentsAdmin() {
   }
 
   const handleBulkApprove = async () => {
-    const docs = data?.items.filter((d) => selected.has(d.id) && d.status !== 'Published') ?? []
+    const docs = data?.items.filter((d) => selected.has(d.id) && (d.status === 'Draft' || d.status === 'Processing')) ?? []
     if (docs.length === 0) return
     try {
       for (const doc of docs) {
@@ -105,6 +105,17 @@ export default function DocumentsAdmin() {
       refetch()
     } catch {
       addToast('error', 'Error al aprobar documento')
+    }
+  }
+
+  const handleUnpublish = async (id: string) => {
+    if (!window.confirm('¿Estás seguro de despublicar este documento? Volverá a estado borrador.')) return
+    try {
+      await client.post(`/documents/${id}/unpublish`)
+      addToast('success', 'Documento despublicado')
+      refetch()
+    } catch {
+      addToast('error', 'Error al despublicar documento')
     }
   }
 
@@ -326,7 +337,7 @@ export default function DocumentsAdmin() {
                       </button>
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center rounded-md bg-iupa-light px-2 py-0.5 text-[11px] font-medium text-iupa-medium">
-                          {doc.type}
+                          {doc.documentTypeName ?? doc.type}
                         </span>
                         <span className="text-[11px] text-iupa-medium">
                           {new Date(doc.uploadedAt).toLocaleDateString('es')}
@@ -345,7 +356,7 @@ export default function DocumentsAdmin() {
                   </div>
 
                   <div className="flex shrink-0 items-center gap-1">
-                    {doc.status !== 'Published' && (
+                    {(doc.status === 'Draft' || doc.status === 'Processing') && (
                       <button
                         onClick={() => handleApprove(doc.id)}
                         className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
@@ -357,7 +368,19 @@ export default function DocumentsAdmin() {
                         Aprobar
                       </button>
                     )}
-                    {doc.status !== 'Published' && (
+                    {doc.status === 'Published' && (
+                      <button
+                        onClick={() => handleUnpublish(doc.id)}
+                        className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-amber-600 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+                        title="Despublicar"
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l-4 4m0 0l4 4m-4-4h8m0 0l-4-4" />
+                        </svg>
+                        Despublicar
+                      </button>
+                    )}
+                    {(doc.status === 'Draft' || doc.status === 'Processing' || doc.status === 'Rejected') && (
                       <button
                         onClick={() => setRejectModal({ open: true, docId: doc.id })}
                         className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
@@ -369,7 +392,7 @@ export default function DocumentsAdmin() {
                         Rechazar
                       </button>
                     )}
-                    {doc.status !== 'Published' && (
+                    {(doc.status === 'Draft' || doc.status === 'Processing' || doc.status === 'Rejected') && (
                       <button
                         onClick={() => navigate(`/app/documents/${doc.id}`)}
                         className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-iupa-green-secondary hover:bg-iupa-green-light hover:text-iupa-green transition-colors"
@@ -381,7 +404,7 @@ export default function DocumentsAdmin() {
                         Editar
                       </button>
                     )}
-                    {doc.status !== 'Published' && (
+                    {(doc.status === 'Draft' || doc.status === 'Processing' || doc.status === 'Rejected') && (
                       <button
                         onClick={() => handleDelete(doc.id)}
                         className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"

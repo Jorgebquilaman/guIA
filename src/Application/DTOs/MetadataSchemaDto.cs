@@ -24,6 +24,7 @@ public class MetadataFieldDto
     public bool IsRepeatable { get; set; }
     public bool IsReadOnly { get; set; }
     public bool IsHidden { get; set; }
+    public bool IsSimpleView { get; set; }
     public int SortOrder { get; set; }
     public string? HelpText { get; set; }
     public List<MetadataFieldOptionDto> Options { get; set; } = new();

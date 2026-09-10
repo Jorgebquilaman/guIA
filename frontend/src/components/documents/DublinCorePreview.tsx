@@ -41,7 +41,7 @@ export default function DublinCorePreview({ document, onClose, metadataValues }:
     { dc: 'dc.contributor.advisor', value: document.advisorName || '—', required: true },
     { dc: 'dc.publisher', value: document.institution || 'IUPA', required: true },
     { dc: 'dc.date.issued', value: pubDate || '—', required: true },
-    { dc: 'dc.type', value: typeLabels[document.type] || document.type, required: true },
+    { dc: 'dc.type', value: document.documentTypeName ?? typeLabels[document.type] ?? document.type, required: true },
     { dc: 'dc.description.abstract', value: document.abstractEs || document.description || '—', required: true },
     { dc: 'dc.subject', value: document.keywords.join('; ') || '—', required: true },
     { dc: 'dc.language', value: document.aiMetadata?.language || 'Español', required: true },
@@ -76,7 +76,7 @@ export default function DublinCorePreview({ document, onClose, metadataValues }:
     if (document.advisorName) lines.push(`<meta name="dc.contributor.advisor" content="${document.advisorName}">`)
     lines.push(`<meta name="dc.publisher" content="${document.institution || 'IUPA'}">`)
     if (pubDate) lines.push(`<meta name="dc.date.issued" content="${pubDate}">`)
-    lines.push(`<meta name="dc.type" content="${typeLabels[document.type] || document.type}">`)
+    lines.push(`<meta name="dc.type" content="${document.documentTypeName ?? typeLabels[document.type] ?? document.type}">`)
     const abstractText = document.abstractEs || document.description || ''
     if (abstractText) lines.push(`<meta name="dc.description.abstract" content="${abstractText}">`)
     document.keywords.forEach((kw) => {
@@ -166,7 +166,7 @@ export default function DublinCorePreview({ document, onClose, metadataValues }:
           {metadataValues && metadataValues.length > 0 && (
             <div>
               <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-iupa-medium">
-                Metadatos SNRD — {document.type === 'Article' ? 'Artículo científico' : document.type === 'ConferenceDocument' ? 'Documento de conferencia' : document.type === 'Book' ? 'Libro' : 'Tesis'}
+                Metadatos SNRD{document.documentTypeName ? ` — ${document.documentTypeName}` : ''}
               </h3>
               <div className="overflow-hidden rounded-lg border border-iupa-light">
                 <table className="w-full text-sm">

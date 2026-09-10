@@ -257,5 +257,25 @@
     "cta": "Want to contribute your work?",
     "ctaTexto": "If you are part of the IUPA community, log in to upload your works to the repository.",
     "iniciarSesion": "Log in"
+  },
+  "thesaurus": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "searchPlaceholder": "Search terms...",
+    "allTypes": "All types",
+    "publicTitle": "Thesaurus",
+    "publicSubtitle": "Controlled vocabulary of the repository",
+    "noTerms": "No terms available",
+    "noTermsDescription": "The thesaurus is under construction",
+    "totalTerms": "Total terms",
+    "type_Concept": "Concept",
+    "type_Subject": "Subject",
+    "type_Genre": "Genre",
+    "type_Format": "Format",
+    "type_Identifier": "Identifier",
+    "type_Classification": "Classification",
+    "type_Vocabulary": "Vocabulary",
+    "type_Descriptor": "Descriptor",
+    "type_Other": "Other"
   }
 }

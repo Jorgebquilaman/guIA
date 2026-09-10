@@ -22,6 +22,7 @@ public class MetadataFieldConfiguration : IEntityTypeConfiguration<MetadataField
         builder.Property(f => f.IsRepeatable).HasColumnName("is_repeatable");
         builder.Property(f => f.IsReadOnly).HasColumnName("is_read_only");
         builder.Property(f => f.IsHidden).HasColumnName("is_hidden");
+        builder.Property(f => f.IsSimpleView).HasColumnName("is_simple_view").HasDefaultValue(false);
         builder.Property(f => f.SortOrder).HasColumnName("sort_order");
         builder.Property(f => f.HelpText).HasMaxLength(500).HasColumnName("help_text");
 

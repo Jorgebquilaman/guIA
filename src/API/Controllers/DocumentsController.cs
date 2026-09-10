@@ -19,6 +19,7 @@ public sealed class DocumentsController : BaseApiController
         [FromForm] Guid? collectionId,
         [FromForm] string? title,
         [FromForm] bool isPublic = false,
+        [FromForm] Guid? documentTypeId = null,
         [FromForm] IFormFile? coverImage = null,
         [FromForm] string? mediaLinks = null,
         CancellationToken ct = default)
@@ -45,7 +46,7 @@ public sealed class DocumentsController : BaseApiController
             catch { }
         }
 
-        var command = new UploadDocumentCommand(fileTuples, collectionId ?? Guid.Empty, title, isPublic, cover, parsedLinks);
+        var command = new UploadDocumentCommand(fileTuples, collectionId ?? Guid.Empty, title, isPublic, documentTypeId, cover, parsedLinks);
         var documentId = await Mediator.Send(command, ct);
         return Ok(new { documentId, message = "Document uploaded successfully." });
     }
@@ -92,6 +93,7 @@ public sealed class DocumentsController : BaseApiController
             request.Department,
             request.DegreeProgram,
             request.Language,
+            request.DocumentTypeId,
             request.MediaLinks
         );
         await Mediator.Send(command, ct);
@@ -111,9 +113,9 @@ public sealed class DocumentsController : BaseApiController
 
     [HttpGet("{id:guid}/ai-suggestions")]
     [Authorize]
-    public async Task<IActionResult> GetAiSuggestions(Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetAiSuggestions(Guid id, [FromQuery] string? type = null, CancellationToken ct = default)
     {
-        var result = await Mediator.Send(new GetAiSuggestionsQuery(id), ct);
+        var result = await Mediator.Send(new GetAiSuggestionsQuery(id, type), ct);
         if (result == null)
             return NotFound(new { message = "Could not generate AI suggestions for this document." });
         return Ok(result);
@@ -143,12 +145,22 @@ public sealed class DocumentsController : BaseApiController
         return Ok(new { message = "Document rejected successfully." });
     }
 
+    [HttpPost("{id:guid}/unpublish")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Unpublish(Guid id, CancellationToken ct)
+    {
+        await Mediator.Send(new UnpublishDocumentCommand(id), ct);
+        return Ok(new { message = "Document unpublished successfully." });
+    }
+
     [HttpGet("{id:guid}/download/{fileId:guid}")]
     public async Task<IActionResult> Download(Guid id, Guid fileId, [FromServices] IGeoIpService geoIp, CancellationToken ct)
     {
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
         var country = await geoIp.ResolveCountryAsync(ip, ct);
-        var result = await Mediator.Send(new GetDocumentDownloadQuery(id, fileId, ip, country), ct);
+        var isAdmin = HttpContext.User.Identity?.IsAuthenticated == true
+            && HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value == "Admin";
+        var result = await Mediator.Send(new GetDocumentDownloadQuery(id, fileId, ip, country, SkipLogging: isAdmin), ct);
         return File(result.Content, result.ContentType, result.FileName);
     }
 
@@ -157,7 +169,9 @@ public sealed class DocumentsController : BaseApiController
     {
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
         var country = await geoIp.ResolveCountryAsync(ip, ct);
-        var result = await Mediator.Send(new GetDocumentDownloadQuery(id, fileId, ip, country), ct);
+        var isAdmin = HttpContext.User.Identity?.IsAuthenticated == true
+            && HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value == "Admin";
+        var result = await Mediator.Send(new GetDocumentDownloadQuery(id, fileId, ip, country, SkipLogging: isAdmin), ct);
         return File(result.Content, result.ContentType);
     }
 
@@ -200,6 +214,7 @@ public sealed record PatchDocumentRequest(
     string? Department,
     string? DegreeProgram,
     string? Language,
+    Guid? DocumentTypeId = null,
     List<MediaLinkDto>? MediaLinks = null
 );
 public sealed record UpdateMetadataRequest(string? Title, string? Description, List<string>? Authors, List<string>? Keywords);

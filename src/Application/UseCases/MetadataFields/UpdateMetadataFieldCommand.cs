@@ -11,7 +11,14 @@ public record UpdateMetadataFieldCommand(
     string Obligatoriness,
     int SortOrder,
     bool IsHidden,
-    string? HelpText
+    string? HelpText,
+    string? DublinCoreElement = null,
+    string? Qualifier = null,
+    string? InternalName = null,
+    string? FieldType = null,
+    bool? IsRepeatable = null,
+    bool? IsReadOnly = null,
+    bool? IsSimpleView = null
 ) : IRequest;
 
 public class UpdateMetadataFieldCommandHandler : IRequestHandler<UpdateMetadataFieldCommand>
@@ -32,7 +39,29 @@ public class UpdateMetadataFieldCommandHandler : IRequestHandler<UpdateMetadataF
         if (!Enum.TryParse<ObligatorinessLevel>(request.Obligatoriness, true, out var obligatoriness))
             throw new ArgumentException($"Invalid obligatoriness: {request.Obligatoriness}");
 
-        field.Update(request.Label, request.IsRequired, obligatoriness, request.SortOrder, request.IsHidden, request.HelpText);
+        FieldType? fieldType = null;
+        if (!string.IsNullOrWhiteSpace(request.FieldType))
+        {
+            if (!Enum.TryParse<FieldType>(request.FieldType, true, out var parsedFieldType))
+                throw new ArgumentException($"Invalid field type: {request.FieldType}");
+            fieldType = parsedFieldType;
+        }
+
+        field.Update(
+            request.Label,
+            request.IsRequired,
+            obligatoriness,
+            request.SortOrder,
+            request.IsHidden,
+            request.HelpText,
+            request.DublinCoreElement,
+            request.Qualifier,
+            request.InternalName,
+            fieldType,
+            request.IsRepeatable,
+            request.IsReadOnly,
+            request.IsSimpleView);
+
         await _context.SaveChangesAsync(ct);
     }
 }

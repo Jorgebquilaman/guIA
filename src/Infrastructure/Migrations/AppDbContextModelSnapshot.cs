@@ -349,6 +349,10 @@ namespace GuIA.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
+                    b.Property<Guid?>("DocumentTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("document_type_def_id");
+
                     b.Property<string>("Institution")
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)")
@@ -418,6 +422,8 @@ namespace GuIA.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CollectionId");
+
+                    b.HasIndex("DocumentTypeId");
 
                     b.HasIndex("UploadedByUserId");
 
@@ -672,6 +678,12 @@ namespace GuIA.Infrastructure.Migrations
                     b.Property<bool>("IsRequired")
                         .HasColumnType("boolean")
                         .HasColumnName("is_required");
+
+                    b.Property<bool>("IsSimpleView")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_simple_view");
 
                     b.Property<string>("Label")
                         .IsRequired()
@@ -966,6 +978,83 @@ namespace GuIA.Infrastructure.Migrations
                     b.ToTable("smtp_config", (string)null);
                 });
 
+            modelBuilder.Entity("GuIA.Domain.Entities.ThesaurusTerm", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AltLabel")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("alt_label");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Definition")
+                        .HasColumnType("text")
+                        .HasColumnName("definition");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<DateTime?>("EffectiveDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("language");
+
+                    b.Property<Guid?>("ParentThesaurusId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_thesaurus_id");
+
+                    b.Property<string>("PreferredLabel")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("preferred_label");
+
+                    b.Property<DateTime?>("RetirementDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("retirement_date");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AltLabel");
+
+                    b.HasIndex("Language");
+
+                    b.HasIndex("ParentThesaurusId");
+
+                    b.HasIndex("PreferredLabel");
+
+                    b.HasIndex("Type");
+
+                    b.ToTable("thesaurus_terms", (string)null);
+                });
+
             modelBuilder.Entity("GuIA.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1058,6 +1147,11 @@ namespace GuIA.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("GuIA.Domain.Entities.DocumentTypeDef", "DocumentType_")
+                        .WithMany()
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("GuIA.Domain.Entities.User", "UploadedBy")
                         .WithMany("Documents")
                         .HasForeignKey("UploadedByUserId")
@@ -1072,6 +1166,8 @@ namespace GuIA.Infrastructure.Migrations
                     b.Navigation("AiMetadata");
 
                     b.Navigation("Collection");
+
+                    b.Navigation("DocumentType_");
 
                     b.Navigation("UploadedBy");
                 });
@@ -1171,6 +1267,16 @@ namespace GuIA.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("GuIA.Domain.Entities.ThesaurusTerm", b =>
+                {
+                    b.HasOne("GuIA.Domain.Entities.ThesaurusTerm", "ParentThesaurus")
+                        .WithMany("ChildThesauri")
+                        .HasForeignKey("ParentThesaurusId")
+                        .HasConstraintName("fk_thesaurus_terms_parent");
+
+                    b.Navigation("ParentThesaurus");
+                });
+
             modelBuilder.Entity("GuIA.Domain.Entities.AiMetadata", b =>
                 {
                     b.Navigation("Documents");
@@ -1205,6 +1311,11 @@ namespace GuIA.Infrastructure.Migrations
             modelBuilder.Entity("GuIA.Domain.Entities.MetadataSchema", b =>
                 {
                     b.Navigation("Fields");
+                });
+
+            modelBuilder.Entity("GuIA.Domain.Entities.ThesaurusTerm", b =>
+                {
+                    b.Navigation("ChildThesauri");
                 });
 
             modelBuilder.Entity("GuIA.Domain.Entities.User", b =>

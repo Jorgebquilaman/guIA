@@ -255,7 +255,7 @@ export default function DocumentBrowseView() {
                   {status.label}
                 </span>
                 <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
-                  {typeLabels[doc.type] || doc.type}
+                  {doc.documentTypeName ?? typeLabels[doc.type] ?? doc.type}
                 </span>
                 <span className="ml-auto text-xs text-white/50">
                   ID: {doc.id.slice(0, 8)}...

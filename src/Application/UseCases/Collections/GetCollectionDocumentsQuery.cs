@@ -28,6 +28,7 @@ public class GetCollectionDocumentsQueryHandler
             .Include(d => d.Collection)
             .Include(d => d.UploadedBy)
             .Include(d => d.AiMetadata)
+            .Include(d => d.DocumentType_)
             .Where(d => d.CollectionId == request.CollectionId && d.DeletedAt == null);
 
         int totalCount = await query.CountAsync(ct);
@@ -38,12 +39,23 @@ public class GetCollectionDocumentsQueryHandler
             .Take(request.PageSize)
             .ToListAsync(ct);
 
+        var defsByName = (await _context.DocumentTypeDefs
+            .Select(t => new { t.Name })
+            .ToListAsync(ct))
+            .ToDictionary(t => t.Name, t => t.Name);
+
+        string? ResolveTypeName(Domain.Entities.Document d)
+            => d.DocumentType_?.Name
+               ?? (defsByName.TryGetValue(d.Type.ToString(), out var name) ? name : null);
+
         var items = documents.Select(d => new DocumentDto
         {
             Id = d.Id,
             Title = d.Title,
             Description = d.Description,
             Type = d.Type,
+            DocumentTypeId = d.DocumentTypeId,
+            DocumentTypeName = ResolveTypeName(d),
             Status = d.Status,
             CollectionId = d.CollectionId,
             CollectionName = d.Collection?.Name ?? string.Empty,

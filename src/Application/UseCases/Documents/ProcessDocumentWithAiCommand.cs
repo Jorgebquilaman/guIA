@@ -127,6 +127,8 @@ public class ProcessDocumentWithAiCommandHandler : IRequestHandler<ProcessDocume
             Title = doc.Title,
             Description = doc.Description,
             Type = doc.Type,
+            DocumentTypeId = doc.DocumentTypeId,
+            DocumentTypeName = doc.DocumentType_?.Name,
             Status = doc.Status,
             CollectionId = doc.CollectionId,
             CollectionName = doc.Collection?.Name ?? string.Empty,

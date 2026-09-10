@@ -37,9 +37,13 @@ public class GetDocumentByIdQueryHandler : IRequestHandler<GetDocumentByIdQuery,
 
         var metadataValues = new List<DocumentMetadataDisplayDto>();
 
-        // Try to get schema fields for this document type
-        var typeDef = await _context.DocumentTypeDefs
-            .FirstOrDefaultAsync(t => t.Name == document.Type.ToString(), ct);
+        // Try to get schema fields for this document type — prefer the FK link to the
+        // custom type def (e.g. "Resolución"), fall back to the legacy enum-name lookup
+        var typeDef = document.DocumentTypeId != null
+            ? await _context.DocumentTypeDefs
+                .FirstOrDefaultAsync(t => t.Id == document.DocumentTypeId, ct)
+            : await _context.DocumentTypeDefs
+                .FirstOrDefaultAsync(t => t.Name == document.Type.ToString(), ct);
 
         string? schemaName = null;
 
@@ -67,7 +71,8 @@ public class GetDocumentByIdQueryHandler : IRequestHandler<GetDocumentByIdQuery,
                             DublinCoreElement = field.DublinCoreElement,
                             Qualifier = field.Qualifier,
                             Value = val.Value,
-                            RepeatIndex = val.RepeatIndex
+                            RepeatIndex = val.RepeatIndex,
+                            IsSimpleView = field.IsSimpleView
                         });
                     }
                 }
@@ -80,7 +85,8 @@ public class GetDocumentByIdQueryHandler : IRequestHandler<GetDocumentByIdQuery,
                         DublinCoreElement = field.DublinCoreElement,
                         Qualifier = field.Qualifier,
                         Value = string.Empty,
-                        RepeatIndex = 0
+                        RepeatIndex = 0,
+                        IsSimpleView = field.IsSimpleView
                     });
                 }
             }
@@ -96,7 +102,8 @@ public class GetDocumentByIdQueryHandler : IRequestHandler<GetDocumentByIdQuery,
                     DublinCoreElement = v.Field?.DublinCoreElement ?? string.Empty,
                     Qualifier = v.Field?.Qualifier,
                     Value = v.Value,
-                    RepeatIndex = v.RepeatIndex
+                    RepeatIndex = v.RepeatIndex,
+                    IsSimpleView = v.Field?.IsSimpleView ?? false
                 })
                 .OrderBy(v => v.FieldLabel)
                 .ThenBy(v => v.RepeatIndex)
@@ -156,6 +163,8 @@ public class GetDocumentByIdQueryHandler : IRequestHandler<GetDocumentByIdQuery,
             DegreeProgram = document.DegreeProgram,
             MetadataValues = metadataValues,
             MetadataSchemaName = schemaName,
+            DocumentTypeId = typeDef?.Id,
+            DocumentTypeName = typeDef?.Name,
             MediaLinks = (document.MediaLinks ?? []).Select(m => new MediaLinkDto
             {
                 Url = m.Url,

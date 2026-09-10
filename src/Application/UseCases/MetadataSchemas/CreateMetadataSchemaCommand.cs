@@ -49,6 +49,7 @@ public class CreateMetadataSchemaCommandHandler : IRequestHandler<CreateMetadata
                     src.IsRepeatable,
                     src.IsReadOnly,
                     src.IsHidden,
+                    src.IsSimpleView,
                     src.SortOrder,
                     src.HelpText
                 );

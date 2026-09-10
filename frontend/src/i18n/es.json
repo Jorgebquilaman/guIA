@@ -257,5 +257,25 @@
     "cta": "¿Querés aportar tu trabajo?",
     "ctaTexto": "Si sos parte de la comunidad del IUPA, iniciá sesión para subir tus trabajos al repositorio.",
     "iniciarSesion": "Iniciar sesión"
+  },
+  "thesaurus": {
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "searchPlaceholder": "Buscar términos...",
+    "allTypes": "Todos los tipos",
+    "publicTitle": "Tesauro",
+    "publicSubtitle": "Vocabulario controlado del repositorio",
+    "noTerms": "No hay términos disponibles",
+    "noTermsDescription": "El tesauro está en construcción",
+    "totalTerms": "Total de términos",
+    "type_Concept": "Concepto",
+    "type_Subject": "Materia",
+    "type_Genre": "Género",
+    "type_Format": "Formato",
+    "type_Identifier": "Identificador",
+    "type_Classification": "Clasificación",
+    "type_Vocabulary": "Vocabulario",
+    "type_Descriptor": "Descriptor",
+    "type_Other": "Otro"
   }
 }

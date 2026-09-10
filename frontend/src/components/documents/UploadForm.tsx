@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useUploadDocument, useUploadLink } from '../../api/documents'
+import { useUploadDocument, useUploadLink, useDocumentTypes } from '../../api/documents'
 import { useCollections } from '../../api/collections'
 import { useSiteConfig } from '../../api/admin'
 import { extractGoogleDriveId, getGoogleDriveEmbedUrl } from '../../utils/gdrive'
@@ -175,12 +175,15 @@ export default function UploadForm() {
   const [files, setFiles] = useState<UploadFileEntry[]>([])
   const [title, setTitle] = useState('')
   const [collectionId, setCollectionId] = useState('')
+  const [documentTypeId, setDocumentTypeId] = useState('')
   const [isPublic, setIsPublic] = useState(true)
   const [coverImage, setCoverImage] = useState<File | null>(null)
   const [uploadedId, setUploadedId] = useState<string | null>(null)
   const [mediaLinks, setMediaLinks] = useState<{ url: string; label: string; type: string }[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
+
+  const { data: typeDefs } = useDocumentTypes()
 
   useEffect(() => {
     if (uploadedId) navigate('/app', { replace: true })
@@ -234,6 +237,7 @@ export default function UploadForm() {
     files.forEach((entry) => formData.append('files', entry.file))
     if (title.trim()) formData.append('title', title.trim())
     if (collectionId) formData.append('collectionId', collectionId)
+    if (documentTypeId) formData.append('documentTypeId', documentTypeId)
     formData.append('isPublic', String(isPublic))
     if (coverImage) formData.append('coverImage', coverImage)
     const validLinks = mediaLinks.filter((ml) => ml.url.trim())
@@ -254,7 +258,7 @@ export default function UploadForm() {
         })),
       )
     }
-  }, [files, title, collectionId, isPublic, coverImage, mediaLinks, uploadMutation])
+  }, [files, title, collectionId, documentTypeId, isPublic, coverImage, mediaLinks, uploadMutation])
 
   return (
     <div className="space-y-4">
@@ -483,6 +487,24 @@ export default function UploadForm() {
                 {flatCollections.map((c) => (
                   <option key={c.id} value={c.id}>
                     {'\u00A0'.repeat(c.depth * 4)}{c.depth > 0 ? '↳ ' : ''}{c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-iupa-dark">
+                Tipo de documento
+              </label>
+              <select
+                value={documentTypeId}
+                onChange={(e) => setDocumentTypeId(e.target.value)}
+                className="w-full rounded-lg border border-iupa-light px-3 py-2 text-sm focus:border-iupa-green focus:outline-none"
+              >
+                <option value="">— Clasificación automática —</option>
+                {typeDefs?.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.label}
                   </option>
                 ))}
               </select>

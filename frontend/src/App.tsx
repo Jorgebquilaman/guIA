@@ -30,7 +30,10 @@ import SmtpConfig from './pages/admin/SmtpConfig'
 import DocumentTypes from './pages/admin/DocumentTypes'
 import Departments from './pages/admin/Departments'
 import MetadataSchemasAdmin from './pages/admin/MetadataSchemasAdmin'
+import Thesaurus from './pages/admin/Thesaurus'
+import ChangePassword from './pages/ChangePassword'
 import DevInfo from './pages/public/DevInfo'
+import PublicThesaurus from './pages/public/PublicThesaurus'
 
 export default function App() {
   return (
@@ -49,6 +52,7 @@ export default function App() {
         <Route path="/solicitar-acceso" element={<RequestAccess />} />
         <Route path="/documentos/:id" element={<DocumentView />} />
         <Route path="/dev" element={<DevInfo />} />
+        <Route path="/tesauro" element={<PublicThesaurus />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/app" element={<Home />} />
@@ -57,6 +61,7 @@ export default function App() {
             <Route path="/app/browse/:id" element={<DocumentBrowseView />} />
             <Route path="/app/documents/:id" element={<DocumentView />} />
             <Route path="/app/upload" element={<Upload />} />
+            <Route path="/app/change-password" element={<ChangePassword />} />
             <Route path="/app/admin" element={<AdminGuard><Dashboard /></AdminGuard>} />
             <Route path="/app/admin/documents" element={<AdminGuard><DocumentsAdmin /></AdminGuard>} />
             <Route path="/app/admin/collections" element={<AdminGuard><CollectionsAdmin /></AdminGuard>} />
@@ -67,6 +72,7 @@ export default function App() {
             <Route path="/app/admin/document-types" element={<AdminGuard><DocumentTypes /></AdminGuard>} />
             <Route path="/app/admin/departments" element={<AdminGuard><Departments /></AdminGuard>} />
             <Route path="/app/admin/metadata-schemas" element={<AdminGuard><MetadataSchemasAdmin /></AdminGuard>} />
+            <Route path="/app/admin/thesaurus" element={<AdminGuard><Thesaurus /></AdminGuard>} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

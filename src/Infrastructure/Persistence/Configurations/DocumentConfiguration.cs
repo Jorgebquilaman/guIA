@@ -28,6 +28,14 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
             .HasMaxLength(20)
             .HasColumnName("type");
 
+        builder.Property(d => d.DocumentTypeId)
+            .HasColumnName("document_type_def_id");
+
+        builder.HasOne(d => d.DocumentType_)
+            .WithMany()
+            .HasForeignKey(d => d.DocumentTypeId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.Property(d => d.Status)
             .IsRequired()
             .HasConversion<string>()

@@ -128,7 +128,7 @@ export default function DocumentCard({
                   <span
                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${typeColors[document.type] || typeColors.Other}`}
                   >
-                    {typeLabels[document.type] || document.type}
+                    {document.documentTypeName ?? typeLabels[document.type] ?? document.type}
                   </span>
                   <span
                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[document.status] || ''}`}

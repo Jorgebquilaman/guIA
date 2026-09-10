@@ -25,6 +25,7 @@ public record UpdateDocumentMetadataCommand(
     string? Department,
     string? DegreeProgram,
     string? Language,
+    Guid? DocumentTypeId = null,
     List<MediaLinkDto>? MediaLinks = null
 ) : IRequest;
 
@@ -63,6 +64,8 @@ public class UpdateDocumentMetadataCommandHandler : IRequestHandler<UpdateDocume
         if (request.Description != null) AddSet("description", request.Description);
         if (request.Type != null && Enum.TryParse<DocumentType>(request.Type, out var docType))
             AddSet("type", docType.ToString());
+        if (request.DocumentTypeId != null)
+            AddSet("document_type_def_id", request.DocumentTypeId);
         if (request.AdvisorName != null) AddSet("advisor_name", request.AdvisorName);
         if (request.Institution != null) AddSet("institution", request.Institution);
         if (request.PublicationDate != null) AddSet("publication_date", request.PublicationDate.Value);

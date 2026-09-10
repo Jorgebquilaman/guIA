@@ -33,7 +33,7 @@ public static class SeedMetadataSchemas
             new("date_available", "dc.date", "available", "Fecha de disponibilidad", FieldType.Date, ObligatorinessLevel.NotApplicable, false, true, false, 12, null, null),
             new("date_issued", "dc.date", "issued", "Fecha de publicación", FieldType.Date, ObligatorinessLevel.Mandatory, false, false, false, 13, null, null),
             new("date_embargo", "dc.date", "embargoEnd", "Fecha fin de embargo", FieldType.Date, ObligatorinessLevel.ConditionallyMandatory, false, false, false, 14, null, null),
-            new("type_document", "dc.type", null, "Tipo de obra", FieldType.Select, ObligatorinessLevel.Mandatory, false, false, false, 15, null, new[]{ "artículo" }),
+            new("type_document", "dc.type", null, "Tipo de obra", FieldType.Text, ObligatorinessLevel.Mandatory, false, false, false, 15, null, null),
             new("type_version", "dc.type", null, "Versión de la publicación", FieldType.Select, ObligatorinessLevel.Mandatory, true, false, false, 16, null, new[]{ "acceptedVersion", "publishedVersion", "updatedVersion" }),
             new("format", "dc.format", null, "Formato", FieldType.Select, ObligatorinessLevel.Mandatory, true, false, false, 17, null, new[]{ "PDF", "MP4", "MPEG1", "MPEG2", "MPEG3" }),
             new("format_extent", "dc.format", "extent", "Páginas", FieldType.Text, ObligatorinessLevel.Mandatory, false, false, false, 18, null, null),
@@ -76,7 +76,7 @@ public static class SeedMetadataSchemas
             new("date_issued", "dc.date", "issued", "Fecha de presentación en el evento", FieldType.Date, ObligatorinessLevel.Mandatory, false, false, false, 14, null, null),
             new("date_embargo", "dc.date", "embargoEnd", "Fecha fin de embargo", FieldType.Date, ObligatorinessLevel.ConditionallyMandatory, false, false, false, 15, null, null),
             new("type_event", "dc.type", null, "Tipo de evento", FieldType.Select, ObligatorinessLevel.Mandatory, false, false, false, 16, null, new[]{ "conferencia", "congreso", "encuentro", "exposición", "feria", "jornada", "mesa redonda", "seminario", "simposio", "taller", "webinar", "workshop", "otro" }),
-            new("type_document", "dc.type", null, "Tipo de objeto (interno)", FieldType.Select, ObligatorinessLevel.Mandatory, false, false, false, 17, null, new[]{ "conference object" }),
+            new("type_document", "dc.type", null, "Tipo de objeto (interno)", FieldType.Text, ObligatorinessLevel.Mandatory, false, false, false, 17, null, null),
             new("type_version", "dc.type", null, "Versión de la publicación", FieldType.Select, ObligatorinessLevel.Mandatory, false, false, false, 18, null, new[]{ "acceptedVersion", "publishedVersion", "updatedVersion" }),
             new("format", "dc.format", null, "Formato", FieldType.Select, ObligatorinessLevel.Mandatory, true, false, false, 19, null, new[]{ "PDF", "MP4", "MPEG1", "MPEG2", "MPEG3" }),
             new("format_extent", "dc.format", "extent", "Páginas", FieldType.Text, ObligatorinessLevel.Mandatory, false, false, false, 20, null, null),
@@ -184,7 +184,7 @@ public static class SeedMetadataSchemas
     {
         foreach (var f in fields)
         {
-            var field = new MetadataField(schemaId, f.Element, f.Qualifier, f.InternalName, f.Label, f.FieldType, f.Obligatoriness, f.IsRepeatable, f.IsReadOnly, f.IsHidden, f.SortOrder, f.HelpText);
+            var field = new MetadataField(schemaId, f.Element, f.Qualifier, f.InternalName, f.Label, f.FieldType, f.Obligatoriness, f.IsRepeatable, f.IsReadOnly, f.IsHidden, false, f.SortOrder, f.HelpText);
             context.MetadataFields.Add(field);
             await context.SaveChangesAsync();
 

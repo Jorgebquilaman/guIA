@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Plus, Search, ChevronRight, ChevronDown, Edit, Trash2, FolderOpen, Folder, Eye, FileText, ArrowUpDown } from 'lucide-react'
+import { Plus, Search, ChevronRight, Edit, Trash2, FolderOpen, Folder, FileText, ArrowUpDown } from 'lucide-react'
 import { useI18n } from '../../i18n/context'
 import client from '../../api/client'
 import Button from '../../components/ui/Button'
@@ -30,7 +29,6 @@ interface ThesaurusTerm {
 
 export default function ThesaurusAdmin() {
   const { t } = useI18n()
-  const navigate = useNavigate()
   const [terms, setTerms] = useState<ThesaurusTerm[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -230,7 +228,7 @@ export default function ThesaurusAdmin() {
           <span className="flex-1 truncate font-medium text-iupa-dark">
             {term.preferredLabel}
           </span>
-          <span className="text-xs text-iupa-medium uppercase">{term.type}</span>
+          <span className="text-xs text-iupa-medium uppercase">{t('thesaurus.type_' + term.type) || term.type}</span>
           <span className="text-xs px-2 py-0.5 rounded-full bg-iupa-light text-iupa-medium capitalize">
             {term.language}
           </span>
@@ -259,19 +257,26 @@ export default function ThesaurusAdmin() {
         {isExpanded && (
           <div className="ml-14 mr-4 space-y-1">
             {term.broaderTerms && term.broaderTerms.length > 0 && (
-              <div className="flex items-center gap-2 rounded-lg bg-blue-50/50 px-3 py-1.5">
-                <span className="text-[11px] font-medium text-blue-600 uppercase tracking-wider">TG</span>
+              <div className="flex items-center gap-2 rounded-lg bg-blue-50/60 px-3 py-1.5">
+                <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">TG</span>
                 <span className="text-xs text-blue-700">{term.broaderTerms[0].preferredLabel}</span>
+              </div>
+            )}
+            {hasChildren && (
+              <div className="flex items-start gap-2 rounded-lg bg-green-50/60 px-3 py-1.5">
+                <span className="text-[11px] font-bold text-green-600 uppercase tracking-wider shrink-0 mt-0.5">TE</span>
+                <div className="flex flex-wrap gap-1">
+                  {term.narrowerTerms?.map(c => (
+                    <span key={c.id} className="inline-flex items-center rounded-md bg-green-100/70 px-2 py-0.5 text-xs font-medium text-green-700">
+                      {c.preferredLabel}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
             {term.definition && (
               <div className="rounded-lg bg-iupa-light/30 px-3 py-2 text-xs text-iupa-medium/70 leading-relaxed">
                 {term.definition}
-              </div>
-            )}
-            {hasChildren && (
-              <div className="space-y-1 pt-1">
-                {term.narrowerTerms?.map(child => renderTermTree(child, depth + 1))}
               </div>
             )}
           </div>
@@ -328,10 +333,10 @@ export default function ThesaurusAdmin() {
           >
             <option value="">{t('thesaurus.allTypes') || 'Todos los tipos'}</option>
             {typeOptions.map(type => (
-              <option key={type} value={type}>{type}</option>
+              <option key={type} value={type}>{t('thesaurus.type_' + type) || type}</option>
             ))}
           </select>
-        </div>
+          </div>
 
         <div className="space-y-2">
           {filteredTerms.length === 0 ? (
@@ -424,7 +429,7 @@ export default function ThesaurusAdmin() {
                 className="w-full rounded-lg border border-iupa-light bg-white px-3.5 py-2.5 text-sm text-iupa-dark focus:border-iupa-green focus:ring-2 focus:ring-iupa-green/20 focus:outline-none"
               >
                 {typeOptions.map(type => (
-                  <option key={type} value={type}>{type}</option>
+                  <option key={type} value={type}>{t('thesaurus.type_' + type) || type}</option>
                 ))}
               </select>
             </div>

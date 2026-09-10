@@ -47,6 +47,18 @@ export function useUpdateMetadataSchema() {
   })
 }
 
+export function useDeleteMetadataSchema() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { id: string; force?: boolean }) => {
+      const res = await client.delete(`/MetadataSchemas/${input.id}${input.force ? '?force=true' : ''}`)
+      if (!res.data.success) throw new Error(res.data.error?.message ?? 'Failed to delete schema')
+      return res.data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['metadata-schemas'] }),
+  })
+}
+
 export function useCreateMetadataSchema() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -77,7 +89,22 @@ export function useCreateMetadataField(schemaId: string) {
 export function useUpdateMetadataField() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ fieldId, ...data }: { fieldId: string; label: string; isRequired: boolean; obligatoriness: string; sortOrder: number; isHidden: boolean; helpText: string | null }) => {
+    mutationFn: async ({ fieldId, ...data }: {
+      fieldId: string
+      label: string
+      isRequired: boolean
+      obligatoriness: string
+      sortOrder: number
+      isHidden: boolean
+      helpText: string | null
+      dublinCoreElement?: string
+      qualifier?: string | null
+      internalName?: string
+      fieldType?: string
+      isRepeatable?: boolean
+      isReadOnly?: boolean
+      isSimpleView?: boolean
+    }) => {
       const res = await client.put(`/MetadataSchemas/fields/${fieldId}`, data)
       if (!res.data.success) throw new Error(res.data.error?.message ?? 'Failed to update field')
       return res.data
@@ -112,7 +139,24 @@ export function useUpdateFieldOptions(fieldId: string) {
       if (!res.data.success) throw new Error(res.data.error?.message ?? 'Failed to update options')
       return res.data
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['metadata-schema'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['metadata-schemas'] })
+      queryClient.invalidateQueries({ queryKey: ['metadata-schema'] })
+    },
+  })
+}
+
+export function useMetadataSchemaById(id: string | null) {
+  return useQuery({
+    queryKey: ['metadata-schema', 'id', id],
+    queryFn: async () => {
+      const res = await client.get<ApiResponse<MetadataSchema>>(`/MetadataSchemas/id/${id}`)
+      if (!res.data.success || !res.data.data) {
+        throw new Error(res.data.error?.message ?? 'Failed to fetch schema')
+      }
+      return res.data.data
+    },
+    enabled: !!id,
   })
 }
 

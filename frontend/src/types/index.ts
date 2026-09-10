@@ -66,6 +66,8 @@ export interface Document {
   title: string
   description: string | null
   type: DocumentType
+  documentTypeId?: string | null
+  documentTypeName?: string | null
   status: DocumentStatus
   collectionId: string
   collectionName: string
@@ -218,6 +220,7 @@ export interface MetadataField {
   isRepeatable: boolean
   isReadOnly: boolean
   isHidden: boolean
+  isSimpleView: boolean
   sortOrder: number
   helpText: string | null
   options: MetadataFieldOption[]
@@ -247,4 +250,5 @@ export interface MetadataValueDisplay {
   qualifier?: string | null
   value: string
   repeatIndex: number
+  isSimpleView: boolean
 }

@@ -35,6 +35,23 @@ public sealed class MetadataSchemasController : BaseApiController
         return Ok(result);
     }
 
+    [HttpGet("id/{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
+    {
+        var result = await Mediator.Send(new GetMetadataSchemaByIdQuery(id), ct);
+        if (result == null)
+            return NotFound("SchemaNotFound", $"No schema found with id '{id}'.");
+        return Ok(result);
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct, [FromQuery] bool force = false)
+    {
+        await Mediator.Send(new DeleteMetadataSchemaCommand(id, force), ct);
+        return Ok(new { message = "Schema deleted." });
+    }
+
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSchemaRequest request, CancellationToken ct)
@@ -68,8 +85,10 @@ public sealed class MetadataSchemasController : BaseApiController
                 request.IsRepeatable,
                 request.IsReadOnly,
                 request.IsHidden,
+                request.IsSimpleView,
                 request.SortOrder,
-                request.HelpText),
+                request.HelpText,
+                request.OptionsPipe),
             ct);
         return Ok(new { id = fieldId });
     }
@@ -86,7 +105,14 @@ public sealed class MetadataSchemasController : BaseApiController
                 request.Obligatoriness,
                 request.SortOrder,
                 request.IsHidden,
-                request.HelpText),
+                request.HelpText,
+                request.DublinCoreElement,
+                request.Qualifier,
+                request.InternalName,
+                request.FieldType,
+                request.IsRepeatable,
+                request.IsReadOnly,
+                request.IsSimpleView),
             ct);
         return Ok(new { message = "Field updated." });
     }
@@ -113,6 +139,8 @@ public record CreateSchemaRequest(string DocumentTypeName, string Label, bool Is
 public record CreateFieldRequest(
     string DublinCoreElement, string? Qualifier, string InternalName, string Label,
     string FieldType, string Obligatoriness, bool IsRepeatable, bool IsReadOnly, bool IsHidden,
-    int SortOrder, string? HelpText);
+    bool IsSimpleView, int SortOrder, string? HelpText, string? OptionsPipe = null);
 public record UpdateFieldRequest(
-    string Label, bool IsRequired, string Obligatoriness, int SortOrder, bool IsHidden, string? HelpText);
+    string Label, bool IsRequired, string Obligatoriness, int SortOrder, bool IsHidden, string? HelpText,
+    string? DublinCoreElement = null, string? Qualifier = null, string? InternalName = null,
+    string? FieldType = null, bool? IsRepeatable = null, bool? IsReadOnly = null, bool? IsSimpleView = null);

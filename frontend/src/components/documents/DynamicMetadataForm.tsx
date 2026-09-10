@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react'
+import { useEffect, useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react'
 import { Plus, X, HelpCircle, AlertCircle, Check } from 'lucide-react'
-import { useMetadataSchemaByType, useDocumentMetadata, useSaveDocumentMetadata } from '../../api/metadata'
+import { useMetadataSchemaByType, useMetadataSchemaById, useDocumentMetadata, useSaveDocumentMetadata } from '../../api/metadata'
 import type { MetadataField } from '../../types'
 
 interface DynamicMetadataFormProps {
@@ -10,6 +10,7 @@ interface DynamicMetadataFormProps {
   aiMetadataValues?: Record<string, string>
   aiVersion?: number
   onLog?: (msg: string) => void
+  schemaId?: string | null
 }
 
 export interface DynamicMetadataFormHandle {
@@ -20,20 +21,37 @@ function stripAccents(s: string): string {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
-const DynamicMetadataForm = forwardRef<DynamicMetadataFormHandle, DynamicMetadataFormProps>(function DynamicMetadataForm({ documentType, documentId, onSaved, aiMetadataValues, aiVersion, onLog }, ref) {
-  const { data: schema, isLoading: schemaLoading } = useMetadataSchemaByType(documentType)
+const DynamicMetadataForm = forwardRef<DynamicMetadataFormHandle, DynamicMetadataFormProps>(function DynamicMetadataForm({ documentType, documentId, onSaved, aiMetadataValues, aiVersion, onLog, schemaId }, ref) {
+  const { data: schemaByType, isLoading: typeLoading } = useMetadataSchemaByType(!schemaId ? documentType : null)
+  const { data: schemaById, isLoading: idLoading } = useMetadataSchemaById(schemaId ?? null)
+  const schema = schemaId ? schemaById : schemaByType
+  const schemaLoading = schemaId ? idLoading : typeLoading
   const { data: existingValues, isLoading: valuesLoading } = useDocumentMetadata(documentId)
   const saveMutation = useSaveDocumentMetadata(documentId)
 
   const [values, setValues] = useState<Record<string, string[]>>({})
   const [saved, setSaved] = useState(false)
 
+  const valuesRef = useRef<Record<string, string[]>>({})
+  useEffect(() => {
+    valuesRef.current = values
+  }, [values])
+
   useEffect(() => {
     if (!schema || !existingValues) return
+
+    const hasCurrentValues = Object.keys(valuesRef.current).length > 0
 
     const initial: Record<string, string[]> = {}
     for (const field of schema.fields) {
       if (field.isHidden) continue
+
+      // Preserve unsaved edits the user already typed
+      const current = valuesRef.current[field.id]
+      if (hasCurrentValues && current && current.some((v) => v.trim())) {
+        initial[field.id] = current
+        continue
+      }
 
       const fieldValues = existingValues
         .filter((v) => v.metadataFieldId === field.id)
@@ -226,15 +244,6 @@ const DynamicMetadataForm = forwardRef<DynamicMetadataFormHandle, DynamicMetadat
     const isDate = field.fieldType === 'Date'
     const isReadOnly = field.isReadOnly || field.obligatoriness === 'NotApplicable'
 
-    // Single default option → auto-select, show as text
-    if (isSelect && field.options.length === 1 && field.options[0].isDefault) {
-      return (
-        <div className="rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-600">
-          {field.options[0].label}
-        </div>
-      )
-    }
-
     const showRepeatButton = field.isRepeatable && field.fieldType !== 'MultiText'
 
     return (
@@ -259,13 +268,20 @@ const DynamicMetadataForm = forwardRef<DynamicMetadataFormHandle, DynamicMetadat
                     )}
                   </div>
                 ) : (
-                  <input
-                    type="text"
-                    value={val}
-                    onChange={(e) => setFieldValue(field.id, index, e.target.value)}
-                    readOnly={isReadOnly}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-iupa-green focus:ring-1 focus:ring-iupa-green/20 disabled:bg-gray-50 disabled:text-gray-500"
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={val}
+                      onChange={(e) => setFieldValue(field.id, index, e.target.value)}
+                      readOnly={isReadOnly}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-iupa-green focus:ring-1 focus:ring-iupa-green/20 disabled:bg-gray-50 disabled:text-gray-500"
+                    />
+                    {showRepeatButton && fieldValues.length > 1 && (
+                      <button onClick={() => removeRepeatable(field.id, index)} className="shrink-0 rounded p-1 text-gray-400 hover:text-red-500" title="Quitar este valor">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             ) : isDate ? (
@@ -402,8 +418,11 @@ const DynamicMetadataForm = forwardRef<DynamicMetadataFormHandle, DynamicMetadat
                 )}
               </label>
               {field.helpText && (
-                <span className="group relative shrink-0" title={field.helpText}>
-                  <HelpCircle className="h-3.5 w-3.5 text-gray-300" />
+                <span className="group relative shrink-0 cursor-help">
+                  <HelpCircle className="h-3.5 w-3.5 text-gray-400 transition-colors group-hover:text-iupa-green" />
+                  <span className="pointer-events-none absolute left-1/2 top-6 z-30 w-64 -translate-x-1/2 rounded-lg bg-gray-900 px-3 py-2 text-[11px] font-normal leading-relaxed text-white opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100">
+                    {field.helpText}
+                  </span>
                 </span>
               )}
             </div>

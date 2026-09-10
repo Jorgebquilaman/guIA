@@ -24,7 +24,7 @@ public class DegreeProgram : BaseEntity
         MarkAsUpdated();
     }
 
-    public void Delete()
+    public new void Delete()
     {
         if (Department != null)
         {

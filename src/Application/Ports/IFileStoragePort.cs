@@ -8,5 +8,6 @@ public interface IFileStoragePort
     Task<Stream> GetAsync(string storedPath, CancellationToken ct = default);
     Task DeleteAsync(string storedPath, CancellationToken ct = default);
     Task<string> ExtractTextAsync(string storedPath, string mimeType, CancellationToken ct = default);
+    Task<int> GetPdfPageCountAsync(string storedPath, CancellationToken ct = default);
     Task<string?> GenerateThumbnailAsync(string storedPath, string mimeType, CancellationToken ct = default);
 }

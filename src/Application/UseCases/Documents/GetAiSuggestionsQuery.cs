@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GuIA.Application.UseCases.Documents;
 
-public record GetAiSuggestionsQuery(Guid DocumentId) : IRequest<AiSuggestionsDto?>;
+public record GetAiSuggestionsQuery(Guid DocumentId, string? SuggestedType = null) : IRequest<AiSuggestionsDto?>;
 
 public class GetAiSuggestionsQueryHandler : IRequestHandler<GetAiSuggestionsQuery, AiSuggestionsDto?>
 {
@@ -39,7 +39,9 @@ public class GetAiSuggestionsQueryHandler : IRequestHandler<GetAiSuggestionsQuer
         {
             try
             {
-                var text = await _fileStorage.ExtractTextAsync(file.StoredPath, file.MimeType, ct);
+                // Use CancellationToken.None so slow OCR keeps running (and caches its result to .md)
+                // even if the HTTP request is aborted by a proxy timeout — the next attempt will hit the cache
+                var text = await _fileStorage.ExtractTextAsync(file.StoredPath, file.MimeType, CancellationToken.None);
                 if (!string.IsNullOrEmpty(text))
                     extractedTexts.Add(text);
             }
@@ -53,18 +55,27 @@ public class GetAiSuggestionsQueryHandler : IRequestHandler<GetAiSuggestionsQuer
             return null;
 
         var combinedText = string.Join("\n---\n", extractedTexts);
+        // Truncate to avoid overwhelming the LLM — 50k chars is enough for metadata extraction
+        const int maxTextLength = 50_000;
+        if (combinedText.Length > maxTextLength)
+            combinedText = combinedText[..maxTextLength] + "\n[... texto truncado ...]";
         var fileName = document.Files.First().OriginalFileName;
 
         // Guess document type first so we can load schema fields
         var guessedType = GuessDocumentType(fileName, document.Keywords.Select(k => k.Value).ToList());
 
-        // Load metadata schema fields for the guessed document type
+        // Use the caller-suggested type if provided, otherwise fall back to guessed type
+        var effectiveType = request.SuggestedType ?? guessedType;
+
+        // Load metadata schema fields for the effective document type
         string[]? metadataFieldLabels = null;
-        if (guessedType != null)
+        Domain.Entities.MetadataSchema? schema = null;
+        if (effectiveType != null)
         {
-            var schema = await _context.MetadataSchemas
+            schema = await _context.MetadataSchemas
                 .Include(s => s.Fields)
-                .FirstOrDefaultAsync(s => s.DocumentTypeName == guessedType && s.IsActive && s.DeletedAt == null, ct);
+                    .ThenInclude(f => f.Options)
+                .FirstOrDefaultAsync(s => s.DocumentTypeName == effectiveType && s.IsActive && s.DeletedAt == null, ct);
 
             if (schema != null)
             {
@@ -82,16 +93,61 @@ public class GetAiSuggestionsQueryHandler : IRequestHandler<GetAiSuggestionsQuer
                             FieldType.MultiText => "texto (múltiples valores separados por ;)",
                             _ => "texto"
                         };
-                        return $"{f.Label} ({f.InternalName}) — {typeHint}";
+                        var guidance = string.IsNullOrWhiteSpace(f.HelpText)
+                            ? ""
+                            : $" | Guía de catalogación: {f.HelpText}";
+                        return $"{f.Label} ({f.InternalName}) — {typeHint}{guidance}";
                     })
                     .ToArray();
             }
         }
 
+        // Tell the LLM the real file page count so it can build dc.format.extent
+        // following the field's HelpText guide (RDA 3.4, e.g. "5 p.; 1 PDF; 3 anexos")
+        var totalPages = 0;
+        foreach (var file in document.Files)
+        {
+            try
+            {
+                totalPages += await _fileStorage.GetPdfPageCountAsync(file.StoredPath, CancellationToken.None);
+            }
+            catch
+            {
+                // ignore files that can't be opened
+            }
+        }
+
+        if (totalPages > 0)
+        {
+            combinedText += $"\n\n[INFORMACIÓN TÉCNICA DEL ARCHIVO] El documento es un archivo PDF de {totalPages} páginas en total. " +
+                "Usá exactamente este dato para el campo de extensión (RDA 3.4): no lo deduzcas del texto ni lo inventes.";
+        }
+
         var analysis = await _llmPort.AnalyzeDocumentAsync(combinedText, fileName, metadataFieldLabels, ct);
 
-        // If the LLM returns low confidence but has metadata values, still accept it
-        if (analysis.Confidence <= 0 && analysis.MetadataValues.Count == 0)
+        // dc.format is machine-generated from the file MIME type (SNRD mimeResolution) —
+        // inject it deterministically so the AI never has to guess it
+        var formatField = schema?.Fields.FirstOrDefault(f => f.InternalName == "format" && f.FieldType == FieldType.Select);
+        if (formatField != null)
+        {
+            var mimeType = document.Files.First().MimeType;
+            if (formatField.Options.Any(o => o.Value == mimeType))
+                analysis.MetadataValues["format"] = mimeType;
+        }
+
+        // dc.format.extent: the page count comes from the PDF itself, so it is authoritative —
+        // always set it with the format defined in the field's HelpText (RDA 3.4: "N p.; 1 PDF")
+        var extentField = schema?.Fields.FirstOrDefault(f => f.InternalName == "format_extent");
+        if (extentField != null && totalPages > 0)
+        {
+            analysis.MetadataValues["format_extent"] = $"{totalPages} p.; 1 PDF";
+        }
+
+        // If the LLM returned nothing useful, return null
+        if (analysis.Confidence <= 0 && analysis.MetadataValues.Count == 0
+            && string.IsNullOrWhiteSpace(analysis.Summary)
+            && string.IsNullOrWhiteSpace(analysis.Description)
+            && analysis.Keywords.Count == 0)
             return null;
 
         return new AiSuggestionsDto
@@ -103,7 +159,7 @@ public class GetAiSuggestionsQueryHandler : IRequestHandler<GetAiSuggestionsQuer
             SuggestedKeywords = analysis.Keywords,
             SuggestedKeywordsEn = analysis.KeywordsEn,
             SuggestedAuthors = analysis.Authors.Select((name, i) => new AuthorDto(name, null, null, i + 1)).ToList(),
-            SuggestedType = guessedType,
+            SuggestedType = effectiveType,
             PublicationVersion = analysis.PublicationVersion,
             DigitalIdentifier = analysis.DigitalIdentifier,
             MetadataValues = analysis.MetadataValues,

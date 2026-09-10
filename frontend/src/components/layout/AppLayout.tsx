@@ -4,6 +4,7 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 import Toast from '../ui/Toast'
 import Spinner from '../ui/Spinner'
+import SessionExpiredModal from '../auth/SessionExpiredModal'
 import { useAuthStore } from '../../store/authStore'
 
 function AppLayout() {
@@ -32,6 +33,7 @@ function AppLayout() {
         </main>
       </div>
       <Toast />
+      <SessionExpiredModal />
     </div>
   )
 }

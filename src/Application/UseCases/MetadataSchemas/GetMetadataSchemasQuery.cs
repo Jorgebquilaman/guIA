@@ -44,6 +44,7 @@ public class GetMetadataSchemasQueryHandler : IRequestHandler<GetMetadataSchemas
                     IsRepeatable = f.IsRepeatable,
                     IsReadOnly = f.IsReadOnly,
                     IsHidden = f.IsHidden,
+                IsSimpleView = f.IsSimpleView,
                     SortOrder = f.SortOrder,
                     HelpText = f.HelpText,
                     Options = f.Options.Select(o => new MetadataFieldOptionDto
