@@ -14,6 +14,7 @@ import { getGoogleDriveEmbedUrl } from '../utils/gdrive'
 import MediaLinkPlayer from '../components/ui/MediaLinkPlayer'
 import Modal from '../components/ui/Modal'
 import { generateCitation, type CitationFormat } from '../utils/citation'
+import { toTitleCaseEs } from '../utils/capitalize'
 
 const typeLabels: Record<string, string> = {
   Article: 'Artículo',
@@ -350,7 +351,7 @@ export default function DocumentView() {
         { dc: 'dc.date.issued', value: pubDate || '—' },
         { dc: 'dc.type', value: typeLabels[doc.type] || doc.type },
         { dc: 'dc.description.abstract', value: doc.abstractEs || doc.description || '—' },
-        { dc: 'dc.subject', value: (doc.keywords || []).join('; ') || '—' },
+        { dc: 'dc.subject', value: toTitleCaseEs((doc.keywords || []).join('; ')) || '—' },
         { dc: 'dc.language', value: doc.aiMetadata?.language || 'Español' },
         { dc: 'dc.rights.license', value: doc.license || 'CC BY-NC-ND 4.0' },
         { dc: 'dc.identifier.uri', value: `${window.location.origin}/documentos/${doc.id}` },
@@ -380,7 +381,9 @@ export default function DocumentView() {
         y += rowH + 1
       }
 
-      if (doc.metadataValues && doc.metadataValues.length > 0) {
+      // PDF: only rows that actually have data — empty schema fields ("—") are noise
+      const snrdRows = (doc.metadataValues ?? []).filter((mv) => mv.value?.trim())
+      if (snrdRows.length > 0) {
         y += 2
         addText(`Metadatos SNRD${doc.metadataSchemaName ? ` — ${doc.metadataSchemaName}` : ''}`, { size: 11, bold: true, color: '#1B4D3E' })
         y += 2
@@ -397,7 +400,7 @@ export default function DocumentView() {
         y += 6
 
         let lastLabel = ''
-        for (const mv of doc.metadataValues) {
+        for (const mv of snrdRows) {
           const dc = mv.qualifier ? `${mv.dublinCoreElement}.${mv.qualifier}` : mv.dublinCoreElement
           const dcLines = pdf.splitTextToSize(mv.fieldLabel === lastLabel ? '' : dc, colW[0] - 2)
           const labelLines = pdf.splitTextToSize(mv.fieldLabel === lastLabel ? '' : mv.fieldLabel, colW[1] - 2)
@@ -1062,7 +1065,7 @@ function DublinCoreSection({ doc }: { doc: Document }) {
     { dc: 'dc.date.issued', value: pubDate },
     { dc: 'dc.type', value: typeLabels[doc.type] || doc.type },
     { dc: 'dc.description.abstract', value: doc.abstractEs || doc.description },
-    { dc: 'dc.subject', value: (doc.keywords || []).join('; ') },
+    { dc: 'dc.subject', value: toTitleCaseEs((doc.keywords || []).join('; ')) },
     { dc: 'dc.language', value: doc.aiMetadata?.language || 'Español' },
     { dc: 'dc.rights.license', value: doc.license || 'CC BY-NC-ND 4.0' },
     { dc: 'dc.identifier.uri', value: `${window.location.origin}/documentos/${doc.id}` },

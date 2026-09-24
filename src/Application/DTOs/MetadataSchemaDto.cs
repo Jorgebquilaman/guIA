@@ -27,6 +27,7 @@ public class MetadataFieldDto
     public bool IsSimpleView { get; set; }
     public int SortOrder { get; set; }
     public string? HelpText { get; set; }
+    public string? AiPrompt { get; set; }
     public List<MetadataFieldOptionDto> Options { get; set; } = new();
 }
 

@@ -85,6 +85,15 @@ public sealed class AdminController : BaseApiController
             => d.DocumentType_?.Name
                ?? (defsByName.TryGetValue(d.Type.ToString(), out var name) ? name : null);
 
+        var collectionNames = await context.Collections
+            .IgnoreQueryFilters()
+            .Where(c => documents.Select(d => d.CollectionId).Distinct().Contains(c.Id))
+            .Select(c => new { c.Id, c.Name })
+            .ToDictionaryAsync(c => c.Id, c => c.Name, ct);
+
+        string ResolveCollectionName(Domain.Entities.Document d)
+            => collectionNames.TryGetValue(d.CollectionId, out var collectionName) ? collectionName : string.Empty;
+
         var items = documents.Select(d => new DocumentDto
         {
             Id = d.Id,
@@ -95,7 +104,7 @@ public sealed class AdminController : BaseApiController
             DocumentTypeName = ResolveTypeName(d),
             Status = d.Status,
             CollectionId = d.CollectionId,
-            CollectionName = d.Collection?.Name ?? string.Empty,
+            CollectionName = ResolveCollectionName(d),
             UploadedByUserId = d.UploadedByUserId,
             UploadedByUserName = d.UploadedBy?.FullName ?? string.Empty,
             IsPublic = d.IsPublic,

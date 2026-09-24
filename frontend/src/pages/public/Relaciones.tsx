@@ -10,12 +10,16 @@ export default function Relaciones() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchMode, setSearchMode] = useState<'tag' | 'author'>('tag')
   const [query, setQuery] = useState('')
-  const [submitted, setSubmitted] = useState(false)
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Términos acumulados: la red crece con cada búsqueda y cada click en un nodo
+  const [accTags, setAccTags] = useState<string[]>([])
+  const [accAuthors, setAccAuthors] = useState<string[]>([])
+  const hasSearch = accTags.length > 0 || accAuthors.length > 0
 
   const { data: tagSuggestions } = useKeywordSuggestions(
     searchMode === 'tag' ? debouncedQuery : ''
@@ -69,27 +73,58 @@ export default function Relaciones() {
   }, [])
 
   const { data, isLoading, error } = useGraph(
-    searchMode === 'tag' && submitted ? query : undefined,
-    searchMode === 'author' && submitted ? query : undefined
+    accTags.length > 0 ? accTags.join(', ') : undefined,
+    accAuthors.length > 0 ? accAuthors.join(', ') : undefined
   )
+
+  function appendTokens(tokens: string[]) {
+    const target = searchMode === 'tag' ? accTags : accAuthors
+    const setTarget = searchMode === 'tag' ? setAccTags : setAccAuthors
+    const lower = new Set(target.map((t) => t.toLowerCase()))
+    const fresh = tokens.map((t) => t.trim()).filter((t) => t && !lower.has(t.toLowerCase()))
+    if (fresh.length > 0) setTarget([...target, ...fresh])
+    return fresh.length > 0
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
-    if (!query.trim()) return
+    const tokens = query.split(',').map((t) => t.trim()).filter(Boolean)
+    if (tokens.length === 0) return
+    appendTokens(tokens)
     setShowSuggestions(false)
-    setSubmitted(true)
   }
 
   function handleTagClick(tag: string) {
     setSearchMode('tag')
-    setQuery(tag)
-    setSubmitted(true)
+    if (!accTags.some((t) => t.toLowerCase() === tag.toLowerCase())) {
+      setAccTags([...accTags, tag])
+      setQuery((prev) => {
+        const tokens = prev.split(',').map((t) => t.trim()).filter(Boolean)
+        if (tokens.some((t) => t.toLowerCase() === tag.toLowerCase())) return prev
+        tokens.push(tag)
+        return tokens.join(', ') + ', '
+      })
+    }
   }
 
   function handleAuthorClick(author: string) {
     setSearchMode('author')
-    setQuery(author)
-    setSubmitted(true)
+    if (!accAuthors.some((a) => a.toLowerCase() === author.toLowerCase())) {
+      setAccAuthors([...accAuthors, author])
+      setQuery((prev) => {
+        const tokens = prev.split(',').map((t) => t.trim()).filter(Boolean)
+        if (tokens.some((t) => t.toLowerCase() === author.toLowerCase())) return prev
+        tokens.push(author)
+        return tokens.join(', ') + ', '
+      })
+    }
+  }
+
+  function clearNetwork() {
+    setAccTags([])
+    setAccAuthors([])
+    setQuery('')
+    setShowSuggestions(false)
   }
 
   function handleSuggestionClick(value: string) {
@@ -124,9 +159,22 @@ export default function Relaciones() {
 
   useEffect(() => {
     if (query.trim()) {
-      setSubmitted(false)
+      setShowSuggestions(false)
     }
   }, [query])
+
+  // Etiquetas reales del repositorio (más usadas) para las sugerencias iniciales
+  const [topKeywordTags, setTopKeywordTags] = useState<string[]>([])
+  useEffect(() => {
+    fetch('/api/stats/comprehensive')
+      .then((res) => res.json())
+      .then((payload) => {
+        const stats = payload.data ?? payload
+        const top = (stats?.topKeywords ?? []) as { word: string; count: number }[]
+        setTopKeywordTags(top.map((k) => k.word).slice(0, 10))
+      })
+      .catch(() => {})
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-iupa-light to-white">
@@ -151,7 +199,7 @@ export default function Relaciones() {
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => { setSearchMode('tag'); setSubmitted(false); setShowSuggestions(false) }}
+                onClick={() => { setSearchMode('tag'); setShowSuggestions(false) }}
                 className={`flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-xs font-semibold transition-colors ${
                   searchMode === 'tag'
                     ? 'border-iupa-green bg-iupa-green text-white'
@@ -163,7 +211,7 @@ export default function Relaciones() {
               </button>
               <button
                 type="button"
-                onClick={() => { setSearchMode('author'); setSubmitted(false); setShowSuggestions(false) }}
+                onClick={() => { setSearchMode('author'); setShowSuggestions(false) }}
                 className={`flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-xs font-semibold transition-colors ${
                   searchMode === 'author'
                     ? 'border-iupa-green bg-iupa-green text-white'
@@ -245,12 +293,24 @@ export default function Relaciones() {
           </div>
         )}
 
-        {!isLoading && !error && submitted && data && data.nodes.length === 0 && (
+        {!isLoading && !error && hasSearch && data && data.nodes.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <Network className="mb-3 h-10 w-10" />
-            <p className="text-sm">
-              No se encontraron relaciones para {searchMode === 'tag' ? 'la etiqueta' : 'el autor'} &ldquo;{query}&rdquo;
-            </p>
+            <p className="text-sm">No se encontraron relaciones para los términos buscados</p>
+            <button onClick={clearNetwork} className="mt-3 text-xs font-medium text-iupa-green hover:underline">
+              Limpiar búsqueda
+            </button>
+          </div>
+        )}
+
+        {hasSearch && (
+          <div className="mb-3 flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs text-gray-500 shadow-sm">
+            <span>
+              {accTags.length + accAuthors.length} término{accTags.length + accAuthors.length !== 1 ? 's' : ''} acumulado{accTags.length + accAuthors.length !== 1 ? 's' : ''} — la red crece con cada término nuevo
+            </span>
+            <button onClick={clearNetwork} className="font-medium text-red-400 hover:text-red-500">
+              Limpiar red
+            </button>
           </div>
         )}
 
@@ -260,21 +320,23 @@ export default function Relaciones() {
           </div>
         )}
 
-        {!submitted && !isLoading && !error && (
+        {!hasSearch && !isLoading && !error && (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <Network className="mb-3 h-12 w-12 text-gray-300" />
-            <p className="text-sm">Seleccioná una etiqueta o autor y presioná Explorar para comenzar</p>
+            <p className="text-sm">Seleccioná una etiqueta o autor y presioná Explorar para comenzar — podés ir sumando términos para expandir la red</p>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
-              {['música', 'teatro', 'danza', 'pintura', 'performance', 'audiovisual', 'composición', 'educación'].map(
-                (tag) => (
+              {topKeywordTags.length > 0 ? (
+                topKeywordTags.map((tag) => (
                   <button
                     key={tag}
-                    onClick={() => { setSearchMode('tag'); setQuery(tag); setSubmitted(true) }}
+                    onClick={() => { setSearchMode('tag'); handleTagClick(tag) }}
                     className="rounded-full border border-iupa-green/30 bg-white px-3 py-1 text-xs font-medium text-iupa-green transition-colors hover:bg-iupa-green hover:text-white"
                   >
                     {tag}
                   </button>
-                )
+                ))
+              ) : (
+                <p className="text-xs text-gray-300">Cargando etiquetas del repositorio...</p>
               )}
             </div>
           </div>

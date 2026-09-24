@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useAiSettings, useUpdateAiSettings, useAiUsage } from '../../api/admin'
-import { useMetadataSchemas } from '../../api/metadata'
+import { useMetadataSchemas, useUpdateMetadataField } from '../../api/metadata'
 import { useUiStore } from '../../store/uiStore'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -283,9 +283,72 @@ function FullPromptPreview({
 }: {
   template: string
   schemaId: string
-  schemas: { id: string; label: string; documentTypeName: string; fields: { label: string; internalName: string; isHidden: boolean; isReadOnly: boolean; obligatoriness: string }[] }[]
+  schemas: {
+    id: string
+    label: string
+    documentTypeName: string
+    fields: {
+      id: string
+      label: string
+      internalName: string
+      dublinCoreElement: string
+      qualifier: string | null
+      fieldType: string
+      isHidden: boolean
+      isReadOnly: boolean
+      isSimpleView: boolean
+      isRepeatable: boolean
+      obligatoriness: string
+      sortOrder: number
+      helpText: string | null
+      aiPrompt: string | null
+      options: { value: string; label: string }[]
+    }[]
+  }[]
 }) {
   const schema = schemas.find((s) => s.id === schemaId)
+  const updateField = useUpdateMetadataField()
+  const addToast = useUiStore((s) => s.addToast)
+  const [editedPrompts, setEditedPrompts] = useState<Record<string, string>>({})
+  const [savingField, setSavingField] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!schema) {
+      setEditedPrompts({})
+      return
+    }
+    const initial: Record<string, string> = {}
+    for (const f of schema.fields) {
+      if (!f.isHidden && !f.isReadOnly && f.obligatoriness !== 'NotApplicable') {
+        initial[f.id] = f.aiPrompt ?? ''
+      }
+    }
+    setEditedPrompts(initial)
+  }, [schemaId])
+
+  const handleSaveFieldPrompt = async (field: NonNullable<typeof schema>['fields'][number]) => {
+    const newPrompt = (editedPrompts[field.id] ?? '').trim()
+    const original = (field.aiPrompt ?? '').trim()
+    if (newPrompt === original) return
+    setSavingField(field.id)
+    try {
+      await updateField.mutateAsync({
+        fieldId: field.id,
+        label: field.label,
+        isRequired: field.obligatoriness === 'Mandatory',
+        obligatoriness: field.obligatoriness,
+        sortOrder: field.sortOrder,
+        isHidden: field.isHidden,
+        helpText: field.helpText,
+        aiPrompt: newPrompt || null,
+      })
+      addToast('success', `Prompt de "${field.label}" guardado`)
+    } catch {
+      addToast('error', `Error al guardar el prompt de "${field.label}"`)
+    } finally {
+      setSavingField(null)
+    }
+  }
 
   const expanded = useMemo(() => {
     if (!schema) return template
@@ -300,25 +363,122 @@ function FullPromptPreview({
 
     const fieldsBlock =
       '\n\nAdemás, incluí un objeto "metadataValues" en el JSON con TODOS los siguientes campos que puedas identificar en el texto. Las claves DEBEN ser exactamente los textos en paréntesis. Para campos de tipo Select, usá UNO de los valores de opción indicados. Para campos MultiText con múltiples valores, separalos con " ; ". SI NO ENCONTRÁS UN VALOR PARA UN CAMPO, NO LO INCLUYAS en metadataValues (no uses placeholders como "No detectado" ni cadenas vacías). Completá la mayor cantidad posible:\n' +
-      visibleFields.map((f) => `  "${f.label} (${f.internalName}): "<valor extraído>"`).join('\n')
+      visibleFields
+        .map((f) => {
+          const currentPrompt = editedPrompts[f.id] !== undefined ? editedPrompts[f.id] : (f.aiPrompt ?? '')
+          const typeHint =
+            f.fieldType === 'Select' && f.options.length > 0
+              ? `opciones: ${f.options.map((o) => o.value).join(', ')}`
+              : f.fieldType === 'Date'
+                ? 'fecha (AAAA-MM-DD)'
+                : f.fieldType === 'MultiText'
+                  ? 'texto (múltiples valores separados por ;)'
+                  : f.fieldType === 'Textarea'
+                    ? 'texto largo'
+                    : 'texto'
+          const guidance = currentPrompt.trim()
+            ? ` | Instrucción IA: ${currentPrompt.trim()}`
+            : f.helpText?.trim()
+              ? ` | Guía de catalogación: ${f.helpText.trim()}`
+              : ''
+          return `  "${f.label} (${f.internalName}) — ${typeHint}${guidance}": "<valor extraído>"`
+        })
+        .join('\n')
 
     return template.replace('{fields}', fieldsBlock)
-  }, [template, schema, schemaId])
+  }, [template, schema, schemaId, editedPrompts])
+
+  if (!schema) {
+    return (
+      <div className="relative">
+        <textarea
+          readOnly
+          value={expanded}
+          rows={16}
+          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs leading-relaxed text-gray-700"
+        />
+        <button
+          onClick={() => navigator.clipboard.writeText(expanded)}
+          className="absolute right-2 top-2 rounded bg-white/90 px-2 py-1 text-[10px] text-gray-500 shadow-sm hover:text-iupa-green"
+        >
+          Copiar
+        </button>
+      </div>
+    )
+  }
 
   return (
-    <div className="relative">
-      <textarea
-        readOnly
-        value={expanded}
-        rows={16}
-        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs leading-relaxed text-gray-700"
-      />
-      <button
-        onClick={() => navigator.clipboard.writeText(expanded)}
-        className="absolute right-2 top-2 rounded bg-white/90 px-2 py-1 text-[10px] text-gray-500 shadow-sm hover:text-iupa-green"
-      >
-        Copiar
-      </button>
+    <div className="space-y-4">
+      <div className="space-y-3">
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+          Prompts por campo SNRD — {schema.label} ({schema.fields.filter((f) => !f.isHidden && !f.isReadOnly && f.obligatoriness !== 'NotApplicable').length} campos)
+        </h4>
+        <p className="text-xs text-gray-400">
+          Editá la instrucción específica para cada metadato. Si lo dejás vacío, se usará la Guía de catalogación (HelpText) del campo. La vista previa de abajo se actualiza en vivo.
+        </p>
+        {schema.fields
+          .filter((f) => !f.isHidden && !f.isReadOnly && f.obligatoriness !== 'NotApplicable')
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((field) => {
+            const isDirty = (editedPrompts[field.id] ?? '') !== (field.aiPrompt ?? '')
+            const isSaving = savingField === field.id
+            return (
+              <div key={field.id} className="rounded-lg border border-gray-200 bg-white p-3">
+                <div className="mb-1.5 flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs font-semibold text-gray-800">{field.label}</span>
+                      <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] text-gray-500">{field.internalName}</span>
+                      <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] text-blue-600">{field.fieldType}</span>
+                      <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-600">{field.obligatoriness}</span>
+                      {field.isSimpleView && <span className="rounded bg-green-50 px-1.5 py-0.5 text-[10px] text-green-600">vista sencilla</span>}
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-gray-400">
+                      {field.dublinCoreElement}
+                      {field.qualifier ? `.${field.qualifier}` : ''} · orden {field.sortOrder}
+                      {field.helpText ? ` · Guía: ${field.helpText}` : ''}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleSaveFieldPrompt(field)}
+                    disabled={!isDirty || isSaving}
+                    className={`shrink-0 rounded px-3 py-1 text-xs font-medium transition-colors ${isDirty ? 'bg-iupa-green text-white hover:bg-iupa-green/90' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                  >
+                    {isSaving ? 'Guardando...' : 'Guardar'}
+                  </button>
+                </div>
+                <textarea
+                  value={editedPrompts[field.id] ?? ''}
+                  onChange={(e) => setEditedPrompts((prev) => ({ ...prev, [field.id]: e.target.value }))}
+                  placeholder={field.helpText ? `Guía actual: ${field.helpText}` : 'Instrucción específica para la IA para este campo (ej: Extrae el título tal como aparece en la portada, sin abreviaturas...)'}
+                  rows={2}
+                  className="w-full rounded border border-gray-200 px-2.5 py-1.5 font-mono text-xs leading-relaxed outline-none placeholder:text-gray-400 focus:border-iupa-green"
+                />
+                {!editedPrompts[field.id]?.trim() && field.helpText && (
+                  <p className="mt-1 text-[11px] text-gray-400">Vacío: se usará la Guía de catalogación como instrucción IA.</p>
+                )}
+              </div>
+            )
+          })}
+      </div>
+
+      <div>
+        <div className="mb-1 flex items-center justify-between">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Vista previa — prompt completo</h4>
+          <button
+            onClick={() => navigator.clipboard.writeText(expanded)}
+            className="rounded bg-white px-2 py-1 text-[10px] text-gray-500 shadow-sm hover:text-iupa-green border border-gray-200"
+          >
+            Copiar prompt completo
+          </button>
+        </div>
+        <textarea
+          readOnly
+          value={expanded}
+          rows={14}
+          className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-xs leading-relaxed text-gray-700"
+        />
+      </div>
     </div>
   )
 }

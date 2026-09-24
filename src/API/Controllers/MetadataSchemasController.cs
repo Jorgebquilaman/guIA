@@ -88,6 +88,7 @@ public sealed class MetadataSchemasController : BaseApiController
                 request.IsSimpleView,
                 request.SortOrder,
                 request.HelpText,
+                request.AiPrompt,
                 request.OptionsPipe),
             ct);
         return Ok(new { id = fieldId });
@@ -112,7 +113,8 @@ public sealed class MetadataSchemasController : BaseApiController
                 request.FieldType,
                 request.IsRepeatable,
                 request.IsReadOnly,
-                request.IsSimpleView),
+                request.IsSimpleView,
+                request.AiPrompt),
             ct);
         return Ok(new { message = "Field updated." });
     }
@@ -139,8 +141,9 @@ public record CreateSchemaRequest(string DocumentTypeName, string Label, bool Is
 public record CreateFieldRequest(
     string DublinCoreElement, string? Qualifier, string InternalName, string Label,
     string FieldType, string Obligatoriness, bool IsRepeatable, bool IsReadOnly, bool IsHidden,
-    bool IsSimpleView, int SortOrder, string? HelpText, string? OptionsPipe = null);
+    bool IsSimpleView, int SortOrder, string? HelpText, string? AiPrompt = null, string? OptionsPipe = null);
 public record UpdateFieldRequest(
     string Label, bool IsRequired, string Obligatoriness, int SortOrder, bool IsHidden, string? HelpText,
     string? DublinCoreElement = null, string? Qualifier = null, string? InternalName = null,
-    string? FieldType = null, bool? IsRepeatable = null, bool? IsReadOnly = null, bool? IsSimpleView = null);
+    string? FieldType = null, bool? IsRepeatable = null, bool? IsReadOnly = null, bool? IsSimpleView = null,
+    string? AiPrompt = null);

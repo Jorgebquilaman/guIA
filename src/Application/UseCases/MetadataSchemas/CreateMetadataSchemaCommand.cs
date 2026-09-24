@@ -70,6 +70,28 @@ public class CreateMetadataSchemaCommandHandler : IRequestHandler<CreateMetadata
             await _context.SaveChangesAsync(ct);
         }
 
+        // Auto-sincronización: todo esquema activo debe tener su tipo de documento,
+        // así aparece en el combo de carga y resuelve su esquema al catalogar.
+        if (request.IsActive)
+        {
+            var existingDef = await _context.DocumentTypeDefs
+                .FirstOrDefaultAsync(t => t.Name == request.DocumentTypeName, ct);
+
+            if (existingDef == null)
+            {
+                var newDef = new DocumentTypeDef(request.DocumentTypeName, request.Label, 0);
+                // vínculo al esquema recién creado
+                newDef.Update(request.DocumentTypeName, request.Label, 0, schema.Id);
+                _context.DocumentTypeDefs.Add(newDef);
+                await _context.SaveChangesAsync(ct);
+            }
+            else if (existingDef.MetadataSchemaId != schema.Id)
+            {
+                existingDef.Update(existingDef.Name, existingDef.Label, existingDef.SortOrder, schema.Id);
+                await _context.SaveChangesAsync(ct);
+            }
+        }
+
         return schema.Id;
     }
 }

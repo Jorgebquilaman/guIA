@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Document, MetadataValueDisplay } from '../../types'
+import { toTitleCaseEs } from '../../utils/capitalize'
 
 interface Props {
   document: Document
@@ -43,7 +44,7 @@ export default function DublinCorePreview({ document, onClose, metadataValues }:
     { dc: 'dc.date.issued', value: pubDate || '—', required: true },
     { dc: 'dc.type', value: document.documentTypeName ?? typeLabels[document.type] ?? document.type, required: true },
     { dc: 'dc.description.abstract', value: document.abstractEs || document.description || '—', required: true },
-    { dc: 'dc.subject', value: document.keywords.join('; ') || '—', required: true },
+    { dc: 'dc.subject', value: toTitleCaseEs(document.keywords.join('; ')) || '—', required: true },
     { dc: 'dc.language', value: document.aiMetadata?.language || 'Español', required: true },
     { dc: 'dc.rights.license', value: document.license || 'CC BY-NC-ND 4.0', required: true },
     { dc: 'dc.identifier.uri', value: docUrl, required: true },

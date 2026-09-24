@@ -18,7 +18,8 @@ public record UpdateMetadataFieldCommand(
     string? FieldType = null,
     bool? IsRepeatable = null,
     bool? IsReadOnly = null,
-    bool? IsSimpleView = null
+    bool? IsSimpleView = null,
+    string? AiPrompt = null
 ) : IRequest;
 
 public class UpdateMetadataFieldCommandHandler : IRequestHandler<UpdateMetadataFieldCommand>
@@ -60,7 +61,8 @@ public class UpdateMetadataFieldCommandHandler : IRequestHandler<UpdateMetadataF
             fieldType,
             request.IsRepeatable,
             request.IsReadOnly,
-            request.IsSimpleView);
+            request.IsSimpleView,
+            request.AiPrompt);
 
         await _context.SaveChangesAsync(ct);
     }

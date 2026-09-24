@@ -93,9 +93,12 @@ public class GetAiSuggestionsQueryHandler : IRequestHandler<GetAiSuggestionsQuer
                             FieldType.MultiText => "texto (múltiples valores separados por ;)",
                             _ => "texto"
                         };
-                        var guidance = string.IsNullOrWhiteSpace(f.HelpText)
+                        var promptInstruction = !string.IsNullOrWhiteSpace(f.AiPrompt)
+                            ? f.AiPrompt!
+                            : f.HelpText;
+                        var guidance = string.IsNullOrWhiteSpace(promptInstruction)
                             ? ""
-                            : $" | Guía de catalogación: {f.HelpText}";
+                            : $" | Instrucción IA: {promptInstruction}";
                         return $"{f.Label} ({f.InternalName}) — {typeHint}{guidance}";
                     })
                     .ToArray();

@@ -28,7 +28,7 @@ public class GetAiSettingsQueryHandler : IRequestHandler<GetAiSettingsQuery, AiP
         {
             Id = config.Id,
             ApiUrl = config.ApiUrl,
-            ApiKey = config.ApiKey,
+            ApiKey = string.IsNullOrEmpty(config.ApiKey) ? string.Empty : "********",
             Model = config.Model,
             MaxTokens = config.MaxTokens,
             IsActive = config.IsActive,

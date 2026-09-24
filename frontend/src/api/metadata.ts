@@ -104,6 +104,7 @@ export function useUpdateMetadataField() {
       isRepeatable?: boolean
       isReadOnly?: boolean
       isSimpleView?: boolean
+      aiPrompt?: string | null
     }) => {
       const res = await client.put(`/MetadataSchemas/fields/${fieldId}`, data)
       if (!res.data.success) throw new Error(res.data.error?.message ?? 'Failed to update field')

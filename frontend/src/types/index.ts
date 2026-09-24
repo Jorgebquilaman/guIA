@@ -223,6 +223,7 @@ export interface MetadataField {
   isSimpleView: boolean
   sortOrder: number
   helpText: string | null
+  aiPrompt: string | null
   options: MetadataFieldOption[]
 }
 

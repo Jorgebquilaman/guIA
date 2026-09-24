@@ -50,6 +50,7 @@ public class GetMetadataSchemaByIdQueryHandler : IRequestHandler<GetMetadataSche
                 IsSimpleView = f.IsSimpleView,
                 SortOrder = f.SortOrder,
                 HelpText = f.HelpText,
+                AiPrompt = f.AiPrompt,
                 Options = f.Options.Select(o => new MetadataFieldOptionDto
                 {
                     Id = o.Id,

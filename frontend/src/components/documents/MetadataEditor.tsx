@@ -79,14 +79,6 @@ export default function MetadataEditor({
   }, [aiLog])
 
   useEffect(() => {
-    if (!typeDefs || typeDefs.length === 0) return
-    if (!typeDefs.some((t) => t.name === type)) {
-      typeChangedByUser.current = true
-      setType(typeDefs[0].name as DocumentType)
-    }
-  }, [typeDefs])
-
-  useEffect(() => {
     if (!aiSuggestions || !aiPendingRef.current) return
     aiPendingRef.current = false
     if (aiSuggestions.description && !description)
@@ -205,6 +197,25 @@ export default function MetadataEditor({
     setKeywords(keywords.filter((k) => k !== kw))
   }
 
+  const [editingKeyword, setEditingKeyword] = useState<{ id: string; value: string } | null>(null)
+
+  function commitKeywordEdit() {
+    if (!editingKeyword) return
+    const old = editingKeyword.id
+    const newValue = editingKeyword.value.trim()
+    setEditingKeyword(null)
+    if (!newValue) return
+    if (newValue.toLowerCase() === old.toLowerCase()) {
+      // Solo cambió el formato (capitalización): reemplazo directo
+      setKeywords(keywords.map((k) => (k === old ? newValue : k)))
+      return
+    }
+    // Dedupe case-insensitive: si ya existe otra keyword con ese valor, se elimina la vieja
+    const exists = keywords.some((k) => k !== old && k.toLowerCase() === newValue.toLowerCase())
+    if (exists) setKeywords(keywords.filter((k) => k !== old))
+    else setKeywords(keywords.map((k) => (k === old ? newValue : k)))
+  }
+
   const addMediaLink = () => {
     if (!newMediaLinkUrl.trim()) return
     setMediaLinks([...mediaLinks, { url: newMediaLinkUrl.trim(), label: newMediaLinkLabel.trim(), type: newMediaLinkType }])
@@ -318,6 +329,9 @@ export default function MetadataEditor({
               {(typeDefs ?? []).map((t) => (
                 <option key={t.id} value={t.name}>{t.label}</option>
               ))}
+              {!typeDefs?.some((t) => t.name === type) && (
+                <option value={type}>{type} — sin esquema asignado</option>
+              )}
             </select>
           </div>
           <div>
@@ -454,20 +468,41 @@ export default function MetadataEditor({
           {keywords.length > 0 && (
             <div className="mb-3 flex flex-wrap gap-1.5">
               {keywords.map((kw) => (
-                <span
-                  key={kw}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-iupa-light px-2.5 py-1 text-xs font-medium text-iupa-dark ring-1 ring-inset ring-iupa-light"
-                >
-                  {kw}
-                  <button
-                    onClick={() => removeKeyword(kw)}
-                    className="text-iupa-medium/50 hover:text-red-500 transition-colors"
+                editingKeyword?.id === kw ? (
+                  <input
+                    key={`edit-${kw}`}
+                    autoFocus
+                    value={editingKeyword.value}
+                    onChange={(e) => setEditingKeyword({ ...editingKeyword, value: e.target.value })}
+                    onBlur={commitKeywordEdit}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') { e.preventDefault(); commitKeywordEdit() }
+                      if (e.key === 'Escape') setEditingKeyword(null)
+                    }}
+                    className="w-48 rounded-lg border border-iupa-green bg-white px-2.5 py-1 text-xs text-iupa-dark outline-none focus:ring-1 focus:ring-iupa-green/30"
+                  />
+                ) : (
+                  <span
+                    key={kw}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-iupa-light px-2.5 py-1 text-xs font-medium text-iupa-dark ring-1 ring-inset ring-iupa-light"
                   >
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </span>
+                    <button
+                      onClick={() => setEditingKeyword({ id: kw, value: kw })}
+                      title="Clic para editar"
+                      className="cursor-text hover:text-iupa-green transition-colors"
+                    >
+                      {kw}
+                    </button>
+                    <button
+                      onClick={() => removeKeyword(kw)}
+                      className="text-iupa-medium/50 hover:text-red-500 transition-colors"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </span>
+                )
               ))}
             </div>
           )}
@@ -652,7 +687,9 @@ export default function MetadataEditor({
         {typeDefs && typeDefs.some((t) => t.name === type) ? (
           <DynamicMetadataForm ref={dynamicFormRef} key={`${document.id}-${type}`} documentType={type} documentId={document.id} aiMetadataValues={aiMetadataValues} aiVersion={aiVersion} onLog={logCallback} schemaId={typeDefs?.find(t => t.name === type)?.metadataSchemaId ?? undefined} />
         ) : (
-          <p className="text-sm text-gray-400">Cargando esquema de metadatos...</p>
+          <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Seleccioná el tipo de documento correcto para cargar el formulario de metadatos correspondiente.
+          </p>
         )}
       </div>
 

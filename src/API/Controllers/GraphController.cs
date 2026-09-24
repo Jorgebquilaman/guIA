@@ -19,25 +19,51 @@ public sealed class GraphController : BaseApiController
             .Include(d => d.Keywords)
             .Where(d => d.DeletedAt == null && d.Status == Domain.Enums.DocumentStatus.Published);
 
-        if (!string.IsNullOrWhiteSpace(tag))
-        {
-            var tags = tag.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(t => t.ToLowerInvariant())
-                .ToList();
-            query = query.Where(d => d.Keywords.Any(k => tags.Contains(k.Value.ToLower())));
-        }
+        bool hasTagFilter = !string.IsNullOrWhiteSpace(tag);
+        bool hasAuthorFilter = !string.IsNullOrWhiteSpace(author);
 
-        if (!string.IsNullOrWhiteSpace(author))
-        {
-            var authors = author.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(a => a.ToLowerInvariant())
-                .ToList();
-            query = query.Where(d => d.Authors.Any(a => authors.Any(au => a.Name.ToLower().Contains(au))));
-        }
+        List<Domain.Entities.Document> documents;
 
-        var documents = await query
-            .Take(50)
-            .ToListAsync(ct);
+        if (hasTagFilter || hasAuthorFilter)
+        {
+            // El repositorio publicado es acotado: traemos un lote y filtramos parcial en memoria
+            var candidates = await query
+                .OrderByDescending(d => d.PublishedAt)
+                .Take(200)
+                .ToListAsync(ct);
+
+            documents = candidates
+                .Where(d =>
+                {
+                    bool tagMatch = false, authorMatch = false;
+                    if (hasTagFilter)
+                    {
+                        var tags = tag.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                            .Select(t => t.ToLowerInvariant())
+                            .ToList();
+                        // Match parcial case-insensitive: "teatro" encuentra "Teatro Patagónico"
+                        tagMatch = d.Keywords.Any(k => tags.Any(t => k.Value.ToLower().Contains(t)));
+                    }
+                    if (hasAuthorFilter)
+                    {
+                        var authors = author.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                            .Select(a => a.ToLowerInvariant())
+                            .ToList();
+                        authorMatch = d.Authors.Any(a => authors.Any(au => a.Name.ToLower().Contains(au)));
+                    }
+                    // Con ambos filtros acumulados: UNIÓN (OR) para que la red crezca
+                    return tagMatch || authorMatch;
+                })
+                .Take(50)
+                .ToList();
+        }
+        else
+        {
+            documents = await query
+                .OrderByDescending(d => d.PublishedAt)
+                .Take(50)
+                .ToListAsync(ct);
+        }
 
         var nodes = new List<object>();
         var edges = new List<object>();

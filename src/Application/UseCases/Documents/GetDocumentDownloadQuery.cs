@@ -13,11 +13,13 @@ public class GetDocumentDownloadQueryHandler : IRequestHandler<GetDocumentDownlo
 {
     private readonly IAppDbContext _context;
     private readonly IFileStoragePort _fileStorage;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetDocumentDownloadQueryHandler(IAppDbContext context, IFileStoragePort fileStorage)
+    public GetDocumentDownloadQueryHandler(IAppDbContext context, IFileStoragePort fileStorage, ICurrentUserService currentUser)
     {
         _context = context;
         _fileStorage = fileStorage;
+        _currentUser = currentUser;
     }
 
     public async Task<FileResponse> Handle(GetDocumentDownloadQuery request, CancellationToken ct)
@@ -26,6 +28,9 @@ public class GetDocumentDownloadQueryHandler : IRequestHandler<GetDocumentDownlo
             .Include(d => d.Files)
             .FirstOrDefaultAsync(d => d.Id == request.DocumentId && d.DeletedAt == null, ct)
             ?? throw new InvalidOperationException($"Document {request.DocumentId} not found.");
+
+        if (!DocumentVisibility.CanView(document, _currentUser))
+            throw new GuIA.Domain.Exceptions.DocumentNotFoundException(request.DocumentId);
 
         var file = document.Files.FirstOrDefault(f => f.Id == request.FileId)
             ?? throw new InvalidOperationException($"File {request.FileId} not found in document.");

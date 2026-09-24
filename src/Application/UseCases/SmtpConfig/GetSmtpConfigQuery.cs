@@ -23,7 +23,7 @@ public class GetSmtpConfigQueryHandler : IRequestHandler<GetSmtpConfigQuery, Smt
             Host = config.Host,
             Port = config.Port,
             Username = config.Username,
-            Password = config.Password,
+            Password = string.IsNullOrEmpty(config.Password) ? string.Empty : "********",
             FromEmail = config.FromEmail,
             FromName = config.FromName,
             UseSsl = config.UseSsl

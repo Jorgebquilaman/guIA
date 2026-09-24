@@ -53,13 +53,27 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
 
         string title = request.Title ?? Path.GetFileNameWithoutExtension(request.Files.First().FileName);
         string ext = Path.GetExtension(request.Files.First().FileName)?.ToLowerInvariant() ?? "";
-        DocumentType docType = ext switch
+        // Si el usuario eligió un tipo personalizado, el tipo base se deriva de la
+        // definición elegida; el guess por extensión solo aplica cuando no hay tipo.
+        DocumentType docType;
+        if (request.DocumentTypeId != null)
         {
-            ".pdf" => DocumentType.Article,
-            ".doc" or ".docx" or ".odt" or ".rtf" => DocumentType.Article,
-            ".csv" or ".xls" or ".xlsx" or ".ods" => DocumentType.Dataset,
-            _ => DocumentType.Other
-        };
+            var defName = await _context.DocumentTypeDefs
+                .Where(t => t.Id == request.DocumentTypeId)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync(ct);
+            docType = DocumentTypeResolver.FromDefName(defName);
+        }
+        else
+        {
+            docType = ext switch
+            {
+                ".pdf" => DocumentType.Article,
+                ".doc" or ".docx" or ".odt" or ".rtf" => DocumentType.Article,
+                ".csv" or ".xls" or ".xlsx" or ".ods" => DocumentType.Dataset,
+                _ => DocumentType.Other
+            };
+        }
 
         var document = new Document(title, docType, request.CollectionId, _currentUser.UserId, request.IsPublic);
         document.SetDocumentType(request.DocumentTypeId);

@@ -76,7 +76,7 @@ public class PostgresFullTextSearchAdapter : ISearchPort
 
         if (query.Keywords is { Count: > 0 })
         {
-            dbQuery = dbQuery.Where(d => d.Keywords.Any(k => query.Keywords.Contains(k.Value)));
+            dbQuery = dbQuery.Where(d => d.Keywords.Any(k => query.Keywords.Any(kw => kw.ToLower() == k.Value.ToLower())));
         }
 
         if (!string.IsNullOrWhiteSpace(query.Author))

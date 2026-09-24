@@ -23,6 +23,12 @@ public sealed class SearchController : BaseApiController
         [FromQuery] string? department = null,
         CancellationToken ct = default)
     {
+        // El filtro de publicidad se deriva del rol server-side: solo admins
+        // pueden pedir documentos no publicados; los demás siempre publicOnly.
+        var isAdmin = User.Identity?.IsAuthenticated == true && User.IsInRole("Admin");
+        if (!isAdmin)
+            publicOnly = true;
+
         DocumentType? docType = type switch
         {
             "Article" => DocumentType.Article,

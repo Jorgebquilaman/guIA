@@ -12,11 +12,13 @@ public class GetDocumentThumbnailQueryHandler : IRequestHandler<GetDocumentThumb
 {
     private readonly IAppDbContext _context;
     private readonly IFileStoragePort _fileStorage;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetDocumentThumbnailQueryHandler(IAppDbContext context, IFileStoragePort fileStorage)
+    public GetDocumentThumbnailQueryHandler(IAppDbContext context, IFileStoragePort fileStorage, ICurrentUserService currentUser)
     {
         _context = context;
         _fileStorage = fileStorage;
+        _currentUser = currentUser;
     }
 
     public async Task<FileResponse?> Handle(GetDocumentThumbnailQuery request, CancellationToken ct)
@@ -25,7 +27,7 @@ public class GetDocumentThumbnailQueryHandler : IRequestHandler<GetDocumentThumb
             .Include(d => d.Files)
             .FirstOrDefaultAsync(d => d.Id == request.DocumentId && d.DeletedAt == null, ct);
 
-        if (document == null)
+        if (document == null || !DocumentVisibility.CanView(document, _currentUser))
             return null;
 
         // Prefer cover image, then fall back to file thumbnails

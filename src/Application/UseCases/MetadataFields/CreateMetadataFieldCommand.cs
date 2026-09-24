@@ -19,6 +19,7 @@ public record CreateMetadataFieldCommand(
     bool IsSimpleView,
     int SortOrder,
     string? HelpText,
+    string? AiPrompt = null,
     string? OptionsPipe = null
 ) : IRequest<Guid>;
 
@@ -56,7 +57,8 @@ public class CreateMetadataFieldCommandHandler : IRequestHandler<CreateMetadataF
             request.IsHidden,
             request.IsSimpleView,
             request.SortOrder,
-            request.HelpText);
+            request.HelpText,
+            request.AiPrompt);
 
         _context.MetadataFields.Add(field);
         await _context.SaveChangesAsync(ct);

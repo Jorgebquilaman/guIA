@@ -32,14 +32,17 @@ public class UpdateAiSettingsCommandHandler : IRequestHandler<UpdateAiSettingsCo
         var config = await _context.AiProviderConfigs
             .FirstOrDefaultAsync(ct);
 
+        // Si el cliente envía el placeholder enmascarado, mantener el valor existente
+        var effectiveApiKey = request.ApiKey == "********" ? config?.ApiKey ?? string.Empty : request.ApiKey;
+
         if (config == null)
         {
-            config = new AiProviderConfig(request.ApiUrl, request.ApiKey, request.Model, request.MaxTokens, request.SystemPrompt);
+            config = new AiProviderConfig(request.ApiUrl, effectiveApiKey, request.Model, request.MaxTokens, request.SystemPrompt);
             _context.AiProviderConfigs.Add(config);
         }
         else
         {
-            config.Update(request.ApiUrl, request.ApiKey, request.Model, request.MaxTokens, request.UpdatedBy, request.SystemPrompt);
+            config.Update(request.ApiUrl, effectiveApiKey, request.Model, request.MaxTokens, request.UpdatedBy, request.SystemPrompt);
         }
 
         await _context.SaveChangesAsync(ct);
@@ -48,7 +51,7 @@ public class UpdateAiSettingsCommandHandler : IRequestHandler<UpdateAiSettingsCo
         {
             Id = config.Id,
             ApiUrl = config.ApiUrl,
-            ApiKey = config.ApiKey,
+            ApiKey = string.IsNullOrEmpty(config.ApiKey) ? string.Empty : "********",
             Model = config.Model,
             MaxTokens = config.MaxTokens,
             IsActive = config.IsActive,

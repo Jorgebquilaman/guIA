@@ -11,6 +11,8 @@ public class User : BaseEntity
     public string FullName { get; private set; } = null!;
     public UserRole Role { get; private set; }
     public bool IsActive { get; private set; }
+    public int FailedLoginAttempts { get; private set; }
+    public DateTime? LockoutEnd { get; private set; }
     public ICollection<Document> Documents { get; private set; } = new List<Document>();
 
     private User() { }
@@ -61,5 +63,20 @@ public class User : BaseEntity
     public void ChangeRole(UserRole role)
     {
         Role = role;
+    }
+
+    public bool IsLockedOut => LockoutEnd.HasValue && LockoutEnd.Value > DateTime.UtcNow;
+
+    public void RecordFailedLogin()
+    {
+        FailedLoginAttempts++;
+        if (FailedLoginAttempts >= 5)
+            LockoutEnd = DateTime.UtcNow.AddMinutes(15);
+    }
+
+    public void ResetFailedLogins()
+    {
+        FailedLoginAttempts = 0;
+        LockoutEnd = null;
     }
 }

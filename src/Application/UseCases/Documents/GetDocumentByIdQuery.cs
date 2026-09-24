@@ -11,10 +11,12 @@ public record GetDocumentByIdQuery(Guid DocumentId) : IRequest<DocumentDto>;
 public class GetDocumentByIdQueryHandler : IRequestHandler<GetDocumentByIdQuery, DocumentDto>
 {
     private readonly IAppDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetDocumentByIdQueryHandler(IAppDbContext context)
+    public GetDocumentByIdQueryHandler(IAppDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<DocumentDto> Handle(GetDocumentByIdQuery request, CancellationToken ct)
@@ -23,13 +25,23 @@ public class GetDocumentByIdQueryHandler : IRequestHandler<GetDocumentByIdQuery,
             .Include(d => d.Files)
             .Include(d => d.Authors)
             .Include(d => d.Keywords)
-            .Include(d => d.Collection)
             .Include(d => d.UploadedBy)
             .Include(d => d.AiMetadata)
             .Include(d => d.MetadataValues)
                 .ThenInclude(v => v.Field)
             .FirstOrDefaultAsync(d => d.Id == request.DocumentId && d.DeletedAt == null, ct)
             ?? throw new InvalidOperationException($"Document {request.DocumentId} not found.");
+
+        // La colección se resuelve aparte (incluso si fue eliminada):
+        // un join requerido con filtro global ocultaría el documento entero
+        var collectionName = await _context.Collections
+            .IgnoreQueryFilters()
+            .Where(c => c.Id == document.CollectionId)
+            .Select(c => c.Name)
+            .FirstOrDefaultAsync(ct) ?? string.Empty;
+
+        if (!DocumentVisibility.CanView(document, _currentUser))
+            throw new GuIA.Domain.Exceptions.DocumentNotFoundException(request.DocumentId);
 
         var savedValues = document.MetadataValues
             .GroupBy(v => v.MetadataFieldId)
@@ -118,7 +130,7 @@ public class GetDocumentByIdQueryHandler : IRequestHandler<GetDocumentByIdQuery,
             Type = document.Type,
             Status = document.Status,
             CollectionId = document.CollectionId,
-            CollectionName = document.Collection?.Name ?? string.Empty,
+            CollectionName = collectionName,
             UploadedByUserId = document.UploadedByUserId,
             UploadedByUserName = document.UploadedBy?.FullName ?? string.Empty,
             IsPublic = document.IsPublic,

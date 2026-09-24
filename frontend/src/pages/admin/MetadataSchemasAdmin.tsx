@@ -302,6 +302,7 @@ function AddFieldForm({ schemaId, onDone }: { schemaId: string; onDone: () => vo
   const [isSimpleView, setIsSimpleView] = useState(false)
   const [sortOrder, setSortOrder] = useState(0)
   const [helpText, setHelpText] = useState('')
+  const [aiPrompt, setAiPrompt] = useState('')
   const [optionsPipe, setOptionsPipe] = useState('')
 
   const parsedOptions = optionsPipe
@@ -325,6 +326,7 @@ function AddFieldForm({ schemaId, onDone }: { schemaId: string; onDone: () => vo
       isSimpleView,
       sortOrder,
       helpText: helpText.trim() || null,
+      aiPrompt: aiPrompt.trim() || null,
       optionsPipe: fieldType === 'Select' ? parsedOptions.join('|') : null,
     } as unknown as Partial<MetadataField>)
     onDone()
@@ -413,6 +415,13 @@ function AddFieldForm({ schemaId, onDone }: { schemaId: string; onDone: () => vo
           <input type="text" value={helpText} onChange={(e) => setHelpText(e.target.value)}
             className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-green-400" />
         </div>
+        <div className="col-span-2">
+          <label className="text-[11px] font-medium text-gray-500">Prompt IA <span className="font-normal text-gray-400">(instrucción específica para la IA — si se deja vacío se usa Help text)</span></label>
+          <textarea value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)}
+            placeholder="Ej: Extrae el título tal como aparece en la portada, sin abreviaturas ni subtítulo..."
+            rows={2}
+            className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-green-400" />
+        </div>
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-1.5 text-xs text-gray-600">
             <input type="checkbox" checked={isRepeatable} onChange={(e) => setIsRepeatable(e.target.checked)} className="rounded" />
@@ -460,6 +469,7 @@ function FieldRow({ field, index }: { field: MetadataField; index: number }) {
   const [isSimpleView, setIsSimpleView] = useState(field.isSimpleView)
   const [label, setLabel] = useState(field.label)
   const [helpText, setHelpText] = useState(field.helpText ?? '')
+  const [aiPrompt, setAiPrompt] = useState(field.aiPrompt ?? '')
   const [obligatoriness, setObligatoriness] = useState(field.obligatoriness)
   const [isHidden, setIsHidden] = useState(field.isHidden)
   const [sortOrder, setSortOrder] = useState(field.sortOrder)
@@ -487,6 +497,7 @@ function FieldRow({ field, index }: { field: MetadataField; index: number }) {
       sortOrder,
       isHidden,
       helpText: helpText || null,
+      aiPrompt: aiPrompt.trim() || null,
       dublinCoreElement: dublinCoreElement.trim(),
       qualifier: qualifier.trim() || null,
       internalName: internalName.trim(),
@@ -542,6 +553,13 @@ function FieldRow({ field, index }: { field: MetadataField; index: number }) {
           <div>
             <label className="text-[11px] font-medium text-gray-500">Help text</label>
             <input type="text" value={helpText} onChange={(e) => setHelpText(e.target.value)}
+              className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-blue-400" />
+          </div>
+          <div className="col-span-2">
+            <label className="text-[11px] font-medium text-gray-500">Prompt IA <span className="font-normal text-gray-400">(vacío = usa Help text)</span></label>
+            <textarea value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder="Instrucción específica para la IA para este campo..."
+              rows={2}
               className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-blue-400" />
           </div>
           <div>

@@ -21,6 +21,7 @@ public class MetadataField : BaseEntity
     public bool IsSimpleView { get; private set; }
     public int SortOrder { get; private set; }
     public string? HelpText { get; private set; }
+    public string? AiPrompt { get; private set; }
 
     public ICollection<MetadataFieldOption> Options { get; private set; } = new List<MetadataFieldOption>();
 
@@ -39,7 +40,8 @@ public class MetadataField : BaseEntity
         bool isHidden,
         bool isSimpleView,
         int sortOrder,
-        string? helpText)
+        string? helpText,
+        string? aiPrompt = null)
     {
         MetadataSchemaId = metadataSchemaId;
         DublinCoreElement = dublinCoreElement;
@@ -55,6 +57,7 @@ public class MetadataField : BaseEntity
         IsSimpleView = isSimpleView;
         SortOrder = sortOrder;
         HelpText = helpText;
+        AiPrompt = aiPrompt;
     }
 
     public void Update(
@@ -70,7 +73,8 @@ public class MetadataField : BaseEntity
         FieldType? fieldType = null,
         bool? isRepeatable = null,
         bool? isReadOnly = null,
-        bool? isSimpleView = null)
+        bool? isSimpleView = null,
+        string? aiPrompt = null)
     {
         Label = label;
         IsRequired = isRequired;
@@ -86,6 +90,7 @@ public class MetadataField : BaseEntity
         if (isRepeatable.HasValue) IsRepeatable = isRepeatable.Value;
         if (isReadOnly.HasValue) IsReadOnly = isReadOnly.Value;
         if (isSimpleView.HasValue) IsSimpleView = isSimpleView.Value;
+        AiPrompt = aiPrompt;
 
         MarkAsUpdated();
     }

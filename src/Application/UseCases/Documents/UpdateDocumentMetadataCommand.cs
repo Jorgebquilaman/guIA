@@ -55,17 +55,41 @@ public class UpdateDocumentMetadataCommandHandler : IRequestHandler<UpdateDocume
 
         void AddSet(string column, object value)
         {
-            setItems.Add($"\"{column}\" = {{{paramIndex}}}");
+            var columnName = $"\"{column}\"";
+            if (setItems.Any(s => s.StartsWith(columnName + " = ")))
+                return;
+            setItems.Add($"{columnName} = {{{paramIndex}}}");
             paramValues.Add(value);
             paramIndex++;
         }
 
         if (request.Title != null) AddSet("title", request.Title);
         if (request.Description != null) AddSet("description", request.Description);
-        if (request.Type != null && Enum.TryParse<DocumentType>(request.Type, out var docType))
-            AddSet("type", docType.ToString());
+
+        // Tipo base: una sola asignación de "type" — si viene documentTypeId, la
+        // definición personalizada es autoritativa y define el tipo base; si no,
+        // se usa el nombre recibido cuando es un valor del enum.
+        string? baseTypeValue = null;
+
         if (request.DocumentTypeId != null)
+        {
             AddSet("document_type_def_id", request.DocumentTypeId);
+            var defName = await _context.DocumentTypeDefs
+                .Where(t => t.Id == request.DocumentTypeId)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync(ct);
+            baseTypeValue = GuIA.Application.Common.DocumentTypeResolver.FromDefName(defName).ToString();
+        }
+        else if (request.Type != null)
+        {
+            // Si el nombre no es un valor del enum (ej. "Resolución"), Other
+            baseTypeValue = GuIA.Application.Common.DocumentTypeResolver.IsBaseEnumName(request.Type)
+                ? Enum.Parse<DocumentType>(request.Type, ignoreCase: true).ToString()
+                : DocumentType.Other.ToString();
+        }
+
+        if (baseTypeValue != null)
+            AddSet("type", baseTypeValue);
         if (request.AdvisorName != null) AddSet("advisor_name", request.AdvisorName);
         if (request.Institution != null) AddSet("institution", request.Institution);
         if (request.PublicationDate != null) AddSet("publication_date", request.PublicationDate.Value);
@@ -114,20 +138,26 @@ public class UpdateDocumentMetadataCommandHandler : IRequestHandler<UpdateDocume
 
             foreach (var keywordValue in request.Keywords)
             {
-                string lower = keywordValue.ToLowerInvariant();
+                var trimmed = keywordValue.Trim();
+                if (string.IsNullOrWhiteSpace(trimmed)) continue;
+                string lower = trimmed.ToLowerInvariant();
                 var existingKeyword = await _context.Keywords
-                    .FirstOrDefaultAsync(k => k.Value == lower, ct);
+                    .FirstOrDefaultAsync(k => k.Value.ToLower() == lower, ct);
 
                 Guid keywordId;
                 if (existingKeyword != null)
                 {
                     keywordId = existingKeyword.Id;
+                    // El formato que escribe el usuario gana: actualizo el caso si difiere
+                    if (existingKeyword.Value != trimmed)
+                        await _context.Database.ExecuteSqlInterpolatedAsync(
+                            $"UPDATE keywords SET value = {trimmed} WHERE \"Id\" = {existingKeyword.Id}", ct);
                 }
                 else
                 {
                     keywordId = Guid.NewGuid();
                     await _context.Database.ExecuteSqlInterpolatedAsync(
-                        $"""INSERT INTO keywords ("Id", value, source, "CreatedAt") VALUES ({keywordId}, {lower}, {KeywordSource.Manual.ToString()}, {DateTime.UtcNow})""",
+                        $"""INSERT INTO keywords ("Id", value, source, "CreatedAt") VALUES ({keywordId}, {trimmed}, {KeywordSource.Manual.ToString()}, {DateTime.UtcNow})""",
                         ct);
                 }
 

@@ -14,6 +14,14 @@ const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
   Music, Video, Palette, Move, Theater, BookOpen, Mic, Camera, Code, Globe, Users, Library, Pen, Star, Heart, Zap, Sun, Moon, Cloud,
 }
 
+// Textura de lienzo compartida, teñida con el color de cada red vía blend
+const TEXTURE_STYLE = {
+  backgroundImage: `url('/img/texture-paper.png')`,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+  backgroundBlendMode: 'multiply',
+} as const
+
 export default function DepartmentSection() {
   const [departments, setDepartments] = useState<Department[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -52,10 +60,7 @@ export default function DepartmentSection() {
                 key={dept.id}
                 href={`/buscar?department=${encodeURIComponent(dept.name)}`}
                 className="group relative flex flex-col items-center justify-center rounded-xl p-6 text-center text-white shadow-lg transition-all duration-200 hover:-translate-y-1.5 hover:shadow-xl"
-                style={{
-                  backgroundColor: dept.color,
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='2' r='1' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='12' cy='6' r='0.8' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='22' cy='2' r='1.2' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='6' cy='14' r='1' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='18' cy='16' r='0.8' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='28' cy='12' r='1' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='4' cy='24' r='0.8' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='14' cy='26' r='1' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='24' cy='22' r='0.8' fill='%23ffffff' fill-opacity='0.07'/%3E%3C/svg%3E")`,
-                }}
+                style={{ backgroundColor: dept.color, ...TEXTURE_STYLE }}
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/20 shadow-inner">
                   {Icon && <Icon className="h-6 w-6" />}
@@ -88,10 +93,7 @@ export default function DepartmentSection() {
                 className={`relative cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl ${
                   isActive ? 'flex-[3]' : 'flex-[0.4]'
                 }`}
-                style={{
-                  backgroundColor: dept.color,
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='2' r='1' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='12' cy='6' r='0.8' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='22' cy='2' r='1.2' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='6' cy='14' r='1' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='18' cy='16' r='0.8' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='28' cy='12' r='1' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='4' cy='24' r='0.8' fill='%23ffffff' fill-opacity='0.07'/%3E%3Ccircle cx='14' cy='26' r='1' fill='%23ffffff' fill-opacity='0.06'/%3E%3Ccircle cx='24' cy='22' r='0.8' fill='%23ffffff' fill-opacity='0.07'/%3E%3C/svg%3E")`,
-                }}
+                style={{ backgroundColor: dept.color, ...TEXTURE_STYLE }}
               >
                 {/* Título vertical (colapsado) */}
                 {!isActive && (
@@ -133,9 +135,14 @@ export default function DepartmentSection() {
                         </p>
                         <ul className="space-y-1">
                           {dept.degreePrograms.map((p) => (
-                            <li key={p.id} className="flex items-center gap-2 text-sm text-white/90">
-                              <span className="h-1.5 w-1.5 rounded-full bg-white/40" />
-                              {p.name}
+                            <li key={p.id}>
+                              <a
+                                href={`/buscar?department=${encodeURIComponent(dept.name)}&career=${encodeURIComponent(p.name)}`}
+                                className="group/item flex items-center gap-2 rounded px-1 py-0.5 text-sm text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+                              >
+                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/40 transition-colors group-hover/item:bg-white" />
+                                <span className="underline-offset-2 group-hover/item:underline">{p.name}</span>
+                              </a>
                             </li>
                           ))}
                         </ul>

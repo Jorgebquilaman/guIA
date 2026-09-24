@@ -90,7 +90,13 @@ public class DeepSeekLlmAdapter : ILlmPort
                     $"Para campos MultiText con múltiples valores, separalos con \" ; \". " +
                     $"Para campos de fecha, usá formato AAAA-MM-DD o NO LO INCLUYAS si no hay fecha. " +
                     $"NO uses placeholders como \"No detectado\", \"N/A\" ni cadenas vacías; omití el campo si no hay dato real. " +
-                    $"Completá la mayor cantidad posible:\n{fieldsList}";
+                    $"Completá la mayor cantidad posible:\n{fieldsList}" +
+                    $"\n\nREGLAS DE IDIOMA (obligatorias):" +
+                    $"\n- NO traduzcas ningún valor: cada valor de \"metadataValues\" debe estar en el mismo idioma en que aparece en el documento." +
+                    $"\n- \"abstractEn\": incluílo SOLO si el documento contiene efectivamente un resumen escrito en inglés; transcribilo textual. Si el documento NO tiene resumen en inglés, OMITÍ la clave — jamás lo generes ni lo traduzcas del resumen en español." +
+                    $"\n- \"keywordsEn\": solo palabras clave que aparezcan en inglés en el texto; si no hay ninguna, omití la clave." +
+                    $"\n- \"summary\" y \"description\": escríbelos en el idioma del documento." +
+                    $"\n- Si el documento está íntegramente en español, el JSON NO debe contener abstractEn ni keywordsEn.";
             }
 
             var systemPrompt = promptTemplate.Replace("{fields}", fieldsBlock);

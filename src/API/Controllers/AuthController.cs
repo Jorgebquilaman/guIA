@@ -3,6 +3,7 @@ using GuIA.Application.DTOs;
 using GuIA.Application.UseCases.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace GuIA.API.Controllers;
@@ -36,6 +37,7 @@ public sealed class AuthController : BaseApiController
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
         var command = new LoginCommand(request.Email, request.Password);
@@ -44,6 +46,7 @@ public sealed class AuthController : BaseApiController
     }
 
     [HttpPost("refresh")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request, CancellationToken ct)
     {
         var command = new RefreshTokenCommand(request.RefreshToken);
@@ -65,6 +68,7 @@ public sealed class AuthController : BaseApiController
     }
 
     [HttpPost("forgot-password")]
+    [EnableRateLimiting("auth-strict")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)
     {
         await Mediator.Send(new ForgotPasswordCommand(request.Email), ct);
@@ -72,6 +76,7 @@ public sealed class AuthController : BaseApiController
     }
 
     [HttpPost("reset-password")]
+    [EnableRateLimiting("auth-strict")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct)
     {
         try
@@ -86,6 +91,7 @@ public sealed class AuthController : BaseApiController
     }
 
     [HttpPost("request-access")]
+    [EnableRateLimiting("auth-strict")]
     public async Task<IActionResult> RequestAccess([FromBody] RequestAccessRequest request, CancellationToken ct)
     {
         try

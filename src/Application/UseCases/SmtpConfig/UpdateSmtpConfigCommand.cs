@@ -19,16 +19,17 @@ public class UpdateSmtpConfigCommandHandler : IRequestHandler<UpdateSmtpConfigCo
     public async Task<SmtpConfigDto> Handle(UpdateSmtpConfigCommand request, CancellationToken ct)
     {
         var config = await _context.SmtpConfigs.FirstOrDefaultAsync(ct);
+        var effectivePassword = request.Password == "********" ? config?.Password ?? string.Empty : request.Password;
         if (config == null)
         {
             config = new Domain.Entities.SmtpConfig(
-                request.Host, request.Port, request.Username, request.Password,
+                request.Host, request.Port, request.Username, effectivePassword,
                 request.FromEmail, request.FromName, request.UseSsl);
             _context.SmtpConfigs.Add(config);
         }
         else
         {
-            config.Update(request.Host, request.Port, request.Username, request.Password,
+            config.Update(request.Host, request.Port, request.Username, effectivePassword,
                 request.FromEmail, request.FromName, request.UseSsl, request.UpdatedBy);
         }
         await _context.SaveChangesAsync(ct);
@@ -38,7 +39,7 @@ public class UpdateSmtpConfigCommandHandler : IRequestHandler<UpdateSmtpConfigCo
             Host = config.Host,
             Port = config.Port,
             Username = config.Username,
-            Password = config.Password,
+            Password = string.IsNullOrEmpty(config.Password) ? string.Empty : "********",
             FromEmail = config.FromEmail,
             FromName = config.FromName,
             UseSsl = config.UseSsl

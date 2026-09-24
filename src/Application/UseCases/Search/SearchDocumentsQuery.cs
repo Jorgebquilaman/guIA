@@ -59,12 +59,18 @@ public class SearchDocumentsQueryHandler : IRequestHandler<SearchDocumentsQuery,
             .Include(d => d.Files)
             .Include(d => d.Authors)
             .Include(d => d.Keywords)
-            .Include(d => d.Collection)
             .Include(d => d.UploadedBy)
             .Include(d => d.AiMetadata)
             .Include(d => d.DocumentType_)
             .Where(d => searchResult.ItemIds.Contains(d.Id))
             .ToListAsync(ct);
+
+        // Nombres de colección resueltos aparte (una colección eliminada no debe ocultar documentos)
+        var collectionNames = await _context.Collections
+            .IgnoreQueryFilters()
+            .Where(c => documents.Select(d => d.CollectionId).Distinct().Contains(c.Id))
+            .Select(c => new { c.Id, c.Name })
+            .ToDictionaryAsync(c => c.Id, c => c.Name, ct);
 
         // Active defs by name — legacy fallback for documents without the FK link
         var defsByName = (await _context.DocumentTypeDefs
@@ -91,7 +97,7 @@ public class SearchDocumentsQueryHandler : IRequestHandler<SearchDocumentsQuery,
                 DocumentTypeName = ResolveTypeName(d),
                 Status = d.Status,
                 CollectionId = d.CollectionId,
-                CollectionName = d.Collection?.Name ?? string.Empty,
+                CollectionName = collectionNames.TryGetValue(d.CollectionId, out var collectionName) ? collectionName : string.Empty,
                 UploadedByUserId = d.UploadedByUserId,
                 UploadedByUserName = d.UploadedBy?.FullName ?? string.Empty,
                 IsPublic = d.IsPublic,

@@ -27,8 +27,17 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
             .FirstOrDefaultAsync(u => u.Email == email && u.IsActive, ct)
             ?? throw new UnauthorizedAccessException("Invalid email or password.");
 
+        if (user.IsLockedOut)
+            throw new UnauthorizedAccessException($"Account locked due to too many failed attempts. Try again after {user.LockoutEnd:u}.");
+
         if (!PasswordHelper.Verify(request.Password, user.PasswordHash))
+        {
+            user.RecordFailedLogin();
+            await _context.SaveChangesAsync(ct);
             throw new UnauthorizedAccessException("Invalid email or password.");
+        }
+
+        user.ResetFailedLogins();
 
         var (accessToken, expiresAt) = _tokenGenerator.GenerateAccessToken(user);
         string refreshTokenValue = _tokenGenerator.GenerateRefreshToken();
