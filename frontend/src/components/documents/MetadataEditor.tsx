@@ -4,6 +4,7 @@ import { useUpdateMetadata, useSetDocumentVisibility, useAiSuggestions, useDocum
 import apiClient from '../../api/client'
 import type { MyAuthorProfile } from '../../api/authorMetadata'
 import { useAuthStore } from '../../store/authStore'
+import { useUiStore } from '../../store/uiStore'
 import DynamicMetadataForm, { type DynamicMetadataFormHandle } from './DynamicMetadataForm'
 import MediaLinkPlayer from '../ui/MediaLinkPlayer'
 import { generateId } from '../../utils/id'
@@ -100,6 +101,7 @@ export default function MetadataEditor({
   const dynamicFormRef = useRef<DynamicMetadataFormHandle>(null)
   const mutation = useUpdateMetadata(document.id)
   const visibilityMutation = useSetDocumentVisibility(document.id)
+  const addToast = useUiStore((s) => s.addToast)
   const { data: aiSuggestions, refetch: fetchAiSuggestions } = useAiSuggestions(document.id, type)
   const { data: typeDefs } = useDocumentTypes()
   const { data: departments } = useDepartments()
@@ -329,6 +331,7 @@ export default function MetadataEditor({
                 await visibilityMutation.mutateAsync(next)
               } catch {
                 setIsPublic(!next)
+                addToast('error', 'No se pudo cambiar la visibilidad del documento')
               }
             }}
             className="rounded border-iupa-light text-iupa-green focus:ring-iupa-green"
