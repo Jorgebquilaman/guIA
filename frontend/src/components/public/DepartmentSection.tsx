@@ -54,8 +54,10 @@ export default function DepartmentSection() {
         </div>
 
         <div>
-          {/* Fila de pestañas estilo carpeta: la activa más alta y apoyada sobre la tarjeta */}
-          <div className="flex flex-wrap items-end gap-[3px]">
+          {/* Fila de pestañas estilo carpeta: la activa más alta y apoyada sobre la tarjeta.
+              wrap-reverse: si hay varias filas, las de arriba quedan encima (la fila
+              inferior siempre apoya sobre la tarjeta y el color no se corta). */}
+          <div className="flex flex-wrap-reverse items-end gap-[3px]">
             {departments.map((dept) => {
               const Icon = ICON_MAP[dept.icon ?? '']
               const isActive = activeId === dept.id
