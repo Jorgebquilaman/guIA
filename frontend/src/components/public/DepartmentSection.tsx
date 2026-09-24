@@ -121,22 +121,8 @@ export default function DepartmentSection() {
                       </a>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between gap-3 text-xs text-white/85">
-                      <span className="flex min-w-0 items-center gap-2 text-[11px]">
-                        {Icon && <Icon className="h-3 w-3 shrink-0 opacity-80" />}
-                        <span className="truncate">
-                          {dept.degreePrograms.length} sección temática{dept.degreePrograms.length !== 1 ? 's' : ''}
-                        </span>
-                      </span>
-                      <a
-                        href={`/buscar?department=${encodeURIComponent(dept.name)}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-white transition-colors hover:text-white/80"
-                      >
-                        {t('departments.verTrabajos')}
-                        <ArrowRight className="h-3 w-3" />
-                      </a>
-                    </div>
+                    /* Tira fina sin contenido: solo el color de la red */
+                    null
                   )}
                 </div>
               </div>
