@@ -40,6 +40,11 @@ export default function DepartmentSection() {
 
   const activeIndex = departments.findIndex((d) => d.id === activeId)
 
+  // La pestaña activa SIEMPRE va primera (extremo izquierdo, fila inferior,
+  // apoyada sobre la tarjeta) para que la ficha nunca pierda integridad.
+  const orderedTabs = [...departments]
+  if (activeIndex > 0) orderedTabs.unshift(...orderedTabs.splice(activeIndex, 1))
+
   return (
     <section className="bg-iupa-light py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -54,11 +59,12 @@ export default function DepartmentSection() {
         </div>
 
         <div>
-          {/* Fila de pestañas estilo carpeta: la activa más alta y apoyada sobre la tarjeta.
-              wrap-reverse: si hay varias filas, las de arriba quedan encima (la fila
-              inferior siempre apoya sobre la tarjeta y el color no se corta). */}
-          <div className="flex flex-wrap-reverse items-end gap-[3px]">
-            {departments.map((dept) => {
+          {/* Fila de pestañas estilo carpeta: la ACTIVA va primera (izquierda,
+              más alta, fusionada con la tarjeta, como en la imagen de referencia);
+              las demás la siguen y, si desbordan, apilan hacia arriba (wrap-reverse)
+              de modo que la fila inferior siempre apoya sobre la tarjeta. */}
+          <div className="flex flex-wrap-reverse items-end gap-x-[3px] gap-y-0">
+            {orderedTabs.map((dept) => {
               const Icon = ICON_MAP[dept.icon ?? '']
               const isActive = activeId === dept.id
               return (
@@ -88,7 +94,7 @@ export default function DepartmentSection() {
             const Icon = ICON_MAP[dept.icon ?? '']
             return (
               <div
-                className="relative z-10 -mt-px w-full rounded-b-2xl rounded-tr-2xl px-6 py-7 text-white sm:rounded-tr-none sm:px-10 sm:py-9"
+                className="relative z-10 -mt-1.5 w-full rounded-b-2xl rounded-tr-2xl px-6 py-7 text-white sm:px-10 sm:py-9"
                 style={{ backgroundColor: dept.color, ...TEXTURE_STYLE }}
               >
                 {/* Cabecera: número + ícono con línea */}
