@@ -10,10 +10,12 @@ public record UpdateUserCommand(Guid UserId, string? FullName, UserRole? Role) :
 public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand>
 {
     private readonly IAppDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public UpdateUserCommandHandler(IAppDbContext context)
+    public UpdateUserCommandHandler(IAppDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task Handle(UpdateUserCommand request, CancellationToken ct)
@@ -21,6 +23,10 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand>
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.Id == request.UserId, ct)
             ?? throw new InvalidOperationException($"User {request.UserId} not found.");
+
+        if (_currentUser.UserRole == UserRole.Curator.ToString()
+            && (request.Role == UserRole.Admin || user.Role == UserRole.Admin))
+            throw new InvalidOperationException("Los curadores no pueden modificar usuarios administradores.");
 
         if (request.FullName != null)
             user.UpdateFullName(request.FullName);

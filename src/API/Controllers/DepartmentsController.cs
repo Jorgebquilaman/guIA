@@ -44,7 +44,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> Create([FromBody] CreateDepartmentRequest request, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
@@ -74,7 +74,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> Update(Guid id, [FromBody] CreateDepartmentRequest request, CancellationToken ct)
     {
         var department = await _context.Departments
@@ -128,7 +128,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         var department = await _context.Departments
@@ -144,7 +144,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/degree-programs")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> AddDegreeProgram(Guid id, [FromBody] AddDegreeProgramRequest request, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
@@ -164,7 +164,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}/degree-programs/{programId:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> RemoveDegreeProgram(Guid id, Guid programId, CancellationToken ct)
     {
         var department = await _context.Departments

@@ -66,10 +66,10 @@ export default function App() {
             <Route path="/app/admin/documents" element={<AdminGuard><DocumentsAdmin /></AdminGuard>} />
             <Route path="/app/admin/collections" element={<AdminGuard><CollectionsAdmin /></AdminGuard>} />
             <Route path="/app/admin/users" element={<AdminGuard><UsersAdmin /></AdminGuard>} />
-            <Route path="/app/admin/ai-settings" element={<AdminGuard><AiSettings /></AdminGuard>} />
-            <Route path="/app/admin/site-config" element={<AdminGuard><SiteConfig /></AdminGuard>} />
-            <Route path="/app/admin/smtp-config" element={<AdminGuard><SmtpConfig /></AdminGuard>} />
-            <Route path="/app/admin/document-types" element={<AdminGuard><DocumentTypes /></AdminGuard>} />
+            <Route path="/app/admin/ai-settings" element={<AdminGuard adminOnly><AiSettings /></AdminGuard>} />
+            <Route path="/app/admin/site-config" element={<AdminGuard adminOnly><SiteConfig /></AdminGuard>} />
+            <Route path="/app/admin/smtp-config" element={<AdminGuard adminOnly><SmtpConfig /></AdminGuard>} />
+            <Route path="/app/admin/document-types" element={<AdminGuard adminOnly><DocumentTypes /></AdminGuard>} />
             <Route path="/app/admin/departments" element={<AdminGuard><Departments /></AdminGuard>} />
             <Route path="/app/admin/metadata-schemas" element={<AdminGuard><MetadataSchemasAdmin /></AdminGuard>} />
             <Route path="/app/admin/thesaurus" element={<AdminGuard><Thesaurus /></AdminGuard>} />

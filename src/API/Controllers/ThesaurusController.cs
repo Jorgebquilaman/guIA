@@ -11,7 +11,7 @@ namespace GuIA.API.Controllers;
 
 [Route("api/thesaurus/terms")]
 [ApiController]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Curator")]
 public class ThesaurusController : ControllerBase
 {
     private readonly IAppDbContext _context;

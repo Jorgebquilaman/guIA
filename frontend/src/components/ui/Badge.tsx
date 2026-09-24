@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 type DocumentStatus = 'pending' | 'approved' | 'rejected' | 'archived'
 type DocumentType = 'pdf' | 'image' | 'docx' | 'txt' | 'csv'
-type UserRole = 'admin' | 'editor' | 'viewer'
+type UserRole = 'admin' | 'curator' | 'editor' | 'viewer'
 
 type BadgeVariant = DocumentStatus | DocumentType | UserRole
 
@@ -23,6 +23,7 @@ const colorMap: Record<string, { bg: string; text: string; dot: string }> = {
   txt: { bg: 'bg-iupa-light', text: 'text-iupa-medium', dot: 'bg-iupa-medium' },
   csv: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500' },
   admin: { bg: 'bg-iupa-green-light', text: 'text-iupa-green', dot: 'bg-iupa-green' },
+  curator: { bg: 'bg-teal-100', text: 'text-teal-800', dot: 'bg-teal-600' },
   editor: { bg: 'bg-dept-music/10', text: 'text-dept-music', dot: 'bg-dept-music' },
   viewer: { bg: 'bg-iupa-light', text: 'text-iupa-medium', dot: 'bg-iupa-medium' },
 }

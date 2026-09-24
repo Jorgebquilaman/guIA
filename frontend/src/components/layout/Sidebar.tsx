@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useUiStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
+import { isAdminRole, isStaffRole } from '../../utils/roles'
 
 const mainLinks = [
   { to: '/app', label: 'Inicio', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1' },
@@ -92,14 +93,19 @@ function Sidebar() {
             </li>
           </ul>
 
-          {user?.role === 'Admin' && (
+          {isStaffRole(user?.role) && (
             <>
               <div className="my-4 border-t border-iupa-green-secondary" />
               <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-iupa-green-light/60">
                 Administración
               </p>
               <ul className="space-y-1">
-                {adminLinks.map((link) => (
+                {adminLinks
+                  .filter((link) =>
+                    isAdminRole(user?.role) ||
+                    !['/app/admin/ai-settings', '/app/admin/site-config', '/app/admin/smtp-config', '/app/admin/document-types'].includes(link.to),
+                  )
+                  .map((link) => (
                   <li key={link.to}>
                     <NavLink
                       to={link.to}

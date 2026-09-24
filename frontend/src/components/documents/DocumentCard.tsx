@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Document } from '../../types'
 import { useAuthStore } from '../../store/authStore'
+import { isStaffRole } from '../../utils/roles'
 import { getGoogleDriveEmbedUrl } from '../../utils/gdrive'
 import { withFileToken } from '../../utils/files'
 
@@ -70,7 +71,7 @@ export default function DocumentCard({
 }: DocumentCardProps) {
   const user = useAuthStore((s) => s.user)
   const isOwner = user?.id === document.uploadedByUserId
-  const isAdmin = user?.role === 'Admin'
+  const isAdmin = isStaffRole(user?.role)
   const isLink = !!document.sourceUrl
   const hasThumbnail = !isLink && (document.hasCoverImage || document.files?.[0]?.hasThumbnail)
   const primaryFile = isLink ? null : document.files?.[0]

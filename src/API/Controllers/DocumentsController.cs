@@ -130,7 +130,7 @@ public sealed class DocumentsController : BaseApiController
     }
 
     [HttpPost("{id:guid}/publish")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> Publish(Guid id, CancellationToken ct)
     {
         await Mediator.Send(new PublishDocumentCommand(id), ct);
@@ -138,7 +138,7 @@ public sealed class DocumentsController : BaseApiController
     }
 
     [HttpPost("{id:guid}/reject")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> Reject(Guid id, [FromBody] RejectDocumentRequest request, CancellationToken ct)
     {
         await Mediator.Send(new RejectDocumentCommand(id, request.Reason), ct);
@@ -146,7 +146,7 @@ public sealed class DocumentsController : BaseApiController
     }
 
     [HttpPost("{id:guid}/unpublish")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> Unpublish(Guid id, CancellationToken ct)
     {
         await Mediator.Send(new UnpublishDocumentCommand(id), ct);

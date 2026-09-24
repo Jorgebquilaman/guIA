@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GuIA.API.Controllers;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Curator")]
 public sealed class AdminController : BaseApiController
 {
     [HttpGet("users")]
@@ -26,24 +26,45 @@ public sealed class AdminController : BaseApiController
     [HttpPost("users")]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request, CancellationToken ct)
     {
-        var command = new CreateUserCommand(request.Email, request.Password, request.FullName, request.Role);
-        var result = await Mediator.Send(command, ct);
-        return Ok(result);
+        try
+        {
+            var command = new CreateUserCommand(request.Email, request.Password, request.FullName, request.Role);
+            var result = await Mediator.Send(command, ct);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest("USER_ERROR", ex.Message);
+        }
     }
 
     [HttpPut("users/{id:guid}")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request, CancellationToken ct)
     {
-        var command = new UpdateUserCommand(id, request.FullName, request.Role);
-        await Mediator.Send(command, ct);
-        return Ok(new { message = "User updated successfully." });
+        try
+        {
+            var command = new UpdateUserCommand(id, request.FullName, request.Role);
+            await Mediator.Send(command, ct);
+            return Ok(new { message = "User updated successfully." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest("USER_ERROR", ex.Message);
+        }
     }
 
     [HttpDelete("users/{id:guid}")]
     public async Task<IActionResult> DeactivateUser(Guid id, CancellationToken ct)
     {
-        await Mediator.Send(new DeactivateUserCommand(id), ct);
-        return Ok(new { message = "User deactivated successfully." });
+        try
+        {
+            await Mediator.Send(new DeactivateUserCommand(id), ct);
+            return Ok(new { message = "User deactivated successfully." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest("USER_ERROR", ex.Message);
+        }
     }
 
     [HttpGet("documents")]
@@ -185,6 +206,7 @@ public sealed class AdminController : BaseApiController
         });
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet("ai-settings")]
     public async Task<IActionResult> GetAiSettings(CancellationToken ct)
     {
@@ -192,6 +214,7 @@ public sealed class AdminController : BaseApiController
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("ai-settings")]
     public async Task<IActionResult> UpdateAiSettings([FromBody] UpdateAiSettingsRequest request, CancellationToken ct)
     {
@@ -207,6 +230,7 @@ public sealed class AdminController : BaseApiController
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet("ai-usage")]
     public async Task<IActionResult> GetAiUsage(CancellationToken ct)
     {
@@ -263,6 +287,7 @@ public sealed class AdminController : BaseApiController
         }
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet("site-config")]
     public async Task<IActionResult> GetSiteConfig(CancellationToken ct)
     {
@@ -270,6 +295,7 @@ public sealed class AdminController : BaseApiController
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("site-config")]
     public async Task<IActionResult> UpdateSiteConfig([FromBody] UpdateSiteConfigRequest request, CancellationToken ct)
     {
@@ -279,6 +305,7 @@ public sealed class AdminController : BaseApiController
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet("smtp-config")]
     public async Task<IActionResult> GetSmtpConfig(CancellationToken ct)
     {
@@ -286,6 +313,7 @@ public sealed class AdminController : BaseApiController
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("smtp-config")]
     public async Task<IActionResult> UpdateSmtpConfig([FromBody] UpdateSmtpConfigRequest request, CancellationToken ct)
     {

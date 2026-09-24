@@ -8,15 +8,19 @@ import Spinner from '../../components/ui/Spinner'
 import Input from '../../components/ui/Input'
 import Badge from '../../components/ui/Badge'
 import { useUiStore } from '../../store/uiStore'
+import { useAuthStore } from '../../store/authStore'
+import { isAdminRole } from '../../utils/roles'
 
 const roleOptions = [
   { value: 'Admin', label: 'Administrador' },
+  { value: 'Curator', label: 'Curador' },
   { value: 'Editor', label: 'Editor' },
   { value: 'Viewer', label: 'Lector' },
 ]
 
 const roleAvatarColors: Record<string, string> = {
   Admin: 'bg-iupa-green',
+  Curator: 'bg-teal-600',
   Editor: 'bg-dept-music',
   Viewer: 'bg-iupa-medium',
 }
@@ -29,6 +33,10 @@ export default function UsersAdmin() {
   const deactivateMutation = useDeactivateUser()
   const approveMutation = useApproveUser()
   const addToast = useUiStore((s) => s.addToast)
+  const currentUser = useAuthStore((s) => s.user)
+  const isAdmin = isAdminRole(currentUser?.role)
+  // Un curador no puede asignar el rol Administrador (el backend también lo bloquea)
+  const assignableRoles = isAdmin ? roleOptions : roleOptions.filter((r) => r.value !== 'Admin')
 
   const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<User | null>(null)
@@ -93,9 +101,21 @@ export default function UsersAdmin() {
   }
 
   const openEdit = (user: User) => {
+    if (!isAdmin && user.role === 'Admin') {
+      addToast('error', 'No tenés permiso para modificar administradores')
+      return
+    }
     setEditTarget(user)
     setEditRole(user.role)
     setEditActive(user.isActive)
+  }
+
+  const handleDeactivateClick = (user: User) => {
+    if (!isAdmin && user.role === 'Admin') {
+      addToast('error', 'No tenés permiso para desactivar administradores')
+      return
+    }
+    setDeactivateTarget(user)
   }
 
   return (
@@ -194,7 +214,7 @@ export default function UsersAdmin() {
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
-                    <Badge variant={user.role.toLowerCase() as 'admin' | 'editor' | 'viewer'}>
+                    <Badge variant={user.role.toLowerCase() as 'admin' | 'curator' | 'editor' | 'viewer'}>
                       {roleOptions.find((r) => r.value === user.role)?.label ?? user.role}
                     </Badge>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
@@ -212,7 +232,7 @@ export default function UsersAdmin() {
                         Editar
                       </button>
                       <button
-                        onClick={() => setDeactivateTarget(user)}
+                        onClick={() => handleDeactivateClick(user)}
                         className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-50 hover:text-red-500 transition-colors"
                       >
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -292,7 +312,7 @@ export default function UsersAdmin() {
               onChange={(e) => setNewRole(e.target.value as User['role'])}
               className="w-full rounded-lg border border-iupa-light bg-white px-3.5 py-2.5 text-sm text-iupa-dark focus:border-iupa-green focus:ring-2 focus:ring-iupa-green/20 focus:outline-none transition-all"
             >
-              {roleOptions.map((r) => (
+              {assignableRoles.map((r) => (
                 <option key={r.value} value={r.value}>{r.label}</option>
               ))}
             </select>
@@ -344,7 +364,7 @@ export default function UsersAdmin() {
               onChange={(e) => setEditRole(e.target.value as User['role'])}
               className="w-full rounded-lg border border-iupa-light bg-white px-3.5 py-2.5 text-sm text-iupa-dark focus:border-iupa-green focus:ring-2 focus:ring-iupa-green/20 focus:outline-none transition-all"
             >
-              {roleOptions.map((r) => (
+              {assignableRoles.map((r) => (
                 <option key={r.value} value={r.value}>{r.label}</option>
               ))}
             </select>

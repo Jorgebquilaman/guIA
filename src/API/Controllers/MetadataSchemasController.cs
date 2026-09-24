@@ -17,7 +17,7 @@ public sealed class MetadataSchemasController : BaseApiController
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> Create([FromBody] CreateSchemaRequest request, CancellationToken ct)
     {
         var id = await Mediator.Send(
@@ -45,7 +45,7 @@ public sealed class MetadataSchemasController : BaseApiController
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct, [FromQuery] bool force = false)
     {
         await Mediator.Send(new DeleteMetadataSchemaCommand(id, force), ct);
@@ -53,7 +53,7 @@ public sealed class MetadataSchemasController : BaseApiController
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSchemaRequest request, CancellationToken ct)
     {
         await Mediator.Send(new UpdateMetadataSchemaCommand(id, request.Label, request.IsActive, request.SortOrder), ct);
@@ -70,7 +70,7 @@ public sealed class MetadataSchemasController : BaseApiController
     }
 
     [HttpPost("{schemaId}/fields")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> CreateField(Guid schemaId, [FromBody] CreateFieldRequest request, CancellationToken ct)
     {
         var fieldId = await Mediator.Send(
@@ -95,7 +95,7 @@ public sealed class MetadataSchemasController : BaseApiController
     }
 
     [HttpPut("fields/{fieldId}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> UpdateField(Guid fieldId, [FromBody] UpdateFieldRequest request, CancellationToken ct)
     {
         await Mediator.Send(
@@ -120,7 +120,7 @@ public sealed class MetadataSchemasController : BaseApiController
     }
 
     [HttpDelete("fields/{fieldId}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> DeleteField(Guid fieldId, CancellationToken ct)
     {
         await Mediator.Send(new DeleteMetadataFieldCommand(fieldId), ct);
@@ -128,7 +128,7 @@ public sealed class MetadataSchemasController : BaseApiController
     }
 
     [HttpPut("fields/{fieldId}/options")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> UpdateFieldOptions(Guid fieldId, [FromBody] List<FieldOptionInput> options, CancellationToken ct)
     {
         await Mediator.Send(new UpdateFieldOptionsCommand(fieldId, options), ct);

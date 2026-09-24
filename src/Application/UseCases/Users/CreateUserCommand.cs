@@ -18,14 +18,19 @@ public record CreateUserCommand(
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserDto>
 {
     private readonly IAppDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public CreateUserCommandHandler(IAppDbContext context)
+    public CreateUserCommandHandler(IAppDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken ct)
     {
+        if (_currentUser.UserRole == UserRole.Curator.ToString() && request.Role == UserRole.Admin)
+            throw new InvalidOperationException("Los curadores no pueden crear usuarios administradores.");
+
         var emailCheck = new Email(request.Email);
         bool emailExists = await _context.Users.AnyAsync(u => u.Email == emailCheck, ct);
         if (emailExists)

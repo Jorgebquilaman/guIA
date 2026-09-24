@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useDocument } from '../api/documents'
 import { useAuthStore } from '../store/authStore'
+import { isStaffRole } from '../utils/roles'
 import Spinner from '../components/ui/Spinner'
 import DublinCorePreview from '../components/documents/DublinCorePreview'
 import Button from '../components/ui/Button'
@@ -145,7 +146,7 @@ export default function DocumentBrowseView() {
   const [showDublinCore, setShowDublinCore] = useState(false)
 
   const isOwner = user?.id === doc?.uploadedByUserId
-  const isAdmin = user?.role === 'Admin'
+  const isAdmin = isStaffRole(user?.role)
 
   if (isLoading) {
     return (

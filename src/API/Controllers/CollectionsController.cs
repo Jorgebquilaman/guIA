@@ -14,7 +14,7 @@ public sealed class CollectionsController : BaseApiController
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> Create([FromBody] CreateCollectionRequest request, CancellationToken ct)
     {
         var command = new CreateCollectionCommand(request.Name, request.Description, request.ParentCollectionId, request.IsPublic);
@@ -23,7 +23,7 @@ public sealed class CollectionsController : BaseApiController
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCollectionRequest request, CancellationToken ct)
     {
         var command = new UpdateCollectionCommand(id, request.Name, request.Description, request.IsPublic);
@@ -32,7 +32,7 @@ public sealed class CollectionsController : BaseApiController
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Curator")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await Mediator.Send(new DeleteCollectionCommand(id), ct);

@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useDocument, useSearchDocuments } from '../api/documents'
 import { useAuthStore } from '../store/authStore'
+import { isStaffRole } from '../utils/roles'
 import type { Document } from '../types'
 import MetadataEditor from '../components/documents/MetadataEditor'
 import DublinCorePreview from '../components/documents/DublinCorePreview'
@@ -252,7 +253,7 @@ export default function DocumentView() {
   )
 
   const isOwner = user?.id === doc?.uploadedByUserId
-  const isAdmin = user?.role === 'Admin'
+  const isAdmin = isStaffRole(user?.role)
 
   const filledMetadata = useMemo(
     () => doc?.metadataValues?.filter((mv) => mv.value?.trim()) ?? [],
