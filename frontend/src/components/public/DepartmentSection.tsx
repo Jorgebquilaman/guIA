@@ -83,13 +83,16 @@ export default function DepartmentSection() {
                   <span className="truncate">{dept.name}</span>
                 </button>
 
-                {/* Banda de color a ancho completo, continua (sin sombras) */}
+                {/* Banda de color a ancho completo, continua (sin sombras).
+                    Esquina superior derecha redondeada; la activa se abre un poco más. */}
                 <div
-                  className={`w-full px-4 pt-1.5 text-white transition-all sm:px-5 ${isLast ? 'rounded-b-2xl pb-3' : 'pb-[36px]'}`}
+                  className={`w-full rounded-tr-2xl px-4 pt-2 text-white transition-all sm:px-5 ${
+                    isLast ? 'rounded-b-2xl pb-3' : isActive ? 'pb-[44px]' : 'pb-[36px]'
+                  }`}
                   style={{ backgroundColor: dept.color, ...TEXTURE_STYLE }}
                 >
                   {isActive ? (
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex min-h-[64px] flex-col justify-center gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0">
                         <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/60">
                           {t('departments.carreras')}
