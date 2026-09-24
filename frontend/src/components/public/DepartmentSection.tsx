@@ -75,7 +75,7 @@ export default function DepartmentSection() {
                   key={dept.id}
                   onClick={() => setActiveId(dept.id)}
                   title={dept.name}
-                  className={`group/tab relative inline-flex max-w-[190px] items-center gap-1.5 rounded-t-xl px-3 font-bold uppercase tracking-widest text-white transition-all hover:brightness-110 sm:px-4 ${
+                  className={`group/tab relative inline-flex max-w-[190px] items-center gap-1.5 rounded-t-xl px-3 font-bold uppercase tracking-widest text-white transition-all hover:z-50 hover:brightness-110 sm:px-4 ${
                     isActive ? 'z-20 h-11 text-[11px] sm:h-12 sm:text-xs' : 'z-0 h-7 text-[9px] sm:h-8 sm:text-[10px]'
                   }`}
                   style={{
@@ -86,8 +86,8 @@ export default function DepartmentSection() {
                 >
                   {Icon && <Icon className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />}
                   <span className="truncate">{dept.name}</span>
-                  {/* Tooltip con el nombre completo al pasar el mouse */}
-                  <span className="pointer-events-none absolute -top-1.5 left-0 z-50 -translate-y-full whitespace-nowrap rounded-lg bg-iupa-dark px-2.5 py-1.5 text-[10px] font-semibold normal-case tracking-wide text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover/tab:opacity-100">
+                  {/* Tooltip con el nombre completo: medio segundo de demora y por encima de todo */}
+                  <span className="pointer-events-none absolute -top-1.5 left-0 z-50 -translate-y-full whitespace-nowrap rounded-lg bg-iupa-dark px-2.5 py-1.5 text-[10px] font-semibold normal-case tracking-wide text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover/tab:delay-500 group-hover/tab:opacity-100">
                     {dept.name}
                   </span>
                 </button>
