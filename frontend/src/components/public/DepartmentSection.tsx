@@ -59,7 +59,7 @@ export default function DepartmentSection() {
               <a
                 key={dept.id}
                 href={`/buscar?department=${encodeURIComponent(dept.name)}`}
-                className="group relative flex flex-col items-center justify-center rounded-xl p-6 text-center text-white shadow-lg transition-all duration-200 hover:-translate-y-1.5 hover:shadow-xl"
+                className="group relative flex flex-col items-center justify-center rounded-r-xl p-6 text-center text-white shadow-lg transition-all duration-200 hover:-translate-y-1.5 hover:shadow-xl"
                 style={{ backgroundColor: dept.color, ...TEXTURE_STYLE }}
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/20 shadow-inner">
@@ -90,7 +90,7 @@ export default function DepartmentSection() {
               <div
                 key={dept.id}
                 onClick={() => setActiveId(activeId === dept.id ? dept.id : dept.id)}
-                className={`relative cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl ${
+                className={`relative cursor-pointer overflow-hidden rounded-r-2xl transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl ${
                   isActive ? 'flex-[3]' : 'flex-[0.4]'
                 }`}
                 style={{ backgroundColor: dept.color, ...TEXTURE_STYLE }}
