@@ -65,27 +65,27 @@ export default function DepartmentSection() {
               <div
                 key={dept.id}
                 className="relative"
-                style={{ zIndex: i + 1, marginTop: i === 0 ? undefined : '-40px' }}
+                style={{ zIndex: i + 1, marginTop: i === 0 ? undefined : '-34px' }}
               >
                 {/* Pestaña (tab) con nombre e ícono */}
                 <button
                   onClick={() => setActiveId(dept.id)}
                   title={dept.name}
-                  className="relative z-10 inline-flex h-8 max-w-full items-center gap-1.5 rounded-t-xl px-4 text-[10px] font-bold uppercase tracking-widest text-white shadow-md transition-all hover:brightness-110 sm:h-9 sm:px-5 sm:text-xs"
+                  className="relative z-10 inline-flex h-7 max-w-full items-center gap-1 rounded-t-lg px-3 text-[9px] font-bold uppercase tracking-widest text-white transition-all hover:brightness-110 sm:h-8 sm:px-4 sm:text-[10px]"
                   style={{
                     backgroundColor: dept.color,
                     ...TEXTURE_STYLE,
                     fontFamily: 'Montserrat, sans-serif',
-                    marginLeft: `clamp(0px, ${TAB_OFFSETS[i % TAB_OFFSETS.length]}, calc(100% - 220px))`,
+                    marginLeft: `clamp(0px, ${TAB_OFFSETS[i % TAB_OFFSETS.length]}, calc(100% - 200px))`,
                   }}
                 >
-                  {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
+                  {Icon && <Icon className="h-3 w-3 shrink-0" />}
                   <span className="truncate">{dept.name}</span>
                 </button>
 
-                {/* Banda de color a ancho completo */}
+                {/* Banda de color a ancho completo, continua (sin sombras) */}
                 <div
-                  className={`w-full px-5 pt-2 text-white shadow-md transition-all sm:px-7 ${isLast ? 'pb-4' : 'pb-[42px]'}`}
+                  className={`w-full px-4 pt-1.5 text-white transition-all sm:px-5 ${isLast ? 'pb-3' : 'pb-[36px]'}`}
                   style={{ backgroundColor: dept.color, ...TEXTURE_STYLE }}
                 >
                   {isActive ? (
