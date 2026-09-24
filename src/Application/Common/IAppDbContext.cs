@@ -8,6 +8,7 @@ namespace GuIA.Application.Common;
 public interface IAppDbContext
 {
     DbSet<User> Users { get; }
+    DbSet<AccessCategory> AccessCategories { get; }
     DbSet<Document> Documents { get; }
     DbSet<DocumentFile> DocumentFiles { get; }
     DbSet<DocumentAuthor> DocumentAuthors { get; }

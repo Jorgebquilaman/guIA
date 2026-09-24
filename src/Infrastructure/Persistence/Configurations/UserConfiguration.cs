@@ -39,6 +39,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.IsActive)
             .HasColumnName("is_active");
 
+        builder.Property(u => u.AccessCategoryId)
+            .HasColumnName("access_category_id");
+
+        builder.HasOne(u => u.AccessCategory)
+            .WithMany()
+            .HasForeignKey(u => u.AccessCategoryId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.Property(u => u.CreatedAt)
             .HasColumnName("created_at");
 

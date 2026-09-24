@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GuIA.Application.UseCases.Auth;
 
-public record RequestAccessCommand(string Email, string FullName) : IRequest<UserDto>;
+public record RequestAccessCommand(string Email, string FullName, Guid? AccessCategoryId = null) : IRequest<UserDto>;
 
 public class RequestAccessCommandHandler : IRequestHandler<RequestAccessCommand, UserDto>
 {
@@ -30,6 +30,14 @@ public class RequestAccessCommandHandler : IRequestHandler<RequestAccessCommand,
         var tempHash = PasswordHelper.Hash(Guid.NewGuid().ToString());
         var user = new User(email, tempHash, request.FullName, UserRole.Viewer);
         user.Deactivate();
+        if (request.AccessCategoryId.HasValue)
+        {
+            var category = await _context.AccessCategories
+                .FirstOrDefaultAsync(c => c.Id == request.AccessCategoryId.Value, ct);
+            if (category == null || !category.IsActive)
+                throw new InvalidOperationException("CATEGORIA: La categoría seleccionada no es válida.");
+            user.SetAccessCategory(category.Id);
+        }
         _context.Users.Add(user);
         await _context.SaveChangesAsync(ct);
 
@@ -40,7 +48,14 @@ public class RequestAccessCommandHandler : IRequestHandler<RequestAccessCommand,
             FullName = user.FullName,
             Role = user.Role,
             IsActive = user.IsActive,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            AccessCategoryId = user.AccessCategoryId,
+            AccessCategoryName = user.AccessCategoryId.HasValue
+                ? (await _context.AccessCategories
+                    .Where(c => c.Id == user.AccessCategoryId.Value)
+                    .Select(c => c.Name)
+                    .FirstOrDefaultAsync(ct))
+                : null
         };
     }
 }

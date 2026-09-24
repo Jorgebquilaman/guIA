@@ -5,6 +5,16 @@ export interface User {
   role: 'Admin' | 'Curator' | 'Editor' | 'Viewer' | 'Reader'
   isActive: boolean
   createdAt: string
+  accessCategoryId?: string | null
+  accessCategoryName?: string | null
+}
+
+export interface AccessCategory {
+  id: string
+  name: string
+  description: string
+  isActive: boolean
+  sortOrder: number
 }
 
 export interface Collection {

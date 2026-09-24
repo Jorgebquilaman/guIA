@@ -28,6 +28,7 @@ import AiSettings from './pages/admin/AiSettings'
 import SiteConfig from './pages/admin/SiteConfig'
 import SmtpConfig from './pages/admin/SmtpConfig'
 import DocumentTypes from './pages/admin/DocumentTypes'
+import AccessCategories from './pages/admin/AccessCategories'
 import Departments from './pages/admin/Departments'
 import MetadataSchemasAdmin from './pages/admin/MetadataSchemasAdmin'
 import Thesaurus from './pages/admin/Thesaurus'
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="/app/admin/site-config" element={<AdminGuard adminOnly><SiteConfig /></AdminGuard>} />
             <Route path="/app/admin/smtp-config" element={<AdminGuard adminOnly><SmtpConfig /></AdminGuard>} />
             <Route path="/app/admin/document-types" element={<AdminGuard adminOnly><DocumentTypes /></AdminGuard>} />
+            <Route path="/app/admin/access-categories" element={<AdminGuard><AccessCategories /></AdminGuard>} />
             <Route path="/app/admin/departments" element={<AdminGuard><Departments /></AdminGuard>} />
             <Route path="/app/admin/metadata-schemas" element={<AdminGuard><MetadataSchemasAdmin /></AdminGuard>} />
             <Route path="/app/admin/thesaurus" element={<AdminGuard><Thesaurus /></AdminGuard>} />

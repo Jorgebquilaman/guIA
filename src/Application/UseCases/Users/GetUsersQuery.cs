@@ -26,7 +26,9 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserDto>
                 FullName = u.FullName,
                 Role = u.Role,
                 IsActive = u.IsActive,
-                CreatedAt = u.CreatedAt
+                CreatedAt = u.CreatedAt,
+                AccessCategoryId = u.AccessCategoryId,
+                AccessCategoryName = u.AccessCategory != null ? u.AccessCategory.Name : null
             })
             .ToListAsync(ct);
     }

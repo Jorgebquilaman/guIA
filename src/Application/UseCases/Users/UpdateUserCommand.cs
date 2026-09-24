@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GuIA.Application.UseCases.Users;
 
-public record UpdateUserCommand(Guid UserId, string? FullName, UserRole? Role) : IRequest;
+public record UpdateUserCommand(Guid UserId, string? FullName, UserRole? Role, Guid? AccessCategoryId = null) : IRequest;
 
 public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand>
 {
@@ -33,6 +33,15 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand>
 
         if (request.Role.HasValue)
             user.ChangeRole(request.Role.Value);
+
+        if (request.AccessCategoryId.HasValue)
+        {
+            bool categoryExists = await _context.AccessCategories
+                .AnyAsync(c => c.Id == request.AccessCategoryId.Value, ct);
+            if (!categoryExists)
+                throw new InvalidOperationException("La categoría de acceso indicada no existe.");
+            user.SetAccessCategory(request.AccessCategoryId);
+        }
 
         await _context.SaveChangesAsync(ct);
     }

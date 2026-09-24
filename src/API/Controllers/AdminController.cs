@@ -28,7 +28,7 @@ public sealed class AdminController : BaseApiController
     {
         try
         {
-            var command = new CreateUserCommand(request.Email, request.Password, request.FullName, request.Role);
+            var command = new CreateUserCommand(request.Email, request.Password, request.FullName, request.Role, request.AccessCategoryId);
             var result = await Mediator.Send(command, ct);
             return Ok(result);
         }
@@ -43,7 +43,7 @@ public sealed class AdminController : BaseApiController
     {
         try
         {
-            var command = new UpdateUserCommand(id, request.FullName, request.Role);
+            var command = new UpdateUserCommand(id, request.FullName, request.Role, request.AccessCategoryId);
             await Mediator.Send(command, ct);
             return Ok(new { message = "User updated successfully." });
         }
@@ -338,7 +338,9 @@ public sealed class AdminController : BaseApiController
                 FullName = u.FullName,
                 Role = u.Role,
                 IsActive = u.IsActive,
-                CreatedAt = u.CreatedAt
+                CreatedAt = u.CreatedAt,
+                AccessCategoryId = u.AccessCategoryId,
+                AccessCategoryName = u.AccessCategory != null ? u.AccessCategory.Name : null
             })
             .OrderByDescending(u => u.CreatedAt)
             .ToListAsync(ct);
@@ -371,8 +373,8 @@ public sealed record DeepSeekBalanceInfo(
     [property: System.Text.Json.Serialization.JsonPropertyName("topped_up_balance")] string? ToppedUpBalance
 );
 
-public sealed record CreateUserRequest(string Email, string Password, string FullName, UserRole Role);
-public sealed record UpdateUserRequest(string? FullName, UserRole? Role);
+public sealed record CreateUserRequest(string Email, string Password, string FullName, UserRole Role, Guid? AccessCategoryId = null);
+public sealed record UpdateUserRequest(string? FullName, UserRole? Role, Guid? AccessCategoryId = null);
 public sealed record UpdateAiSettingsRequest(string ApiUrl, string ApiKey, string Model, int MaxTokens, string? SystemPrompt = null);
 public sealed record UpdateSiteConfigRequest(bool ShowMessage, string MessageText, string? BaseUrl = null, long? MaxFileSizeBytes = null);
 public sealed record UpdateSmtpConfigRequest(string Host, int Port, string Username, string Password, string FromEmail, string FromName, bool UseSsl);

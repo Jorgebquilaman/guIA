@@ -12,7 +12,8 @@ public record CreateUserCommand(
     string Email,
     string Password,
     string FullName,
-    UserRole Role
+    UserRole Role,
+    Guid? AccessCategoryId = null
 ) : IRequest<UserDto>;
 
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserDto>
@@ -40,6 +41,14 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
         string passwordHash = PasswordHelper.Hash(request.Password);
 
         var user = new User(email, passwordHash, request.FullName, request.Role);
+        if (request.AccessCategoryId.HasValue)
+        {
+            bool categoryExists = await _context.AccessCategories
+                .AnyAsync(c => c.Id == request.AccessCategoryId.Value, ct);
+            if (!categoryExists)
+                throw new InvalidOperationException("La categoría de acceso indicada no existe.");
+            user.SetAccessCategory(request.AccessCategoryId);
+        }
         _context.Users.Add(user);
         await _context.SaveChangesAsync(ct);
 
@@ -50,7 +59,14 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             FullName = user.FullName,
             Role = user.Role,
             IsActive = user.IsActive,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            AccessCategoryId = user.AccessCategoryId,
+            AccessCategoryName = user.AccessCategoryId.HasValue
+                ? (await _context.AccessCategories
+                    .Where(c => c.Id == user.AccessCategoryId.Value)
+                    .Select(c => c.Name)
+                    .FirstOrDefaultAsync(ct))
+                : null
         };
     }
 }

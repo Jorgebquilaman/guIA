@@ -12,6 +12,7 @@ public class AppDbContext : DbContext, IAppDbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<AccessCategory> AccessCategories => Set<AccessCategory>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentFile> DocumentFiles => Set<DocumentFile>();
     public DbSet<DocumentAuthor> DocumentAuthors => Set<DocumentAuthor>();

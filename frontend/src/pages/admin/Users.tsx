@@ -9,6 +9,7 @@ import Input from '../../components/ui/Input'
 import Badge from '../../components/ui/Badge'
 import { useUiStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
+import { useAccessCategories } from '../../api/accessCategories'
 import { isAdminRole } from '../../utils/roles'
 
 const roleOptions = [
@@ -28,6 +29,7 @@ const roleAvatarColors: Record<string, string> = {
 export default function UsersAdmin() {
   const { data: users, isLoading, isError, error } = useUsers()
   const { data: pendingUsers } = usePendingUsers()
+  const { data: categories } = useAccessCategories()
   const createMutation = useCreateUser()
   const updateMutation = useUpdateUser()
   const deactivateMutation = useDeactivateUser()
@@ -46,8 +48,10 @@ export default function UsersAdmin() {
   const [newPassword, setNewPassword] = useState('')
   const [newName, setNewName] = useState('')
   const [newRole, setNewRole] = useState<User['role']>('Reader')
+  const [newCategoryId, setNewCategoryId] = useState('')
 
   const [editRole, setEditRole] = useState<User['role']>('Reader')
+  const [editCategoryId, setEditCategoryId] = useState('')
   const [editActive, setEditActive] = useState(true)
 
   const resetForm = () => {
@@ -55,6 +59,7 @@ export default function UsersAdmin() {
     setNewPassword('')
     setNewName('')
     setNewRole('Reader')
+    setNewCategoryId('')
   }
 
   const handleCreate = async () => {
@@ -65,6 +70,7 @@ export default function UsersAdmin() {
         fullName: newName.trim(),
         password: newPassword,
         role: newRole,
+        accessCategoryId: newCategoryId || null,
       })
       addToast('success', 'Usuario creado exitosamente')
       setCreateOpen(false)
@@ -81,6 +87,7 @@ export default function UsersAdmin() {
         id: editTarget.id,
         role: editRole,
         fullName: editTarget.fullName,
+        accessCategoryId: editCategoryId || null,
       })
       addToast('success', 'Usuario actualizado')
       setEditTarget(null)
@@ -107,6 +114,7 @@ export default function UsersAdmin() {
     }
     setEditTarget(user)
     setEditRole(user.role)
+    setEditCategoryId(user.accessCategoryId ?? '')
     setEditActive(user.isActive)
   }
 
@@ -152,6 +160,9 @@ export default function UsersAdmin() {
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-iupa-dark">{user.fullName}</div>
                     <div className="text-xs text-iupa-medium">{user.email}</div>
+                    {user.accessCategoryName && (
+                      <div className="mt-0.5 text-xs font-medium text-teal-700">Categoría: {user.accessCategoryName}</div>
+                    )}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -217,6 +228,11 @@ export default function UsersAdmin() {
                     <Badge variant={user.role.toLowerCase() as 'admin' | 'curator' | 'editor' | 'viewer'}>
                       {roleOptions.find((r) => r.value === user.role)?.label ?? user.role}
                     </Badge>
+                    {user.accessCategoryName && (
+                      <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700" title="Categoría de acceso">
+                        {user.accessCategoryName}
+                      </span>
+                    )}
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
                       <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                       Activo
@@ -317,6 +333,24 @@ export default function UsersAdmin() {
               ))}
             </select>
           </div>
+          <div>
+            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-iupa-dark">
+              <svg className="h-4 w-4 text-iupa-green-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+              </svg>
+              Categoría de acceso
+            </label>
+            <select
+              value={newCategoryId}
+              onChange={(e) => setNewCategoryId(e.target.value)}
+              className="w-full rounded-lg border border-iupa-light bg-white px-3.5 py-2.5 text-sm text-iupa-dark focus:border-iupa-green focus:ring-2 focus:ring-iupa-green/20 focus:outline-none transition-all"
+            >
+              <option value="">Sin categoría</option>
+              {(categories ?? []).map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
           <div className="flex justify-end gap-3 border-t border-iupa-light pt-4">
             <Button variant="ghost" onClick={() => setCreateOpen(false)}>
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -366,6 +400,24 @@ export default function UsersAdmin() {
             >
               {assignableRoles.map((r) => (
                 <option key={r.value} value={r.value}>{r.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-iupa-dark">
+              <svg className="h-4 w-4 text-iupa-green-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+              </svg>
+              Categoría de acceso
+            </label>
+            <select
+              value={editCategoryId}
+              onChange={(e) => setEditCategoryId(e.target.value)}
+              className="w-full rounded-lg border border-iupa-light bg-white px-3.5 py-2.5 text-sm text-iupa-dark focus:border-iupa-green focus:ring-2 focus:ring-iupa-green/20 focus:outline-none transition-all"
+            >
+              <option value="">Sin categoría</option>
+              {(categories ?? []).map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
           </div>

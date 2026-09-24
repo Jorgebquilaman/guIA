@@ -110,6 +110,7 @@ using (var scope = app.Services.CreateScope())
 
     var metadataCtx = scope.ServiceProvider.GetRequiredService<IAppDbContext>();
     await SeedMetadataSchemas.SeedAsync(metadataCtx);
+    await SeedAccessCategories.SeedAsync(metadataCtx);
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

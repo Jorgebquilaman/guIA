@@ -18,7 +18,7 @@ export function useUsers() {
 export function useCreateUser() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { email: string; fullName: string; password: string; role: User['role'] }) => {
+    mutationFn: async (data: { email: string; fullName: string; password: string; role: User['role']; accessCategoryId?: string | null }) => {
       const res = await apiClient.post<ApiResponse<User>>('/admin/users', data)
       if (!res.data.success || !res.data.data) {
         throw new Error(res.data.error?.message ?? 'Failed to create user')
@@ -34,7 +34,7 @@ export function useCreateUser() {
 export function useUpdateUser() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: string; email?: string; fullName?: string; role?: User['role'] }) => {
+    mutationFn: async ({ id, ...data }: { id: string; email?: string; fullName?: string; role?: User['role']; accessCategoryId?: string | null }) => {
       const res = await apiClient.put<ApiResponse<User>>(`/admin/users/${id}`, data)
       if (!res.data.success || !res.data.data) {
         throw new Error(res.data.error?.message ?? 'Failed to update user')

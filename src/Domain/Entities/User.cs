@@ -13,6 +13,8 @@ public class User : BaseEntity
     public bool IsActive { get; private set; }
     public int FailedLoginAttempts { get; private set; }
     public DateTime? LockoutEnd { get; private set; }
+    public Guid? AccessCategoryId { get; private set; }
+    public AccessCategory? AccessCategory { get; private set; }
     public ICollection<Document> Documents { get; private set; } = new List<Document>();
 
     private User() { }
@@ -63,6 +65,11 @@ public class User : BaseEntity
     public void ChangeRole(UserRole role)
     {
         Role = role;
+    }
+
+    public void SetAccessCategory(Guid? accessCategoryId)
+    {
+        AccessCategoryId = accessCategoryId;
     }
 
     public bool IsLockedOut => LockoutEnd.HasValue && LockoutEnd.Value > DateTime.UtcNow;

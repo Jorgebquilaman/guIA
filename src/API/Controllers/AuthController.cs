@@ -96,11 +96,14 @@ public sealed class AuthController : BaseApiController
     {
         try
         {
-            var result = await Mediator.Send(new RequestAccessCommand(request.Email, request.FullName), ct);
+            var result = await Mediator.Send(new RequestAccessCommand(request.Email, request.FullName, request.AccessCategoryId), ct);
             return Ok(result);
         }
         catch (InvalidOperationException ex)
         {
+            const string prefix = "CATEGORIA:";
+            if (ex.Message.StartsWith(prefix))
+                return BadRequest("INVALID_CATEGORY", ex.Message[prefix.Length..].Trim());
             return BadRequest("DUPLICATE_EMAIL", ex.Message);
         }
     }
@@ -111,4 +114,4 @@ public sealed record RefreshTokenRequest(string RefreshToken);
 public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Token, string NewPassword);
-public sealed record RequestAccessRequest(string Email, string FullName);
+public sealed record RequestAccessRequest(string Email, string FullName, Guid? AccessCategoryId = null);

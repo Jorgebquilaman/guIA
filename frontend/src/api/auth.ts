@@ -69,7 +69,7 @@ export function useResetPassword() {
 
 export function useRequestAccess() {
   return useMutation({
-    mutationFn: async (data: { email: string; fullName: string }) => {
+    mutationFn: async (data: { email: string; fullName: string; accessCategoryId?: string }) => {
       const res = await apiClient.post<ApiResponse<null>>('/auth/request-access', data)
       if (!res.data.success) {
         throw new Error(res.data.error?.message ?? 'Request failed')

@@ -10,4 +10,6 @@ public class UserDto
     public UserRole Role { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
+    public Guid? AccessCategoryId { get; set; }
+    public string? AccessCategoryName { get; set; }
 }
