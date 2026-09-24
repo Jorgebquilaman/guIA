@@ -15,6 +15,7 @@ import MediaLinkPlayer from '../components/ui/MediaLinkPlayer'
 import Modal from '../components/ui/Modal'
 import { generateCitation, type CitationFormat } from '../utils/citation'
 import { toTitleCaseEs } from '../utils/capitalize'
+import { withFileToken } from '../utils/files'
 
 const typeLabels: Record<string, string> = {
   Article: 'Artículo',
@@ -482,8 +483,8 @@ export default function DocumentView() {
   const primary = hasSourceUrl ? null : (doc.files.find((f) => f.isPrimary) ?? doc.files[0])
   const isPdf = primary?.mimeType === 'application/pdf'
   const isImage = primary?.mimeType.startsWith('image/')
-  const previewUrl = primary ? `/api/documents/${doc.id}/preview/${primary.id}` : null
-  const downloadUrl = primary ? `/api/documents/${doc.id}/download/${primary.id}` : null
+  const previewUrl = primary ? withFileToken(`/api/documents/${doc.id}/preview/${primary.id}`) : null
+  const downloadUrl = primary ? withFileToken(`/api/documents/${doc.id}/download/${primary.id}`) : null
   const status = statusConfig[doc.status] ?? statusConfig.Draft
 
   return (
@@ -827,7 +828,7 @@ export default function DocumentView() {
                                 <span className="shrink-0 text-xs text-iupa-medium">({(file.fileSizeBytes / 1024 / 1024).toFixed(1)} MB)</span>
                               </div>
                               <a
-                                href={`/api/documents/${doc.id}/download/${file.id}`}
+                                href={withFileToken(`/api/documents/${doc.id}/download/${file.id}`)}
                                 className="shrink-0 text-xs font-medium text-iupa-green hover:text-iupa-green-secondary"
                               >
                                 Descargar

@@ -32,6 +32,26 @@ public static class ServiceExtensions
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
                 ClockSkew = TimeSpan.Zero
             };
+            options.Events = new JwtBearerEvents
+            {
+                // Los previews (iframe/img) y descargas (a[href]) no pueden enviar
+                // el header Authorization: aceptar el token SOLO por query string
+                // y SOLO en endpoints de archivos de documentos.
+                OnMessageReceived = context =>
+                {
+                    var path = context.HttpContext.Request.Path.Value ?? string.Empty;
+                    if (path.StartsWith("/api/documents/", StringComparison.OrdinalIgnoreCase) &&
+                        (path.Contains("/download/", StringComparison.OrdinalIgnoreCase) ||
+                         path.Contains("/preview/", StringComparison.OrdinalIgnoreCase) ||
+                         path.EndsWith("/thumbnail", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        var token = context.Request.Query["access_token"].FirstOrDefault();
+                        if (!string.IsNullOrEmpty(token))
+                            context.Token = token;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
         });
 
         return services;

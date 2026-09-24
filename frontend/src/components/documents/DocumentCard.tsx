@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import type { Document } from '../../types'
 import { useAuthStore } from '../../store/authStore'
 import { getGoogleDriveEmbedUrl } from '../../utils/gdrive'
+import { withFileToken } from '../../utils/files'
 
 const MEDIA_EXTENSIONS = {
   video: ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'],
@@ -77,9 +78,9 @@ export default function DocumentCard({
   const [previewOpen, setPreviewOpen] = useState(false)
   const urlType = document.sourceUrl ? getUrlType(document.sourceUrl) : 'other'
   const gdriveEmbedUrl = urlType === 'gdrive' && document.sourceUrl ? getGoogleDriveEmbedUrl(document.sourceUrl) : null
-  const previewUrl = primaryFile?.mimeType?.startsWith('image/')
+  const previewUrl = withFileToken(primaryFile?.mimeType?.startsWith('image/')
     ? `/api/documents/${document.id}/preview/${primaryFile.id}`
-    : `/api/documents/${document.id}/thumbnail`
+    : `/api/documents/${document.id}/thumbnail`)
 
   return (
     <>
@@ -96,7 +97,7 @@ export default function DocumentCard({
               ) : hasThumbnail ? (
                 <button onClick={() => setLightbox(true)} className="group relative">
                   <img
-                    src={`/api/documents/${document.id}/thumbnail`}
+                    src={withFileToken(`/api/documents/${document.id}/thumbnail`)}
                     alt=""
                     className="h-24 w-20 rounded object-cover transition group-hover:ring-2 group-hover:ring-iupa-green/50"
                   />

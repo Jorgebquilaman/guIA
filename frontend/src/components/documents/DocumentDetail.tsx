@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Document } from '../../types'
 import MediaLinkPlayer from '../ui/MediaLinkPlayer'
+import { withFileToken } from '../../utils/files'
 
 interface DocumentDetailProps {
   document: Document
@@ -31,8 +32,8 @@ export default function DocumentDetail({ document }: DocumentDetailProps) {
   const primary = isLink ? null : (document.files.find((f) => f.isPrimary) ?? document.files[0])
   const isPdf = primary?.mimeType === 'application/pdf'
   const isImage = primary?.mimeType.startsWith('image/')
-  const previewUrl = primary ? `/api/documents/${document.id}/preview/${primary.id}` : null
-  const downloadUrl = primary ? `/api/documents/${document.id}/download/${primary.id}` : null
+  const previewUrl = primary ? withFileToken(`/api/documents/${document.id}/preview/${primary.id}`) : null
+  const downloadUrl = primary ? withFileToken(`/api/documents/${document.id}/download/${primary.id}`) : null
 
   return (
     <div className="space-y-8">
@@ -237,7 +238,7 @@ export default function DocumentDetail({ document }: DocumentDetailProps) {
                     <span className="shrink-0 text-xs text-iupa-medium">({(file.fileSizeBytes / 1024 / 1024).toFixed(1)} MB)</span>
                   </div>
                   <a
-                    href={`/api/documents/${document.id}/download/${file.id}`}
+                    href={withFileToken(`/api/documents/${document.id}/download/${file.id}`)}
                     className="shrink-0 text-xs font-medium text-iupa-green hover:text-iupa-green-secondary"
                   >
                     Descargar

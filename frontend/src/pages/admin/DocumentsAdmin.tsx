@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAdminDocuments } from '../../api/admin'
 import client from '../../api/client'
 import type { DocumentStatus as DocStatus } from '../../types'
+import { withFileToken } from '../../utils/files'
 import Card from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
@@ -316,7 +317,7 @@ export default function DocumentsAdmin() {
                     <div className="shrink-0">
                       {(doc.hasCoverImage || doc.files?.[0]?.hasThumbnail) ? (
                         <img
-                          src={`/api/documents/${doc.id}/thumbnail`}
+                          src={withFileToken(`/api/documents/${doc.id}/thumbnail`)}
                           alt=""
                           className="h-12 w-10 rounded object-cover"
                         />

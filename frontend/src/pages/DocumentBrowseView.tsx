@@ -6,6 +6,7 @@ import Spinner from '../components/ui/Spinner'
 import DublinCorePreview from '../components/documents/DublinCorePreview'
 import Button from '../components/ui/Button'
 import { getGoogleDriveEmbedUrl } from '../utils/gdrive'
+import { withFileToken } from '../utils/files'
 
 const typeLabels: Record<string, string> = {
   Article: 'Artículo',
@@ -424,7 +425,7 @@ export default function DocumentBrowseView() {
                             <span className="shrink-0 text-xs text-iupa-medium">({(file.fileSizeBytes / 1024 / 1024).toFixed(1)} MB)</span>
                           </div>
                           <a
-                            href={`/api/documents/${doc.id}/download/${file.id}`}
+                            href={withFileToken(`/api/documents/${doc.id}/download/${file.id}`)}
                             className="shrink-0 text-xs font-medium text-iupa-green hover:text-iupa-green-secondary"
                           >
                             Descargar

@@ -4,6 +4,7 @@ import { type ReactNode } from 'react'
 import Card from '../../components/ui/Card'
 import Spinner from '../../components/ui/Spinner'
 import Badge from '../../components/ui/Badge'
+import { withFileToken } from '../../utils/files'
 import Button from '../../components/ui/Button'
 
 function Bar({ value, max, label, color }: { value: number; max: number; label: string; color: string }) {
@@ -232,7 +233,7 @@ export default function Dashboard() {
                   <div className="shrink-0">
                     {(doc.hasCoverImage || doc.files?.[0]?.hasThumbnail) ? (
                       <img
-                        src={`/api/documents/${doc.id}/thumbnail`}
+                        src={withFileToken(`/api/documents/${doc.id}/thumbnail`)}
                         alt=""
                         className="h-10 w-8 rounded object-cover"
                       />
