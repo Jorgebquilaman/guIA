@@ -63,7 +63,10 @@ export default function DepartmentSection() {
               más alta, fusionada con la tarjeta, como en la imagen de referencia);
               las demás la siguen y, si desbordan, apilan hacia arriba (wrap-reverse)
               de modo que la fila inferior siempre apoya sobre la tarjeta. */}
-          <div className="flex flex-wrap-reverse items-end gap-x-[3px] gap-y-0">
+          {/* items-start: en wrap-reverse el eje cruzado se invierte, así que
+              "start" alinea las pestañas hacia ABAJO de su fila — las pestañas
+              superiores quedan apoyadas sobre las inferiores sin aire debajo. */}
+          <div className="flex flex-wrap-reverse items-start gap-x-[3px] gap-y-0">
             {orderedTabs.map((dept) => {
               const Icon = ICON_MAP[dept.icon ?? '']
               const isActive = activeId === dept.id
