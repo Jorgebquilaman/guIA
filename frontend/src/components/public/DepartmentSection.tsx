@@ -65,65 +65,65 @@ export default function DepartmentSection() {
               <div
                 key={dept.id}
                 className="relative"
-                style={{ zIndex: i + 1, marginTop: i === 0 ? undefined : '-58px' }}
+                style={{ zIndex: i + 1, marginTop: i === 0 ? undefined : '-40px' }}
               >
                 {/* Pestaña (tab) con nombre e ícono */}
                 <button
                   onClick={() => setActiveId(dept.id)}
                   title={dept.name}
-                  className="relative z-10 inline-flex h-11 max-w-full items-center gap-2 rounded-t-2xl px-5 text-xs font-bold uppercase tracking-widest text-white shadow-md transition-all hover:brightness-110 sm:h-12 sm:px-7 sm:text-sm"
+                  className="relative z-10 inline-flex h-8 max-w-full items-center gap-1.5 rounded-t-xl px-4 text-[10px] font-bold uppercase tracking-widest text-white shadow-md transition-all hover:brightness-110 sm:h-9 sm:px-5 sm:text-xs"
                   style={{
                     backgroundColor: dept.color,
                     ...TEXTURE_STYLE,
                     fontFamily: 'Montserrat, sans-serif',
-                    marginLeft: `clamp(0px, ${TAB_OFFSETS[i % TAB_OFFSETS.length]}, calc(100% - 250px))`,
+                    marginLeft: `clamp(0px, ${TAB_OFFSETS[i % TAB_OFFSETS.length]}, calc(100% - 220px))`,
                   }}
                 >
-                  {Icon && <Icon className="h-4 w-4 shrink-0" />}
+                  {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
                   <span className="truncate">{dept.name}</span>
                 </button>
 
                 {/* Banda de color a ancho completo */}
                 <div
-                  className={`w-full px-5 pt-3 text-white shadow-md transition-all sm:px-7 ${isLast ? 'pb-6' : 'pb-[70px]'}`}
+                  className={`w-full px-5 pt-2 text-white shadow-md transition-all sm:px-7 ${isLast ? 'pb-4' : 'pb-[42px]'}`}
                   style={{ backgroundColor: dept.color, ...TEXTURE_STYLE }}
                 >
                   {isActive ? (
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0">
-                        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-white/60">
+                        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/60">
                           {t('departments.carreras')}
                         </p>
                         {dept.degreePrograms.length > 0 ? (
-                          <ul className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
+                          <ul className="grid gap-0.5 sm:grid-cols-2 lg:grid-cols-3">
                             {dept.degreePrograms.map((p) => (
                               <li key={p.id}>
                                 <a
                                   href={`/buscar?department=${encodeURIComponent(dept.name)}&career=${encodeURIComponent(p.name)}`}
-                                  className="flex items-center gap-2 rounded px-1 py-0.5 text-sm text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+                                  className="flex items-center gap-2 rounded px-1 py-0.5 text-xs text-white/90 transition-colors hover:bg-white/10 hover:text-white"
                                 >
-                                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/40" />
+                                  <span className="h-1 w-1 shrink-0 rounded-full bg-white/40" />
                                   <span className="underline-offset-2 hover:underline">{p.name}</span>
                                 </a>
                               </li>
                             ))}
                           </ul>
                         ) : (
-                          <p className="text-sm text-white/60">Sin secciones temáticas todavía</p>
+                          <p className="text-xs text-white/60">Sin secciones temáticas todavía</p>
                         )}
                       </div>
                       <a
                         href={`/buscar?department=${encodeURIComponent(dept.name)}`}
-                        className="inline-flex shrink-0 items-center gap-1.5 self-start text-sm font-semibold text-white transition-colors hover:text-white/80"
+                        className="inline-flex shrink-0 items-center gap-1.5 self-start text-xs font-semibold text-white transition-colors hover:text-white/80"
                       >
                         {t('departments.verTrabajos')}
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </a>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between gap-3 text-sm text-white/85">
-                      <span className="flex min-w-0 items-center gap-2 text-xs">
-                        {Icon && <Icon className="h-3.5 w-3.5 shrink-0 opacity-80" />}
+                    <div className="flex items-center justify-between gap-3 text-xs text-white/85">
+                      <span className="flex min-w-0 items-center gap-2 text-[11px]">
+                        {Icon && <Icon className="h-3 w-3 shrink-0 opacity-80" />}
                         <span className="truncate">
                           {dept.degreePrograms.length} sección temática{dept.degreePrograms.length !== 1 ? 's' : ''}
                         </span>
@@ -131,10 +131,10 @@ export default function DepartmentSection() {
                       <a
                         href={`/buscar?department=${encodeURIComponent(dept.name)}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-white transition-colors hover:text-white/80"
+                        className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-white transition-colors hover:text-white/80"
                       >
                         {t('departments.verTrabajos')}
-                        <ArrowRight className="h-3.5 w-3.5" />
+                        <ArrowRight className="h-3 w-3" />
                       </a>
                     </div>
                   )}
