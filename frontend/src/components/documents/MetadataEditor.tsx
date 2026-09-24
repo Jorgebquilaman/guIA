@@ -319,25 +319,68 @@ export default function MetadataEditor({
           <h2 className="text-lg font-semibold text-iupa-dark mb-1">Metadatos del documento</h2>
           <p className="text-sm text-iupa-medium">Completá los campos según el estándar Dublin Core (Ley 26.899)</p>
         </div>
-        <label className="flex items-center gap-2 rounded-lg border border-iupa-light bg-white px-3 py-2 text-sm text-iupa-dark shadow-sm">
-          <input
-            type="checkbox"
-            checked={isPublic}
-            disabled={visibilityMutation.isPending}
-            onChange={async (e) => {
-              const next = e.target.checked
-              setIsPublic(next)
-              try {
-                await visibilityMutation.mutateAsync(next)
-              } catch {
-                setIsPublic(!next)
-                addToast('error', 'No se pudo cambiar la visibilidad del documento')
-              }
-            }}
-            className="rounded border-iupa-light text-iupa-green focus:ring-iupa-green"
-          />
-          {isPublic ? 'Público (todos)' : 'Privado · solo usuarios registrados'}
-        </label>
+        <div className="flex flex-col items-end gap-1">
+          <div
+            role="group"
+            aria-label="Visibilidad del documento"
+            className="inline-flex overflow-hidden rounded-lg border border-iupa-light bg-white shadow-sm"
+          >
+            <button
+              type="button"
+              disabled={visibilityMutation.isPending}
+              onClick={async () => {
+                if (isPublic) return
+                setIsPublic(true)
+                try {
+                  await visibilityMutation.mutateAsync(true)
+                } catch {
+                  setIsPublic(false)
+                  addToast('error', 'No se pudo cambiar la visibilidad del documento')
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-colors disabled:opacity-50 ${
+                isPublic
+                  ? 'bg-iupa-green text-white'
+                  : 'text-iupa-medium hover:bg-iupa-green-light/40 hover:text-iupa-green'
+              }`}
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 0c2.5 0 4.5-4.03 4.5-9S14.5 3 12 3 7.5 7.03 7.5 12s2 9 4.5 9zM3.056 9h17.888M3.056 15h17.888" />
+              </svg>
+              Público
+            </button>
+            <span className="my-1.5 w-px bg-iupa-light" />
+            <button
+              type="button"
+              disabled={visibilityMutation.isPending}
+              onClick={async () => {
+                if (!isPublic) return
+                setIsPublic(false)
+                try {
+                  await visibilityMutation.mutateAsync(false)
+                } catch {
+                  setIsPublic(true)
+                  addToast('error', 'No se pudo cambiar la visibilidad del documento')
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-colors disabled:opacity-50 ${
+                !isPublic
+                  ? 'bg-iupa-green text-white'
+                  : 'text-iupa-medium hover:bg-iupa-green-light/40 hover:text-iupa-green'
+              }`}
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+              Privado
+            </button>
+          </div>
+          <p className="text-[11px] text-iupa-medium">
+            {isPublic
+              ? 'Público: todos pueden ver y descargar este documento'
+              : 'Privado: solo usuarios registrados pueden verlo y descargarlo'}
+          </p>
+        </div>
       </div>
 
       <div className="space-y-5">
