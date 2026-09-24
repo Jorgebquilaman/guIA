@@ -13,6 +13,10 @@ public class AppDbContext : DbContext, IAppDbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<AccessCategory> AccessCategories => Set<AccessCategory>();
+    public DbSet<AuthorMetadataField> AuthorMetadataFields => Set<AuthorMetadataField>();
+    public DbSet<AuthorMetadataFieldOption> AuthorMetadataFieldOptions => Set<AuthorMetadataFieldOption>();
+    public DbSet<UserAuthorMetadataValue> UserAuthorMetadataValues => Set<UserAuthorMetadataValue>();
+    public DbSet<AuthorMetadataSettings> AuthorMetadataSettings => Set<AuthorMetadataSettings>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentFile> DocumentFiles => Set<DocumentFile>();
     public DbSet<DocumentAuthor> DocumentAuthors => Set<DocumentAuthor>();

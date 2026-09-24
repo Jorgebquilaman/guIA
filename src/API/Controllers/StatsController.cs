@@ -361,6 +361,45 @@ public sealed class StatsController : BaseApiController
             .OrderBy(x => x.Date)
             .ToListAsync(ct);
 
+        // ── Ficha de autor (solo si el usuario autorizó la publicación de sus datos) ──
+        var authorUser = await context.Users
+            .Include(u => u.AuthorMetadataValues)
+            .Include(u => u.AccessCategory)
+            .FirstOrDefaultAsync(u => u.IsActive
+                && u.AuthorizesPublication
+                && u.FullName == decodedName, ct);
+
+        object? authorProfile = null;
+        if (authorUser != null)
+        {
+            var profileFields = authorUser.AccessCategoryId.HasValue
+                ? await context.AuthorMetadataFields
+                    .Include(f => f.Options)
+                    .Where(f => f.AccessCategoryId == authorUser.AccessCategoryId.Value && !f.IsHidden)
+                    .OrderBy(f => f.SortOrder)
+                    .ToListAsync(ct)
+                : new List<AuthorMetadataField>();
+
+            var profileValues = authorUser.AuthorMetadataValues
+                .GroupBy(v => v.AuthorMetadataFieldId)
+                .ToDictionary(g => g.Key, g => g.OrderBy(v => v.RepeatIndex).Select(v => v.Value).ToList());
+
+            authorProfile = new
+            {
+                fullName = authorUser.FullName,
+                categoryName = authorUser.AccessCategory?.Name,
+                fields = profileFields
+                    .Where(f => profileValues.ContainsKey(f.Id) && profileValues[f.Id].Any(v => !string.IsNullOrWhiteSpace(v)))
+                    .Select(f => new
+                    {
+                        label = f.Label,
+                        internalName = f.InternalName,
+                        values = profileValues[f.Id]
+                    })
+                    .ToList()
+            };
+        }
+
         return Ok(new
         {
             author = decodedName,
@@ -373,7 +412,8 @@ public sealed class StatsController : BaseApiController
             downloadsByMonth,
             downloadsByCountry,
             coauthors,
-            activity30d
+            activity30d,
+            authorProfile
         });
     }
 

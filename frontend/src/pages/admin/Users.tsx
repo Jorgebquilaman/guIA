@@ -11,6 +11,7 @@ import { useUiStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
 import { useAccessCategories } from '../../api/accessCategories'
 import { isAdminRole } from '../../utils/roles'
+import UserAuthorMetadataModal from '../../components/admin/UserAuthorMetadataModal'
 
 const roleOptions = [
   { value: 'Admin', label: 'Administrador' },
@@ -45,6 +46,7 @@ export default function UsersAdmin() {
   const [editTarget, setEditTarget] = useState<User | null>(null)
   const [deactivateTarget, setDeactivateTarget] = useState<User | null>(null)
   const [rejectTarget, setRejectTarget] = useState<User | null>(null)
+  const [profileTarget, setProfileTarget] = useState<User | null>(null)
 
   const [newEmail, setNewEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -213,6 +215,12 @@ export default function UsersAdmin() {
                   >
                     Rechazar
                   </button>
+                  <button
+                    onClick={() => setProfileTarget(user)}
+                    className="rounded-lg border border-iupa-light px-3 py-1.5 text-xs font-medium text-iupa-medium hover:border-iupa-green hover:text-iupa-green transition-colors"
+                  >
+                    Perfil
+                  </button>
                 </div>
               </div>
             ))}
@@ -273,6 +281,12 @@ export default function UsersAdmin() {
                       Activo
                     </span>
                     <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setProfileTarget(user)}
+                        className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-teal-700 hover:bg-teal-50 transition-colors"
+                      >
+                        Perfil
+                      </button>
                       <button
                         onClick={() => openEdit(user)}
                         className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-iupa-green-secondary hover:bg-iupa-green-light transition-colors"
@@ -523,6 +537,11 @@ export default function UsersAdmin() {
           </div>
         </div>
       </Modal>
+
+      <UserAuthorMetadataModal
+        userId={profileTarget?.id ?? null}
+        onClose={() => setProfileTarget(null)}
+      />
 
       <Modal
         open={rejectTarget !== null}

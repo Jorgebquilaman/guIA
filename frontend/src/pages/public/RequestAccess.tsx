@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { UserPlus, CheckCircle, ArrowLeft } from 'lucide-react'
 import { useRequestAccess } from '../../api/auth'
-import { useActiveAccessCategories } from '../../api/accessCategories'
+import { useActiveAccessCategories, } from '../../api/accessCategories'
+import { useAuthorFieldsForCategory, useConsentSettings } from '../../api/authorMetadata'
+import AuthorMetadataFieldsEditor from '../../components/AuthorMetadataFieldsEditor'
 
 export default function RequestAccess() {
   const navigate = useNavigate()
@@ -13,6 +15,18 @@ export default function RequestAccess() {
   const [error, setError] = useState('')
   const mutation = useRequestAccess()
   const { data: categories, isLoading: loadingCategories } = useActiveAccessCategories()
+  const { data: categoryFields, isLoading: loadingFields } = useAuthorFieldsForCategory(categoryId)
+  const { data: consent } = useConsentSettings()
+  const [fieldValues, setFieldValues] = useState<Record<string, string[]>>({})
+  const [authorizes, setAuthorizes] = useState(false)
+
+  const missingMandatory = useMemo(() => {
+    if (!categoryFields) return []
+    return categoryFields
+      .filter((f) => f.obligatoriness === 'Mandatory')
+      .filter((f) => !(fieldValues[f.id] ?? []).some((v) => v.trim()))
+      .map((f) => f.label)
+  }, [categoryFields, fieldValues])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,8 +36,25 @@ export default function RequestAccess() {
       setError('Elegí la categoría que mejor describa tu vínculo con el IUPA.')
       return
     }
+    if (missingMandatory.length > 0) {
+      setError(`Completá los campos obligatorios: ${missingMandatory.join(', ')}`)
+      return
+    }
     try {
-      await mutation.mutateAsync({ fullName: fullName.trim(), email: email.trim(), accessCategoryId: categoryId })
+      const authorMetadata = Object.entries(fieldValues)
+        .flatMap(([fieldId, vals]) =>
+          vals
+            .filter((v) => v.trim())
+            .map((value, repeatIndex) => ({ fieldId, value: value.trim(), repeatIndex })),
+        )
+      await mutation.mutateAsync({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        accessCategoryId: categoryId,
+        authorMetadata,
+        authorizesPublication: authorizes,
+        consentText: authorizes ? (consent?.consentText ?? '') : '',
+      })
       setDone(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al solicitar acceso')
@@ -78,7 +109,10 @@ export default function RequestAccess() {
                             <button
                               key={cat.id}
                               type="button"
-                              onClick={() => setCategoryId(cat.id)}
+                              onClick={() => {
+                                setCategoryId(cat.id)
+                                setFieldValues({})
+                              }}
                               className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${
                                 selected
                                   ? 'border-iupa-green bg-iupa-green-light/30 ring-1 ring-iupa-green'
@@ -100,6 +134,39 @@ export default function RequestAccess() {
                       </div>
                     )}
                   </div>
+
+                  {categoryId && categoryFields && categoryFields.length > 0 && (
+                    <div className="rounded-lg border border-iupa-light bg-iupa-light/30 p-4">
+                      <p className="mb-3 text-sm font-semibold text-iupa-dark">Datos de autor</p>
+                      {loadingFields ? (
+                        <p className="text-sm text-iupa-medium">Cargando campos...</p>
+                      ) : (
+                        <AuthorMetadataFieldsEditor
+                          fields={categoryFields}
+                          values={fieldValues}
+                          onChange={(fieldId, values) =>
+                            setFieldValues((prev) => ({ ...prev, [fieldId]: values }))
+                          }
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {consent?.consentText && (
+                    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-iupa-light px-4 py-3 text-sm hover:bg-iupa-green-light/20 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={authorizes}
+                        onChange={(e) => setAuthorizes(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-iupa-light text-iupa-green focus:ring-2 focus:ring-iupa-green/20"
+                      />
+                      <span className="text-xs text-iupa-medium">
+                        <span className="font-medium text-iupa-dark">Autorización de publicación: </span>
+                        {consent.consentText}
+                      </span>
+                    </label>
+                  )}
+
                   {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
                   <button type="submit" disabled={mutation.isPending}
                     className="w-full rounded-lg bg-iupa-green px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-iupa-green-secondary disabled:opacity-50">

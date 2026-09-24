@@ -1,5 +1,6 @@
 using GuIA.Application.Common;
 using GuIA.Application.DTOs;
+using GuIA.Application.UseCases.AuthorMetadata;
 using GuIA.Domain.Entities;
 using GuIA.Domain.Enums;
 using GuIA.Domain.ValueObjects;
@@ -8,11 +9,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GuIA.Application.UseCases.Auth;
 
-public record RequestAccessCommand(string Email, string FullName, Guid? AccessCategoryId = null) : IRequest<UserDto>;
+public record RequestAccessCommand(
+    string Email,
+    string FullName,
+    Guid? AccessCategoryId = null,
+    List<AuthorMetadataInput>? AuthorMetadata = null,
+    bool AuthorizesPublication = false,
+    string? ConsentText = null
+) : IRequest<UserDto>;
 
 public class RequestAccessCommandHandler : IRequestHandler<RequestAccessCommand, UserDto>
 {
     private readonly IAppDbContext _context;
+    private readonly AuthorMetadataWriter _authorMetadataWriter;
+
+    public RequestAccessCommandHandler(IAppDbContext context, AuthorMetadataWriter authorMetadataWriter)
+    {
+        _context = context;
+        _authorMetadataWriter = authorMetadataWriter;
+    }
 
     public RequestAccessCommandHandler(IAppDbContext context)
     {
@@ -38,8 +53,15 @@ public class RequestAccessCommandHandler : IRequestHandler<RequestAccessCommand,
                 throw new InvalidOperationException("CATEGORIA: La categoría seleccionada no es válida.");
             user.SetAccessCategory(category.Id);
         }
+        user.SetPublicationConsent(request.AuthorizesPublication, request.ConsentText);
         _context.Users.Add(user);
         await _context.SaveChangesAsync(ct);
+
+        if (request.AccessCategoryId.HasValue && request.AuthorMetadata is { Count: > 0 })
+        {
+            await _authorMetadataWriter.SaveAsync(
+                user.Id, request.AccessCategoryId, request.AuthorMetadata, ct);
+        }
 
         return new UserDto
         {

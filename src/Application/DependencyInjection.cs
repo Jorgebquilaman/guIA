@@ -14,6 +14,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<GuIA.Application.UseCases.AuthorMetadata.AuthorMetadataWriter>();
 
         return services;
     }

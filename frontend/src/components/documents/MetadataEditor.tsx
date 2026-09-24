@@ -1,9 +1,38 @@
 import { useState, useEffect, useRef } from 'react'
-import type { Document, DocumentType, DocumentAuthor, MediaLink } from '../../types'
+import type { Document, DocumentType, DocumentAuthor, MediaLink, ApiResponse } from '../../types'
 import { useUpdateMetadata, useAiSuggestions, useDocumentTypes, useDepartments } from '../../api/documents'
+import apiClient from '../../api/client'
+import type { MyAuthorProfile } from '../../api/authorMetadata'
+import { useAuthStore } from '../../store/authStore'
 import DynamicMetadataForm, { type DynamicMetadataFormHandle } from './DynamicMetadataForm'
 import MediaLinkPlayer from '../ui/MediaLinkPlayer'
 import { generateId } from '../../utils/id'
+
+function UseMyDataButton({ onApply }: { onApply: () => void }) {
+  const [available, setAvailable] = useState(false)
+
+  useEffect(() => {
+    apiClient.get<ApiResponse<MyAuthorProfile>>('/auth/my-author-metadata')
+      .then((res) => {
+        if (res.data.success && res.data.data?.fields?.some((f) => f.values.some((v) => v.trim()))) {
+          setAvailable(true)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  if (!available) return null
+
+  return (
+    <button
+      type="button"
+      onClick={onApply}
+      className="rounded-full bg-iupa-green-light px-3 py-1 text-xs font-medium text-iupa-green hover:bg-iupa-green-light/70 transition-colors"
+    >
+      Usar mis datos de autor
+    </button>
+  )
+}
 
 interface MetadataEditorProps {
   document: Document
@@ -72,6 +101,7 @@ export default function MetadataEditor({
   const { data: aiSuggestions, refetch: fetchAiSuggestions } = useAiSuggestions(document.id, type)
   const { data: typeDefs } = useDocumentTypes()
   const { data: departments } = useDepartments()
+  const user = useAuthStore((s) => s.user)
   const isLink = !!document.sourceUrl
 
   useEffect(() => {
@@ -158,7 +188,7 @@ export default function MetadataEditor({
 
   const addAuthor = () => {
     if (!newAuthorName.trim()) return
-    const nextOrder = authors.length > 0 ? Math.max(...authors.map((a) => a.order)) + 1 : 1
+    const nextOrder = authors.length > 0 ? Math.max(...authors.map(a => a.order)) + 1 : 1
     setAuthors([
       ...authors,
       {
@@ -170,6 +200,34 @@ export default function MetadataEditor({
       },
     ])
     setNewAuthorName('')
+  }
+
+  // Pre-llenado desde Mi perfil de autor (categoría + metadatos de autor del usuario)
+  const [myAuthorProfile, setMyAuthorProfile] = useState<MyAuthorProfile | null>(null)
+  useEffect(() => {
+    apiClient.get<ApiResponse<MyAuthorProfile>>('/auth/my-author-metadata')
+      .then((res) => { if (res.data.success && res.data.data) setMyAuthorProfile(res.data.data) })
+      .catch(() => {})
+  }, [])
+
+  const applyMyAuthorData = () => {
+    if (!myAuthorProfile) return
+    const fieldVals: Record<string, string[]> = {}
+    for (const f of myAuthorProfile.fields) fieldVals[f.internalName.toLowerCase()] = f.values.filter((v) => v.trim())
+    const orcid = (fieldVals['orcid'] ?? [])[0] ?? null
+    const affiliation = (fieldVals['afiliacion'] ?? fieldVals['afiliación'] ?? fieldVals['filiacion'] ?? fieldVals['filiación'] ?? [])[0] ?? null
+    if (authors.length === 0) {
+      setAuthors([{
+        id: generateId(),
+        name: user?.fullName ?? '',
+        email: user?.email ?? null,
+        orcid,
+        order: 1,
+      }])
+    } else if (authors.length === 1) {
+      setAuthors(authors.map((a, i) => (i === 0 ? { ...a, orcid: a.orcid ?? orcid } : a)))
+    }
+    if (affiliation && !institution) setInstitution(affiliation)
   }
 
   const removeAuthor = (id: string) => {
@@ -394,8 +452,11 @@ export default function MetadataEditor({
         </div>
 
         <div className="mt-5">
-          <label className="mb-2 block text-sm font-medium text-iupa-dark">
-            Autores <span className="text-xs text-iupa-medium font-normal">(dc.creator) *</span>
+          <label className="mb-2 flex flex-wrap items-center justify-between gap-2 text-sm font-medium text-iupa-dark">
+            <span>
+              Autores <span className="text-xs text-iupa-medium font-normal">(dc.creator) *</span>
+            </span>
+            <UseMyDataButton onApply={applyMyAuthorData} />
           </label>
           {authors.length > 0 && (
             <div className="mb-3 space-y-1.5">

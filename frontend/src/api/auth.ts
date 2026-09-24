@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import apiClient from './client'
 import type { ApiResponse, LoginResponse } from '../types'
+import type { AuthorMetadataInput } from './authorMetadata'
 
 interface LoginRequest {
   email: string
@@ -69,7 +70,14 @@ export function useResetPassword() {
 
 export function useRequestAccess() {
   return useMutation({
-    mutationFn: async (data: { email: string; fullName: string; accessCategoryId?: string }) => {
+    mutationFn: async (data: {
+      email: string
+      fullName: string
+      accessCategoryId?: string
+      authorMetadata?: AuthorMetadataInput[]
+      authorizesPublication?: boolean
+      consentText?: string
+    }) => {
       const res = await apiClient.post<ApiResponse<null>>('/auth/request-access', data)
       if (!res.data.success) {
         throw new Error(res.data.error?.message ?? 'Request failed')

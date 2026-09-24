@@ -16,6 +16,7 @@ const adminLinks = [
   { to: '/app/admin/collections', label: 'Colecciones', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
   { to: '/app/admin/users', label: 'Usuarios', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
   { to: '/app/admin/access-categories', label: 'Categorías de acceso', icon: 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z' },
+  { to: '/app/admin/author-metadata', label: 'Metadatos de autores', icon: 'M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5a2.25 2.25 0 002.25 2.25h11.25a2.25 2.25 0 002.25-2.25V16.5a1.5 1.5 0 00-1.5-1.5H18a2.25 2.25 0 00-2.25-2.25H13.5A2.25 2.25 0 0011.25 15H9a1.5 1.5 0 00-1.5 1.5v3a2.25 2.25 0 01-2.25 2.25z' },
   { to: '/app/admin/ai-settings', label: 'Configuración IA', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
   { to: '/app/admin/site-config', label: 'Configuración Sitio', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
   { to: '/app/admin/smtp-config', label: 'Configuración SMTP', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
@@ -90,6 +91,21 @@ function Sidebar() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                 </svg>
                 Cambiar contraseña
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/app/profile"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                    isActive ? 'bg-iupa-green-secondary text-white' : 'text-iupa-green-light hover:bg-iupa-green-secondary/50 hover:text-white'
+                  }`
+                }
+              >
+                <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+                Mi perfil de autor
               </NavLink>
             </li>
           </ul>

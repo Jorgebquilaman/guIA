@@ -2,11 +2,18 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, FileText, Download, Eye, BookOpen, Users, MapPin, Calendar, TrendingUp, Activity } from 'lucide-react'
 
+interface AuthorProfileCard {
+  fullName: string
+  categoryName?: string | null
+  fields: { label: string; internalName: string; values: string[] }[]
+}
+
 interface AuthorStatsData {
   author: string
   totalDocuments: number
   totalDownloads: number
   totalViews: number
+  authorProfile?: AuthorProfileCard | null
   documents: { id: string; title: string; type: string; publishedAt: string | null; status: string; authors: string[] }[]
   docsByType: { type: string; count: number }[]
   docsByYear: { year: number; count: number }[]
@@ -77,6 +84,31 @@ export default function AuthorStats() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* ── Ficha del autor (solo si autorizó la publicación de sus datos) ── */}
+        {data.authorProfile && data.authorProfile.fields.length > 0 && (
+          <div className="mb-8 rounded-xl border border-teal-200 bg-gradient-to-br from-teal-50/70 to-white p-6 shadow-sm">
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-600 text-sm font-bold text-white">
+                {data.authorProfile.fullName.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-iupa-dark">Perfil del autor</p>
+                {data.authorProfile.categoryName && (
+                  <p className="text-xs text-teal-700">{data.authorProfile.categoryName} · IUPA</p>
+                )}
+              </div>
+            </div>
+            <dl className="grid gap-3 sm:grid-cols-2">
+              {data.authorProfile.fields.map((f) => (
+                <div key={f.internalName} className="rounded-lg bg-white/70 px-4 py-3">
+                  <dt className="text-xs text-gray-500">{f.label}</dt>
+                  <dd className="mt-0.5 text-sm text-iupa-dark">{f.values.join(' ; ')}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        )}
+
         {/* ── Overview Cards ── */}
         <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div className="rounded-xl bg-white p-4 shadow-sm">

@@ -29,6 +29,8 @@ import SiteConfig from './pages/admin/SiteConfig'
 import SmtpConfig from './pages/admin/SmtpConfig'
 import DocumentTypes from './pages/admin/DocumentTypes'
 import AccessCategories from './pages/admin/AccessCategories'
+import AuthorMetadataAdmin from './pages/admin/AuthorMetadataAdmin'
+import MiPerfil from './pages/MiPerfil'
 import Departments from './pages/admin/Departments'
 import MetadataSchemasAdmin from './pages/admin/MetadataSchemasAdmin'
 import Thesaurus from './pages/admin/Thesaurus'
@@ -63,6 +65,8 @@ export default function App() {
             <Route path="/app/documents/:id" element={<DocumentView />} />
             <Route path="/app/upload" element={<Upload />} />
             <Route path="/app/change-password" element={<ChangePassword />} />
+            <Route path="/app/profile" element={<MiPerfil />} />
+            <Route path="/app/admin/author-metadata" element={<AdminGuard><AuthorMetadataAdmin /></AdminGuard>} />
             <Route path="/app/admin" element={<AdminGuard><Dashboard /></AdminGuard>} />
             <Route path="/app/admin/documents" element={<AdminGuard><DocumentsAdmin /></AdminGuard>} />
             <Route path="/app/admin/collections" element={<AdminGuard><CollectionsAdmin /></AdminGuard>} />

@@ -15,7 +15,11 @@ public class User : BaseEntity
     public DateTime? LockoutEnd { get; private set; }
     public Guid? AccessCategoryId { get; private set; }
     public AccessCategory? AccessCategory { get; private set; }
+    public bool AuthorizesPublication { get; private set; }
+    public DateTime? DataConsentAt { get; private set; }
+    public string? DataConsentText { get; private set; }
     public ICollection<Document> Documents { get; private set; } = new List<Document>();
+    public ICollection<UserAuthorMetadataValue> AuthorMetadataValues { get; private set; } = new List<UserAuthorMetadataValue>();
 
     private User() { }
 
@@ -70,6 +74,20 @@ public class User : BaseEntity
     public void SetAccessCategory(Guid? accessCategoryId)
     {
         AccessCategoryId = accessCategoryId;
+    }
+
+    public void SetPublicationConsent(bool authorizes, string? consentText)
+    {
+        AuthorizesPublication = authorizes;
+        if (authorizes)
+        {
+            DataConsentAt = DateTime.UtcNow;
+            DataConsentText = consentText;
+        }
+        else
+        {
+            DataConsentAt = null;
+        }
     }
 
     public bool IsLockedOut => LockoutEnd.HasValue && LockoutEnd.Value > DateTime.UtcNow;
