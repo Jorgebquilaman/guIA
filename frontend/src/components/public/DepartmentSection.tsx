@@ -74,7 +74,7 @@ export default function DepartmentSection() {
                 <button
                   key={dept.id}
                   onClick={() => setActiveId(dept.id)}
-                  title={dept.name}
+                  aria-label={dept.name}
                   className={`group/tab relative inline-flex max-w-[190px] items-center gap-1.5 rounded-t-xl px-3 font-bold uppercase tracking-widest text-white transition-all hover:z-50 hover:brightness-110 sm:px-4 ${
                     isActive ? 'z-20 h-11 text-[11px] sm:h-12 sm:text-xs' : 'z-0 h-7 text-[9px] sm:h-8 sm:text-[10px]'
                   }`}
