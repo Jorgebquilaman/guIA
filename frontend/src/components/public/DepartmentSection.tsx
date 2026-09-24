@@ -22,9 +22,6 @@ const TEXTURE_STYLE = {
   backgroundBlendMode: 'multiply',
 } as const
 
-// Desplazamiento horizontal de cada pestaña (estilo carpeta archivadora)
-const TAB_OFFSETS = ['0%', '12%', '24%', '38%', '6%', '30%', '18%', '42%']
-
 export default function DepartmentSection() {
   const [departments, setDepartments] = useState<Department[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -41,6 +38,8 @@ export default function DepartmentSection() {
       .catch(() => {})
   }, [])
 
+  const activeIndex = departments.findIndex((d) => d.id === activeId)
+
   return (
     <section className="bg-iupa-light py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -54,83 +53,96 @@ export default function DepartmentSection() {
           </h2>
         </div>
 
-        {/* Capas apiladas estilo carpeta archivadora: cada pestaña sobresale
-            sobre la banda anterior y cada banda tapa el final de la anterior */}
-        <div className="relative">
-          {departments.map((dept, i) => {
-            const Icon = ICON_MAP[dept.icon ?? '']
-            const isActive = activeId === dept.id
-            const isLast = i === departments.length - 1
-            return (
-              <div
-                key={dept.id}
-                className="relative"
-                style={{ zIndex: i + 1, marginTop: i === 0 ? undefined : '-34px' }}
-              >
-                {/* Pestaña (tab) con nombre e ícono */}
+        <div>
+          {/* Fila de pestañas estilo carpeta: la activa más alta y apoyada sobre la tarjeta */}
+          <div className="flex flex-wrap items-end gap-[3px]">
+            {departments.map((dept) => {
+              const Icon = ICON_MAP[dept.icon ?? '']
+              const isActive = activeId === dept.id
+              return (
                 <button
+                  key={dept.id}
                   onClick={() => setActiveId(dept.id)}
                   title={dept.name}
-                  className="relative z-10 inline-flex h-7 max-w-full items-center gap-1 rounded-t-lg px-3 text-[9px] font-bold uppercase tracking-widest text-white transition-all hover:brightness-110 sm:h-8 sm:px-4 sm:text-[10px]"
+                  className={`relative inline-flex max-w-[190px] items-center gap-1.5 rounded-t-xl px-3 font-bold uppercase tracking-widest text-white transition-all hover:brightness-110 sm:px-4 ${
+                    isActive ? 'z-20 h-11 text-[11px] sm:h-12 sm:text-xs' : 'z-0 h-7 text-[9px] sm:h-8 sm:text-[10px]'
+                  }`}
                   style={{
                     backgroundColor: dept.color,
                     ...TEXTURE_STYLE,
                     fontFamily: 'Montserrat, sans-serif',
-                    marginLeft: `clamp(0px, ${TAB_OFFSETS[i % TAB_OFFSETS.length]}, calc(100% - 200px))`,
                   }}
                 >
-                  {Icon && <Icon className="h-3 w-3 shrink-0" />}
+                  {Icon && <Icon className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />}
                   <span className="truncate">{dept.name}</span>
                 </button>
+              )
+            })}
+          </div>
 
-                {/* Banda de color a ancho completo, continua (sin sombras).
-                    Esquina superior derecha redondeada; la activa se abre un poco más. */}
-                <div
-                  className={`w-full rounded-tr-2xl px-4 pt-2 text-white transition-all sm:px-5 ${
-                    isLast ? 'rounded-b-2xl pb-3' : isActive ? 'pb-[44px]' : 'pb-[36px]'
-                  }`}
-                  style={{ backgroundColor: dept.color, ...TEXTURE_STYLE }}
+          {/* Tarjeta grande de la red activa */}
+          {activeId && activeIndex >= 0 && (() => {
+            const dept = departments[activeIndex]
+            const Icon = ICON_MAP[dept.icon ?? '']
+            return (
+              <div
+                className="relative z-10 -mt-px w-full rounded-b-2xl rounded-tr-2xl px-6 py-7 text-white sm:rounded-tr-none sm:px-10 sm:py-9"
+                style={{ backgroundColor: dept.color, ...TEXTURE_STYLE }}
+              >
+                {/* Cabecera: número + ícono con línea */}
+                <div className="mb-6 flex items-end justify-between gap-4 border-b border-white/30 pb-3">
+                  <span className="text-sm font-medium tracking-widest text-white/70">
+                    {String(activeIndex + 1).padStart(2, '0')}
+                  </span>
+                  {Icon && <Icon className="h-5 w-5 shrink-0 text-white/80" />}
+                </div>
+
+                {/* Título grande */}
+                <h3
+                  className="mb-6 max-w-2xl text-3xl font-bold leading-tight sm:mb-8 sm:text-5xl"
+                  style={{ fontFamily: 'Montserrat, sans-serif' }}
                 >
-                  {isActive ? (
-                    <div className="flex min-h-[64px] flex-col justify-center gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/60">
-                          {t('departments.carreras')}
-                        </p>
-                        {dept.degreePrograms.length > 0 ? (
-                          <ul className="grid gap-0.5 sm:grid-cols-2 lg:grid-cols-3">
-                            {dept.degreePrograms.map((p) => (
-                              <li key={p.id}>
-                                <a
-                                  href={`/buscar?department=${encodeURIComponent(dept.name)}&career=${encodeURIComponent(p.name)}`}
-                                  className="flex items-center gap-2 rounded px-1 py-0.5 text-xs text-white/90 transition-colors hover:bg-white/10 hover:text-white"
-                                >
-                                  <span className="h-1 w-1 shrink-0 rounded-full bg-white/40" />
-                                  <span className="underline-offset-2 hover:underline">{p.name}</span>
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-xs text-white/60">Sin secciones temáticas todavía</p>
-                        )}
-                      </div>
-                      <a
-                        href={`/buscar?department=${encodeURIComponent(dept.name)}`}
-                        className="inline-flex shrink-0 items-center gap-1.5 self-start text-xs font-semibold text-white transition-colors hover:text-white/80"
-                      >
-                        {t('departments.verTrabajos')}
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </a>
-                    </div>
-                  ) : (
-                    /* Tira fina sin contenido: solo el color de la red */
-                    null
-                  )}
+                  {dept.name}
+                </h3>
+
+                {/* Secciones temáticas */}
+                <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-white/60">
+                  {t('departments.carreras')}
+                </p>
+                {dept.degreePrograms.length > 0 ? (
+                  <ul className="mb-8 grid max-w-3xl gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+                    {dept.degreePrograms.map((p) => (
+                      <li key={p.id}>
+                        <a
+                          href={`/buscar?department=${encodeURIComponent(dept.name)}&career=${encodeURIComponent(p.name)}`}
+                          className="flex items-center gap-2 rounded px-1 py-0.5 text-sm text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+                        >
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/40" />
+                          <span className="underline-offset-2 hover:underline">{p.name}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mb-8 text-sm text-white/60">Sin secciones temáticas todavía</p>
+                )}
+
+                {/* Pie: conteo + botón circular de flecha */}
+                <div className="mt-10 flex items-end justify-between gap-4">
+                  <p className="text-xs text-white/60">
+                    {dept.degreePrograms.length} sección temática{dept.degreePrograms.length !== 1 ? 's' : ''}
+                  </p>
+                  <a
+                    href={`/buscar?department=${encodeURIComponent(dept.name)}`}
+                    title={t('departments.verTrabajos')}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/40 transition-colors hover:bg-white/10 hover:border-white/60"
+                  >
+                    <ArrowRight className="h-5 w-5" />
+                  </a>
                 </div>
               </div>
             )
-          })}
+          })()}
         </div>
       </div>
     </section>
