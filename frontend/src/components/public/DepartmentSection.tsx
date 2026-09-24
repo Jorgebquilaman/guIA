@@ -85,7 +85,7 @@ export default function DepartmentSection() {
 
                 {/* Banda de color a ancho completo, continua (sin sombras) */}
                 <div
-                  className={`w-full px-4 pt-1.5 text-white transition-all sm:px-5 ${isLast ? 'pb-3' : 'pb-[36px]'}`}
+                  className={`w-full px-4 pt-1.5 text-white transition-all sm:px-5 ${isLast ? 'rounded-b-2xl pb-3' : 'pb-[36px]'}`}
                   style={{ backgroundColor: dept.color, ...TEXTURE_STYLE }}
                 >
                   {isActive ? (
