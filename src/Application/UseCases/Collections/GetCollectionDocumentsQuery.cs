@@ -1,5 +1,6 @@
 using GuIA.Application.Common;
 using GuIA.Application.DTOs;
+using GuIA.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,15 +13,21 @@ public class GetCollectionDocumentsQueryHandler
     : IRequestHandler<GetCollectionDocumentsQuery, PagedResult<DocumentDto>>
 {
     private readonly IAppDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetCollectionDocumentsQueryHandler(IAppDbContext context)
+    public GetCollectionDocumentsQueryHandler(IAppDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<PagedResult<DocumentDto>> Handle(
         GetCollectionDocumentsQuery request, CancellationToken ct)
     {
+        var isAdmin = _currentUser.IsAuthenticated && _currentUser.UserRole == "Admin";
+        var isOwner = _currentUser.IsAuthenticated && _currentUser.UserId != Guid.Empty;
+        var currentUserId = _currentUser.UserId;
+
         var query = _context.Documents
             .Include(d => d.Files)
             .Include(d => d.Authors)
@@ -30,6 +37,18 @@ public class GetCollectionDocumentsQueryHandler
             .Include(d => d.AiMetadata)
             .Include(d => d.DocumentType_)
             .Where(d => d.CollectionId == request.CollectionId && d.DeletedAt == null);
+
+        // Misma regla que DocumentVisibility.CanView: admin todo, owner lo suyo,
+        // autenticados los publicados (privados incluidos), anónimos solo publicados y públicos.
+        query = (isAdmin, isOwner) switch
+        {
+            (true, _) => query,
+            (_, true) => query.Where(d =>
+                d.Status == DocumentStatus.Published || d.UploadedByUserId == currentUserId),
+            _ => _currentUser.IsAuthenticated
+                ? query.Where(d => d.Status == DocumentStatus.Published)
+                : query.Where(d => d.Status == DocumentStatus.Published && d.IsPublic),
+        };
 
         int totalCount = await query.CountAsync(ct);
 

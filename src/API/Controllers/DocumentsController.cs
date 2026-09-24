@@ -1,3 +1,4 @@
+using GuIA.Application.Common;
 using GuIA.Application.DTOs;
 using GuIA.Application.UseCases.Documents;
 using GuIA.Application.UseCases.DocumentMetadata;
@@ -7,6 +8,7 @@ using GuIA.Infrastructure.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GuIA.API.Controllers;
 
@@ -98,6 +100,38 @@ public sealed class DocumentsController : BaseApiController
         );
         await Mediator.Send(command, ct);
         return Ok(new { message = "Metadata updated successfully." });
+    }
+
+    /// <summary>
+    /// Cambia la visibilidad del documento: público (todos) o privado
+    /// (solo usuarios registrados). Permitido solo al owner o a un admin,
+    /// sin importar el estado (incluye publicados).
+    /// </summary>
+    [HttpPut("{id:guid}/visibility")]
+    [Authorize]
+    public async Task<IActionResult> SetVisibility(Guid id, [FromBody] SetVisibilityRequest request, CancellationToken ct)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized("AUTH_INVALID_TOKEN", "Invalid token.");
+
+        var context = HttpContext.RequestServices.GetRequiredService<IAppDbContext>();
+        var document = await context.Documents
+            .FirstOrDefaultAsync(d => d.Id == id && d.DeletedAt == null, ct);
+        if (document == null)
+            return NotFound("DOCUMENT_NOT_FOUND", "Document not found.");
+
+        var isOwner = document.UploadedByUserId == userId;
+        var isAdmin = User.IsInRole("Admin");
+        if (!isOwner && !isAdmin)
+            return Forbid("FORBIDDEN", "Solo el propietario o un administrador pueden cambiar la visibilidad.");
+
+        document.SetVisibility(request.IsPublic);
+        await context.SaveChangesAsync(ct);
+
+        return Ok(new { isPublic = document.IsPublic, message = document.IsPublic
+            ? "Documento visible para todos."
+            : "Documento privado: solo usuarios registrados pueden verlo y descargarlo." });
     }
 
     [HttpPut("{id:guid}/metadata")]
@@ -219,6 +253,7 @@ public sealed record PatchDocumentRequest(
 );
 public sealed record UpdateMetadataRequest(string? Title, string? Description, List<string>? Authors, List<string>? Keywords);
 public sealed record RejectDocumentRequest(string Reason);
+public sealed record SetVisibilityRequest(bool IsPublic);
 
 public sealed record UploadLinkRequest(
     string SourceUrl,

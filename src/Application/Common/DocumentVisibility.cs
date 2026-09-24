@@ -4,10 +4,11 @@ using GuIA.Domain.Enums;
 namespace GuIA.Application.Common;
 
 /// <summary>
-/// Public visibility is governed by Status == Published (same rule as the
-/// search publicOnly filter). Admins see everything; owners see their own
-/// documents in any status. Non-privileged access to anything else behaves
-/// as "not found" (no existence leak).
+/// Visibility rules: admins see everything; owners see their own documents
+/// in any status. Published + IsPublic is visible to anyone. Published but
+/// private (IsPublic == false) is visible only to authenticated users.
+/// Non-privileged access to anything else behaves as "not found"
+/// (no existence leak).
 /// </summary>
 public static class DocumentVisibility
 {
@@ -19,6 +20,12 @@ public static class DocumentVisibility
         if (currentUser.IsAuthenticated && currentUser.UserId != Guid.Empty && document.UploadedByUserId == currentUser.UserId)
             return true;
 
-        return document.Status == DocumentStatus.Published;
+        if (document.Status != DocumentStatus.Published)
+            return false;
+
+        if (!document.IsPublic)
+            return currentUser.IsAuthenticated;
+
+        return true;
     }
 }

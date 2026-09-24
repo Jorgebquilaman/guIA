@@ -102,6 +102,20 @@ export function useUpdateMetadata(documentId: string) {
   })
 }
 
+export function useSetDocumentVisibility(documentId: string) {
+  const queryClient = useQueryClient()
+  return useMutation<ApiResponse<null>, Error, boolean>({
+    mutationFn: async (isPublic) => {
+      const { data } = await client.put(`/documents/${documentId}/visibility`, { isPublic })
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['document', documentId] })
+      queryClient.invalidateQueries({ queryKey: ['documents'] })
+    },
+  })
+}
+
 export function useDocumentTypes() {
   return useQuery<DocumentTypeDef[]>({
     queryKey: ['document-types'],

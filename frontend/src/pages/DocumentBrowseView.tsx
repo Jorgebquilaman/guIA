@@ -181,8 +181,8 @@ export default function DocumentBrowseView() {
   const primary = hasSourceUrl ? null : (doc.files.find((f) => f.isPrimary) ?? doc.files[0])
   const isPdf = primary?.mimeType === 'application/pdf'
   const isImage = primary?.mimeType.startsWith('image/')
-  const previewUrl = primary ? `/api/documents/${doc.id}/preview/${primary.id}` : null
-  const downloadUrl = primary ? `/api/documents/${doc.id}/download/${primary.id}` : null
+  const previewUrl = primary ? withFileToken(`/api/documents/${doc.id}/preview/${primary.id}`) : null
+  const downloadUrl = primary ? withFileToken(`/api/documents/${doc.id}/download/${primary.id}`) : null
   const status = statusConfig[doc.status] ?? statusConfig.Draft
 
   return (
@@ -259,6 +259,14 @@ export default function DocumentBrowseView() {
                 <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
                   {doc.documentTypeName ?? typeLabels[doc.type] ?? doc.type}
                 </span>
+                {doc.status === 'Published' && !doc.isPublic && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/20 px-3 py-1 text-xs font-medium text-amber-100 backdrop-blur-sm" title="Solo usuarios registrados pueden ver y descargar este documento">
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                    Privado · solo usuarios
+                  </span>
+                )}
                 <span className="ml-auto text-xs text-white/50">
                   ID: {doc.id.slice(0, 8)}...
                 </span>

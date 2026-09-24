@@ -9,10 +9,12 @@ namespace GuIA.Infrastructure.Adapters;
 public class PostgresFullTextSearchAdapter : ISearchPort
 {
     private readonly IAppDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public PostgresFullTextSearchAdapter(IAppDbContext context)
+    public PostgresFullTextSearchAdapter(IAppDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<SearchResult> SearchAsync(SearchQuery query, CancellationToken ct = default)
@@ -51,7 +53,13 @@ public class PostgresFullTextSearchAdapter : ISearchPort
             .Where(d => d.DeletedAt == null);
 
         if (query.PublicOnly)
+        {
             dbQuery = dbQuery.Where(d => d.Status == DocumentStatus.Published);
+            // Documentos privados (Published && !IsPublic): solo visibles para
+            // usuarios autenticados; los anónimos no los ven en la búsqueda.
+            if (!_currentUser.IsAuthenticated)
+                dbQuery = dbQuery.Where(d => d.IsPublic);
+        }
 
         if (query.CollectionId.HasValue)
         {

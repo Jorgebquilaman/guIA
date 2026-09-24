@@ -148,15 +148,22 @@ function LinkForm() {
         </div>
       )}
 
-      <label className="flex items-center gap-2 text-sm text-iupa-dark">
-        <input
-          type="checkbox"
-          checked={isPublic}
-          onChange={(e) => setIsPublic(e.target.checked)}
-          className="rounded border-iupa-light text-iupa-green focus:ring-iupa-green"
-        />
-        Hacer visible públicamente
-      </label>
+      <div>
+        <label className="flex items-center gap-2 text-sm text-iupa-dark">
+          <input
+            type="checkbox"
+            checked={isPublic}
+            onChange={(e) => setIsPublic(e.target.checked)}
+            className="rounded border-iupa-light text-iupa-green focus:ring-iupa-green"
+          />
+          Público (todos pueden verlo)
+        </label>
+        {!isPublic && (
+          <p className="mt-1 text-xs text-iupa-medium">
+            Privado: solo usuarios registrados del repositorio podrán verlo y descargarlo.
+          </p>
+        )}
+      </div>
 
       <button
         onClick={handleSubmit}
@@ -511,18 +518,25 @@ export default function UploadForm() {
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-iupa-dark">
-            <input
-              type="checkbox"
-              checked={isPublic}
-              onChange={(e) => setIsPublic(e.target.checked)}
-              className="rounded border-iupa-light text-iupa-green focus:ring-iupa-green"
-            />
-            Hacer visible públicamente
-          </label>
+      <div>
+        <label className="flex items-center gap-2 text-sm text-iupa-dark">
+          <input
+            type="checkbox"
+            checked={isPublic}
+            onChange={(e) => setIsPublic(e.target.checked)}
+            className="rounded border-iupa-light text-iupa-green focus:ring-iupa-green"
+          />
+          Público (todos pueden verlo)
+        </label>
+        {!isPublic && (
+          <p className="mt-1 text-xs text-iupa-medium">
+            Privado: solo usuarios registrados del repositorio podrán verlo y descargarlo.
+          </p>
+        )}
+      </div>
 
-          <button
-            onClick={handleUpload}
+      <button
+        onClick={handleUpload}
             disabled={files.length === 0 || !collectionId || uploadMutation.isPending}
             className="w-full rounded-lg bg-iupa-green px-4 py-2 text-sm font-medium text-white hover:bg-iupa-green-secondary disabled:cursor-not-allowed disabled:opacity-50"
           >

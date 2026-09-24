@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { Document, DocumentType, DocumentAuthor, MediaLink, ApiResponse } from '../../types'
-import { useUpdateMetadata, useAiSuggestions, useDocumentTypes, useDepartments } from '../../api/documents'
+import { useUpdateMetadata, useSetDocumentVisibility, useAiSuggestions, useDocumentTypes, useDepartments } from '../../api/documents'
 import apiClient from '../../api/client'
 import type { MyAuthorProfile } from '../../api/authorMetadata'
 import { useAuthStore } from '../../store/authStore'
@@ -62,6 +62,7 @@ export default function MetadataEditor({
 }: MetadataEditorProps) {
   const [title, setTitle] = useState(document.title)
   const [description, setDescription] = useState(document.description ?? '')
+  const [isPublic, setIsPublic] = useState(document.isPublic)
   const [type, setType] = useState<DocumentType>((document.documentTypeName ?? document.type) as DocumentType)
   const typeChangedByUser = useRef(false)
   const [language, setLanguage] = useState(
@@ -98,6 +99,7 @@ export default function MetadataEditor({
 
   const dynamicFormRef = useRef<DynamicMetadataFormHandle>(null)
   const mutation = useUpdateMetadata(document.id)
+  const visibilityMutation = useSetDocumentVisibility(document.id)
   const { data: aiSuggestions, refetch: fetchAiSuggestions } = useAiSuggestions(document.id, type)
   const { data: typeDefs } = useDocumentTypes()
   const { data: departments } = useDepartments()
@@ -310,9 +312,29 @@ export default function MetadataEditor({
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-lg font-semibold text-iupa-dark mb-1">Metadatos del documento</h2>
-        <p className="text-sm text-iupa-medium">Completá los campos según el estándar Dublin Core (Ley 26.899)</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-iupa-dark mb-1">Metadatos del documento</h2>
+          <p className="text-sm text-iupa-medium">Completá los campos según el estándar Dublin Core (Ley 26.899)</p>
+        </div>
+        <label className="flex items-center gap-2 rounded-lg border border-iupa-light bg-white px-3 py-2 text-sm text-iupa-dark shadow-sm">
+          <input
+            type="checkbox"
+            checked={isPublic}
+            disabled={visibilityMutation.isPending}
+            onChange={async (e) => {
+              const next = e.target.checked
+              setIsPublic(next)
+              try {
+                await visibilityMutation.mutateAsync(next)
+              } catch {
+                setIsPublic(!next)
+              }
+            }}
+            className="rounded border-iupa-light text-iupa-green focus:ring-iupa-green"
+          />
+          {isPublic ? 'Público (todos)' : 'Privado · solo usuarios registrados'}
+        </label>
       </div>
 
       <div className="space-y-5">
