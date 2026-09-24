@@ -240,6 +240,7 @@ export default function DocumentView() {
   const [showAllMetadata, setShowAllMetadata] = useState(false)
   const [metadataExpanded, setMetadataExpanded] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   const relatedParams = useMemo(() => ({
     keywords: doc?.keywords,
@@ -254,6 +255,15 @@ export default function DocumentView() {
 
   const isOwner = user?.id === doc?.uploadedByUserId
   const isAdmin = isStaffRole(user?.role)
+
+  // Vista previa lateral en modo edición
+  const previewFile = doc?.files?.find((f) => f.isPrimary) ?? doc?.files?.[0] ?? null
+  const previewIsPdf = previewFile?.mimeType === 'application/pdf'
+  const previewIsImage = !!previewFile?.mimeType?.startsWith('image/')
+  const previewIsVideo = !!previewFile?.mimeType?.startsWith('video/')
+  const previewIsAudio = !!previewFile?.mimeType?.startsWith('audio/')
+  const previewFileUrl = previewFile ? withFileToken(`/api/documents/${doc!.id}/preview/${previewFile.id}`) : null
+  const previewGdrive = doc?.sourceUrl ? getGoogleDriveEmbedUrl(doc.sourceUrl) : null
 
   const filledMetadata = useMemo(
     () => doc?.metadataValues?.filter((mv) => mv.value?.trim()) ?? [],
@@ -636,17 +646,111 @@ export default function DocumentView() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className={`mx-auto px-6 py-8 ${previewOpen && editing ? 'max-w-[1700px]' : 'max-w-6xl'}`}>
         {editing ? (
-          <div className="overflow-hidden rounded-2xl border border-iupa-light bg-white shadow-sm">
-            <div className="p-8">
-              <MetadataEditor
-                document={doc}
-                onCancel={() => setEditing(false)}
-                onSaved={() => setEditing(false)}
-              />
+          <>
+            {/* Botón lateral fijo para abrir/cerrar la vista previa */}
+            <button
+              onClick={() => setPreviewOpen((o) => !o)}
+              title={previewOpen ? 'Ocultar vista previa' : 'Ver vista previa del documento'}
+              className="fixed right-0 top-1/3 z-40 flex items-center gap-1.5 rounded-l-lg bg-iupa-green px-2.5 py-3 text-white shadow-lg transition-colors hover:bg-iupa-green-secondary"
+            >
+              {previewOpen ? (
+                <>
+                  <span className="text-xs font-semibold">Cerrar</span>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12l-7.5 7.5M21 12H3" />
+                  </svg>
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.5.177.526.214 1.097.04 1.615l-.03.03a8.42 8.42 0 01-.04.03V16.5l-.03.03A9.479 9.479 0 0112 19.5c-4.638 0-8.573-3.007-9.963-7.5a9.766 9.766 0 01-.037-1.97zM15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="text-xs font-semibold">Vista previa</span>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </>
+              )}
+            </button>
+
+            <div className={previewOpen ? 'flex flex-col gap-5 xl:flex-row xl:items-start' : ''}>
+              <div className={`overflow-hidden rounded-2xl border border-iupa-light bg-white shadow-sm ${previewOpen ? 'w-full xl:w-[58%]' : ''}`}>
+                <div className="p-8">
+                  <MetadataEditor
+                    document={doc}
+                    onCancel={() => setEditing(false)}
+                    onSaved={() => setEditing(false)}
+                  />
+                </div>
+              </div>
+
+              {previewOpen && (
+                <div className="w-full xl:sticky xl:top-20 xl:w-[42%]">
+                  <div className="overflow-hidden rounded-2xl border border-iupa-light bg-white shadow-sm">
+                    <div className="flex items-center justify-between border-b border-iupa-light bg-iupa-green-light/30 px-4 py-2.5">
+                      <span className="text-sm font-semibold text-iupa-green">Vista previa del documento</span>
+                      <div className="flex items-center gap-2">
+                        {previewFile && (
+                          <a
+                            href={previewFileUrl ?? '#'}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-lg border border-iupa-light px-2.5 py-1 text-xs font-medium text-iupa-medium hover:border-iupa-green hover:text-iupa-green transition-colors"
+                          >
+                            Abrir en pestaña
+                          </a>
+                        )}
+                        <button
+                          onClick={() => setPreviewOpen(false)}
+                          className="rounded-lg p-1.5 text-iupa-medium hover:bg-iupa-light transition-colors"
+                          title="Cerrar vista previa"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="h-[70vh] bg-iupa-light/40">
+                      {previewIsPdf && previewFileUrl ? (
+                        <iframe src={previewFileUrl} className="h-full w-full" title="Vista previa del documento" />
+                      ) : previewIsImage && previewFileUrl ? (
+                        <img src={previewFileUrl} alt={doc.title} className="mx-auto max-h-full object-contain" />
+                      ) : previewIsVideo && previewFileUrl ? (
+                        <video src={previewFileUrl} controls className="h-full w-full" />
+                      ) : previewIsAudio && previewFileUrl ? (
+                        <div className="flex h-full items-center justify-center p-8">
+                          <audio src={previewFileUrl} controls className="w-full" />
+                        </div>
+                      ) : previewGdrive ? (
+                        <iframe src={previewGdrive} className="h-full w-full" title="Vista previa del documento" />
+                      ) : doc.sourceUrl ? (
+                        <iframe src={doc.sourceUrl} className="h-full w-full" title="Vista previa del documento" />
+                      ) : previewFile ? (
+                        <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
+                          <p className="text-sm text-iupa-medium">
+                            No hay vista previa para <span className="font-medium">{previewFile.originalFileName}</span>
+                          </p>
+                          <a
+                            href={withFileToken(`/api/documents/${doc.id}/download/${previewFile.id}`)}
+                            className="rounded-lg bg-iupa-green px-4 py-2 text-xs font-bold text-white hover:bg-iupa-green-secondary transition-colors"
+                          >
+                            Descargar archivo
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="flex h-full items-center justify-center p-8 text-center text-sm text-iupa-medium">
+                          Este documento es un enlace externo.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
+          </>
         ) : (
           <>
             <div className="overflow-hidden rounded-2xl border border-iupa-light bg-white shadow-sm">
