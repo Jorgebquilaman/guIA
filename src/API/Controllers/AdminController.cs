@@ -360,6 +360,20 @@ public sealed class AdminController : BaseApiController
             return BadRequest("USER_ERROR", ex.Message);
         }
     }
+
+    [HttpDelete("users/{id:guid}/reject")]
+    public async Task<IActionResult> RejectUser(Guid id, CancellationToken ct)
+    {
+        try
+        {
+            await Mediator.Send(new RejectUserCommand(id), ct);
+            return Ok(new { message = "Solicitud rechazada y eliminada." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest("USER_ERROR", ex.Message);
+        }
+    }
 }
 
 public sealed record DeepSeekBalanceResponse(

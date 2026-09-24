@@ -296,6 +296,22 @@ export function useApproveUser() {
   })
 }
 
+export function useRejectUser() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiClient.delete<ApiResponse<null>>(`/admin/users/${id}/reject`)
+      if (!res.data.success) {
+        throw new Error(res.data.error?.message ?? 'Failed to reject user')
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users', 'pending'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+    },
+  })
+}
+
 export interface AiUsage {
   balance: number | null
   totalBalance: number | null

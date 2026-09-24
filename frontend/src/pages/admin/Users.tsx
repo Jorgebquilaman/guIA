@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useUsers, useCreateUser, useUpdateUser, useDeactivateUser, usePendingUsers, useApproveUser } from '../../api/admin'
+import { useUsers, useCreateUser, useUpdateUser, useDeactivateUser, usePendingUsers, useApproveUser, useRejectUser } from '../../api/admin'
 import type { User } from '../../types'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -34,6 +34,7 @@ export default function UsersAdmin() {
   const updateMutation = useUpdateUser()
   const deactivateMutation = useDeactivateUser()
   const approveMutation = useApproveUser()
+  const rejectMutation = useRejectUser()
   const addToast = useUiStore((s) => s.addToast)
   const currentUser = useAuthStore((s) => s.user)
   const isAdmin = isAdminRole(currentUser?.role)
@@ -43,6 +44,7 @@ export default function UsersAdmin() {
   const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<User | null>(null)
   const [deactivateTarget, setDeactivateTarget] = useState<User | null>(null)
+  const [rejectTarget, setRejectTarget] = useState<User | null>(null)
 
   const [newEmail, setNewEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -107,6 +109,17 @@ export default function UsersAdmin() {
     }
   }
 
+  const handleReject = async () => {
+    if (!rejectTarget) return
+    try {
+      await rejectMutation.mutateAsync(rejectTarget.id)
+      addToast('success', 'Solicitud rechazada')
+      setRejectTarget(null)
+    } catch (err) {
+      addToast('error', err instanceof Error ? err.message : 'Error al rechazar la solicitud')
+    }
+  }
+
   const openEdit = (user: User) => {
     if (!isAdmin && user.role === 'Admin') {
       addToast('error', 'No tenés permiso para modificar administradores')
@@ -124,6 +137,14 @@ export default function UsersAdmin() {
       return
     }
     setDeactivateTarget(user)
+  }
+
+  const handleRejectClick = (user: User) => {
+    if (!isAdmin && user.role === 'Admin') {
+      addToast('error', 'No tenés permiso para eliminar administradores')
+      return
+    }
+    setRejectTarget(user)
   }
 
   return (
@@ -160,13 +181,21 @@ export default function UsersAdmin() {
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-iupa-dark">{user.fullName}</div>
                     <div className="text-xs text-iupa-medium">{user.email}</div>
-                    {user.accessCategoryName && (
-                      <div className="mt-0.5 text-xs font-medium text-teal-700">Categoría: {user.accessCategoryName}</div>
-                    )}
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-700">Pendiente</span>
+                      {user.accessCategoryName ? (
+                        <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700" title="Tipo de usuario solicitado">
+                          {user.accessCategoryName}
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-iupa-light px-2.5 py-0.5 text-xs font-medium text-iupa-medium" title="Tipo de usuario solicitado">
+                          Sin categoría
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-700">Pendiente</span>
                   <button
                     onClick={async () => {
                       try {
@@ -177,6 +206,12 @@ export default function UsersAdmin() {
                     className="rounded-lg bg-iupa-green px-3 py-1.5 text-xs font-medium text-white hover:bg-iupa-green-secondary transition-colors"
                   >
                     Aprobar
+                  </button>
+                  <button
+                    onClick={() => handleRejectClick(user)}
+                    className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    Rechazar
                   </button>
                 </div>
               </div>
@@ -484,6 +519,39 @@ export default function UsersAdmin() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
               </svg>
               Desactivar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={rejectTarget !== null}
+        onClose={() => setRejectTarget(null)}
+        title="Rechazar solicitud"
+        size="sm"
+      >
+        <div className="space-y-5">
+          <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100">
+              <svg className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-red-800">
+                ¿Rechazar la solicitud de <strong>{rejectTarget?.fullName}</strong>?
+              </p>
+              <p className="mt-1 text-xs text-red-600">
+                La solicitud se eliminará definitivamente y el correo quedará libre para una futura solicitud.
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setRejectTarget(null)}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={handleReject} loading={rejectMutation.isPending}>
+              Rechazar
             </Button>
           </div>
         </div>
