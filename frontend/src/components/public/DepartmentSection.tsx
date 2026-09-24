@@ -59,7 +59,7 @@ export default function DepartmentSection() {
               <a
                 key={dept.id}
                 href={`/buscar?department=${encodeURIComponent(dept.name)}`}
-                className="group relative flex flex-col items-center justify-center rounded-r-xl p-6 text-center text-white shadow-lg transition-all duration-200 hover:-translate-y-1.5 hover:shadow-xl"
+                className="group relative flex flex-col items-center justify-center rounded-r-xl p-6 text-center text-white shadow-lg transition-all duration-200 hover:-translate-y-1.5 hover:shadow-xl [&:nth-child(even)]:z-10 [&:nth-child(even)]:-ml-6 [&:nth-child(odd)]:z-20 sm:[&:nth-child(3n)]:z-10 sm:[&:nth-child(3n)]:-ml-6 sm:[&:nth-child(3n+1)]:z-30 sm:[&:nth-child(3n+1)]:ml-0 sm:[&:nth-child(3n+2)]:z-20 sm:[&:nth-child(3n+2)]:-ml-6"
                 style={{ backgroundColor: dept.color, ...TEXTURE_STYLE }}
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/20 shadow-inner">
@@ -81,19 +81,26 @@ export default function DepartmentSection() {
           })}
         </div>
 
-        {/* Desktop: accordion horizontal */}
-        <div className="hidden md:flex h-[280px] gap-1.5">
-          {departments.map((dept) => {
+        {/* Desktop: accordion horizontal.
+            Cada panel se desliza 16px (el radio) por debajo del anterior,
+            de modo que su borde recto "completa" la esquina redondeada del vecino. */}
+        <div className="hidden md:flex h-[280px]">
+          {departments.map((dept, i) => {
             const Icon = ICON_MAP[dept.icon ?? ""]
             const isActive = activeId === dept.id
             return (
               <div
                 key={dept.id}
                 onClick={() => setActiveId(activeId === dept.id ? dept.id : dept.id)}
+                style={{
+                  backgroundColor: dept.color,
+                  ...TEXTURE_STYLE,
+                  zIndex: departments.length - i,
+                  marginLeft: i > 0 ? '-16px' : undefined,
+                }}
                 className={`relative cursor-pointer overflow-hidden rounded-r-2xl transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl ${
                   isActive ? 'flex-[3]' : 'flex-[0.4]'
                 }`}
-                style={{ backgroundColor: dept.color, ...TEXTURE_STYLE }}
               >
                 {/* Título vertical (colapsado) */}
                 {!isActive && (
