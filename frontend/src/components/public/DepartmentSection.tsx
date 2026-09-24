@@ -108,9 +108,9 @@ export default function DepartmentSection() {
                   {Icon && <Icon className="h-5 w-5 shrink-0 text-white/80" />}
                 </div>
 
-                {/* Título grande */}
+                {/* Título grande: los nombres largos se reparten en dos líneas equilibradas */}
                 <h3
-                  className="mb-6 max-w-2xl text-3xl font-bold leading-tight sm:mb-8 sm:text-5xl"
+                  className="mb-6 max-w-2xl text-balance break-words text-3xl font-bold leading-tight sm:mb-8 sm:text-5xl"
                   style={{ fontFamily: 'Montserrat, sans-serif' }}
                 >
                   {dept.name}
