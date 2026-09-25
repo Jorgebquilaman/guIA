@@ -1,4 +1,4 @@
-import { useState, useEffect, type ComponentType } from 'react'
+import { useState, useEffect, useRef, Fragment, type ComponentType } from 'react'
 import { ArrowRight, Grid3X3, Music, Video, Palette, Move, Theater, BookOpen, Mic, Camera, Code, Globe, Users, Library, Pen, Star, Heart, Zap, Sun, Moon, Cloud } from 'lucide-react'
 import { useI18n } from '../../i18n/context'
 
@@ -27,6 +27,16 @@ export default function DepartmentSection() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const { t } = useI18n()
 
+  // Disposición de pestañas: las pestañas NUNCA cambian de orden natural;
+  // al elegir una de una fila superior, las filas se intercambian (la fila
+  // de la elegida baja a la base, junto a la tarjeta) y la pestaña elegida
+  // conserva su posición horizontal dentro de su fila.
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const [layout, setLayout] = useState<{ ids: string[]; breakAfter: string | null }>({
+    ids: [],
+    breakAfter: null,
+  })
+
   useEffect(() => {
     fetch('/api/stats/departments')
       .then((res) => res.json())
@@ -40,10 +50,68 @@ export default function DepartmentSection() {
 
   const activeIndex = departments.findIndex((d) => d.id === activeId)
 
-  // La pestaña activa SIEMPRE va primera (extremo izquierdo, fila inferior,
-  // apoyada sobre la tarjeta) para que la ficha nunca pierda integridad.
-  const orderedTabs = [...departments]
-  if (activeIndex > 0) orderedTabs.unshift(...orderedTabs.splice(activeIndex, 1))
+  // Agrupa las pestañas por fila usando el borde INFERIOR (todas las pestañas
+  // de una fila comparten la base, aunque la activa sea más alta)
+  const measureRows = (orderIds: string[]): string[][] => {
+    const rows: string[][] = []
+    let currentRow: string[] = []
+    let currentBottom: number | null = null
+    for (const id of orderIds) {
+      const btn = tabRefs.current[id]
+      const bottom = btn ? btn.getBoundingClientRect().bottom : 0
+      if (currentBottom === null || Math.abs(bottom - currentBottom) < 2) {
+        currentRow.push(id)
+        if (currentBottom === null) currentBottom = bottom
+      } else {
+        rows.push(currentRow)
+        currentRow = [id]
+        currentBottom = bottom
+      }
+    }
+    if (currentRow.length > 0) rows.push(currentRow)
+    return rows
+  }
+
+  // Devuelve la disposición para que la fila de targetId quede en la base.
+  // Si ya está en la fila inferior, mantiene la disposición actual.
+  const computeLayoutFor = (
+    targetId: string,
+    prev: { ids: string[]; breakAfter: string | null },
+  ): { ids: string[]; breakAfter: string | null } => {
+    const currentIds = prev.ids.length > 0 ? prev.ids : departments.map((d) => d.id)
+    const rows = measureRows(currentIds)
+    const rowIndex = rows.findIndex((r) => r.includes(targetId))
+    if (rowIndex <= 0 || rows.length <= 1)
+      return prev // ya está apoyada en la base: no mover nada
+    const activeRow = rows[rowIndex]
+    const rest = [...rows.slice(0, rowIndex), ...rows.slice(rowIndex + 1)]
+    return {
+      ids: [...activeRow, ...rest.flat()],
+      breakAfter: activeRow[activeRow.length - 1],
+    }
+  }
+
+  const handleTabClick = (deptId: string) => {
+    setActiveId(deptId)
+    setLayout((prev) => computeLayoutFor(deptId, prev))
+  }
+
+  // Reacomodar al redimensionar la ventana (cambia cuántas pestañas entran por fila)
+  useEffect(() => {
+    const onResize = () => {
+      if (!activeId || departments.length === 0) return
+      setLayout((prev) => computeLayoutFor(activeId, prev))
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId, departments, layout])
+
+  // Orden visible: el calculado, o el natural si aún no hay disposición medida
+  const displayIds = layout.ids.length > 0 ? layout.ids : departments.map((d) => d.id)
+  const displayDepts = displayIds
+    .map((id) => departments.find((d) => d.id === id))
+    .filter((d): d is Department => !!d)
 
   return (
     <section className="bg-iupa-light py-12">
@@ -67,30 +135,36 @@ export default function DepartmentSection() {
               "start" alinea las pestañas hacia ABAJO de su fila — las pestañas
               superiores quedan apoyadas sobre las inferiores sin aire debajo. */}
           <div className="flex flex-wrap-reverse items-start gap-x-[3px] gap-y-0">
-            {orderedTabs.map((dept) => {
+            {displayDepts.map((dept) => {
               const Icon = ICON_MAP[dept.icon ?? '']
               const isActive = activeId === dept.id
               return (
-                <button
-                  key={dept.id}
-                  onClick={() => setActiveId(dept.id)}
-                  aria-label={dept.name}
-                  className={`group/tab relative inline-flex max-w-[190px] items-center gap-1.5 rounded-t-xl px-3 font-bold uppercase tracking-widest text-white transition-all hover:z-50 hover:brightness-110 sm:px-4 ${
-                    isActive ? 'z-20 h-11 text-[11px] sm:h-12 sm:text-xs' : 'z-0 h-7 text-[9px] sm:h-8 sm:text-[10px]'
-                  }`}
-                  style={{
-                    backgroundColor: dept.color,
-                    ...TEXTURE_STYLE,
-                    fontFamily: 'Montserrat, sans-serif',
-                  }}
-                >
-                  {Icon && <Icon className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />}
-                  <span className="truncate">{dept.name}</span>
-                  {/* Tooltip con el nombre completo: medio segundo de demora y por encima de todo */}
-                  <span className="pointer-events-none absolute -top-1.5 left-0 z-50 -translate-y-full whitespace-nowrap rounded-lg bg-iupa-dark px-2.5 py-1.5 text-[10px] font-semibold normal-case tracking-wide text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover/tab:delay-500 group-hover/tab:opacity-100">
-                    {dept.name}
-                  </span>
-                </button>
+                <Fragment key={dept.id}>
+                  <button
+                    ref={(el) => { tabRefs.current[dept.id] = el }}
+                    onClick={() => handleTabClick(dept.id)}
+                    aria-label={dept.name}
+                    className={`group/tab relative inline-flex max-w-[190px] items-center gap-1.5 rounded-t-xl px-3 font-bold uppercase tracking-widest text-white transition-all hover:z-50 hover:brightness-110 sm:px-4 ${
+                      isActive ? 'z-20 h-11 text-[11px] sm:h-12 sm:text-xs' : 'z-0 h-7 text-[9px] sm:h-8 sm:text-[10px]'
+                    }`}
+                    style={{
+                      backgroundColor: dept.color,
+                      ...TEXTURE_STYLE,
+                      fontFamily: 'Montserrat, sans-serif',
+                    }}
+                  >
+                    {Icon && <Icon className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />}
+                    <span className="truncate">{dept.name}</span>
+                    {/* Tooltip con el nombre completo: medio segundo de demora y por encima de todo */}
+                    <span className="pointer-events-none absolute -top-1.5 left-0 z-50 -translate-y-full whitespace-nowrap rounded-lg bg-iupa-dark px-2.5 py-1.5 text-[10px] font-semibold normal-case tracking-wide text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover/tab:delay-500 group-hover/tab:opacity-100">
+                      {dept.name}
+                    </span>
+                  </button>
+                  {/* Salto de línea forzado tras la fila de la pestaña activa */}
+                  {layout.breakAfter === dept.id && (
+                    <span aria-hidden="true" className="h-0 w-full shrink-0 grow-0 basis-full" />
+                  )}
+                </Fragment>
               )
             })}
           </div>
