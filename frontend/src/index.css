@@ -42,6 +42,9 @@
 /* ── Tema oscuro del área logueada (scoped a .app-dark; el sitio público no cambia) ──
    Superficies: #141920 (página) · #1f262f (tarjetas) · #232a33 (elevada) · #2b333d (activa) */
 .app-dark { color-scheme: dark; }
+/* La raíz del layout combina app-dark + bg-iupa-light en el mismo elemento:
+   el selector descendente no la alcanza, cubrir también el caso compuesto */
+.app-dark.bg-iupa-light { background-color: #141920 !important; }
 
 /* Superficies / fondos */
 .app-dark .bg-white { background-color: #1f262f !important; }
