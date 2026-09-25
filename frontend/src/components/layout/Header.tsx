@@ -48,7 +48,7 @@ function Header() {
   }))
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-iupa-dark bg-iupa-dark px-4 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-iupa-dark bg-iupa-dark px-4 lg:px-6">
       <button
         onClick={handleSidebarToggle}
         className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-white/25 bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
@@ -103,7 +103,7 @@ function Header() {
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 top-full mt-1 w-48 rounded-lg border border-white/10 bg-iupa-dark py-1 shadow-lg">
+            <div className="user-dropdown absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-white/15 bg-iupa-dark py-1 shadow-2xl">
               <div className="border-b border-white/10 px-4 py-2">
                 <p className="text-sm font-medium text-white">{user?.fullName}</p>
                 <p className="text-xs text-white/50">{user?.email}</p>

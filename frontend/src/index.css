@@ -81,3 +81,7 @@
 .app-dark .text-purple-800 { color: #d8b4fe !important; }
 .app-dark .placeholder\:text-iupa-medium\/50::placeholder { color: #6b7280 !important; }
 .app-dark .divide-iupa-light > :not([hidden]) ~ :not([hidden]) { border-color: #2c343f !important; }
+/* Menú del usuario: superficie propia y distinguible del header en oscuro */
+.app-dark .user-dropdown { background-color: #232d38 !important; border-color: #3d4854 !important; }
+.app-dark .user-dropdown > div:first-child { border-color: #3d4854 !important; }
+.app-dark .user-dropdown + .user-dropdown { border-color: #3d4854 !important; }
