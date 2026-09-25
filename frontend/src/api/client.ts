@@ -15,19 +15,44 @@ let refreshing: Promise<boolean> | null = null
 
 const AUTH_URLS = ['/auth/login', '/auth/refresh', '/auth/forgot-password', '/auth/reset-password', '/auth/request-access']
 
-async function tryRefresh(): Promise<boolean> {
-  const { refreshToken, setAuth } = useAuthStore.getState()
-  if (!refreshToken) return false
+async function attemptRefresh(token: string): Promise<boolean> {
   try {
-    const res = await axios.post(`${baseURL}/auth/refresh`, { refreshToken })
+    const res = await axios.post(`${baseURL}/auth/refresh`, { refreshToken: token })
     const d = res.data
     if (!d?.success || !d?.data) return false
-    setAuth(d.data.user, d.data.accessToken, d.data.refreshToken)
+    useAuthStore.getState().setAuth(d.data.user, d.data.accessToken, d.data.refreshToken)
     sessionExpired = false
     return true
   } catch {
     return false
   }
+}
+
+async function tryRefresh(): Promise<boolean> {
+  const { refreshToken } = useAuthStore.getState()
+  if (!refreshToken) return false
+
+  if (await attemptRefresh(refreshToken)) return true
+
+  // Multi-pestaña: el refresh rota y revoca el token anterior. Otra pestaña
+  // pudo haber rotado y persistido uno más nuevo: adoptarlo y reintentar una vez.
+  try {
+    const raw = localStorage.getItem('guia-auth')
+    const persisted = raw ? JSON.parse(raw)?.state : null
+    if (persisted?.refreshToken && persisted.refreshToken !== refreshToken) {
+      useAuthStore.setState({
+        user: persisted.user,
+        accessToken: persisted.accessToken,
+        refreshToken: persisted.refreshToken,
+        isAuthenticated: true,
+      })
+      if (await attemptRefresh(persisted.refreshToken)) return true
+    }
+  } catch {
+    /* localStorage ilegible: seguir sin fallback */
+  }
+
+  return false
 }
 
 export function resetSessionExpired() {

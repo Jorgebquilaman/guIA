@@ -75,3 +75,25 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 )
+
+// Sincronización entre pestañas: si otra pestaña rota el token (el refresh
+// revoca el anterior), esta pestaña adopta el estado persistido más nuevo.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key !== 'guia-auth') return
+    try {
+      if (!e.newValue) {
+        useAuthStore.getState().clearAuth()
+        return
+      }
+      const next = JSON.parse(e.newValue)?.state
+      if (!next?.refreshToken) return
+      const { refreshToken, setAuth } = useAuthStore.getState()
+      if (next.refreshToken !== refreshToken && next.user) {
+        setAuth(next.user, next.accessToken, next.refreshToken)
+      }
+    } catch {
+      /* estado persistido ilegible: ignorar */
+    }
+  })
+}
