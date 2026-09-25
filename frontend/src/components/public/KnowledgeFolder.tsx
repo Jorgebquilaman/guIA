@@ -54,6 +54,7 @@ export default function KnowledgeFolder({
   const [items, setItems] = useState<DeckItem[] | null>(null)
   const [hovered, setHovered] = useState<number | null>(null)
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
+  const [touchLayout, setTouchLayout] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const n = items?.length ?? 0
@@ -97,6 +98,16 @@ export default function KnowledgeFolder({
       setHovered(null)
     }, FOLDER_CONFIG.closeMs + 80)
   }
+
+  useEffect(() => {
+    if (!open) return
+    // En pantallas chicas el abanico no entra: usar tira deslizable
+    const mq = window.matchMedia('(max-width: 767px)')
+    setTouchLayout(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setTouchLayout(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -214,7 +225,62 @@ export default function KnowledgeFolder({
               </button>
             </div>
 
-            {/* Contenido en abanico */}
+            {/* Contenido: abanico en desktop, tira deslizable en mobile */}
+            {touchLayout ? (
+              <div className="flex max-h-[60vh] min-h-[280px] flex-1 snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden px-4 py-6">
+                {items === null ? (
+                  <div className="h-32 w-24 shrink-0 animate-pulse self-center rounded-lg bg-white/15" />
+                ) : n === 0 ? (
+                  <p className="self-center text-sm text-white/70">Todavía no hay publicaciones en esta red.</p>
+                ) : (
+                  items.map((item, i) => (
+                    <button
+                      key={item.id ?? `${item.kind}-${i}`}
+                      onClick={() => {
+                        if (item.kind === 'doc' && item.id) window.location.href = `/documentos/${item.id}`
+                        else if (item.kind === 'career')
+                          window.location.href = `/buscar?department=${encodeURIComponent(department.name)}&career=${encodeURIComponent(item.title)}`
+                      }}
+                      className="group/touch-item flex w-32 shrink-0 snap-center flex-col cursor-pointer"
+                      style={{ animation: `folder-item-in ${FOLDER_CONFIG.openMs}ms ${EASE_SPRING} ${i * FOLDER_CONFIG.staggerMs}ms backwards` }}
+                    >
+                      <div className="flex h-40 w-32 flex-col overflow-hidden rounded-lg bg-white shadow-xl">
+                        <div
+                          className="flex items-center gap-1 border-b border-white/20 px-2 py-1.5"
+                          style={{ backgroundColor: department.color }}
+                        >
+                          <FileText className="h-3 w-3 text-white" />
+                          <span className="truncate text-[8px] font-bold uppercase tracking-wider text-white">
+                            {item.kind === 'career' ? 'Sección' : 'Documento'}
+                          </span>
+                        </div>
+                        {item.image ? (
+                          <img
+                            src={withFileToken(item.image)}
+                            alt={item.title}
+                            className="min-h-0 flex-1 object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                          />
+                        ) : (
+                          <div className="flex flex-1 items-center justify-center bg-iupa-light/80 p-2 text-center">
+                            <span
+                              className="line-clamp-3 px-1 text-[11px] font-semibold leading-tight"
+                              style={{ color: department.color }}
+                            >
+                              {item.title}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      {/* Título siempre visible en táctil */}
+                      <p className="mt-1.5 line-clamp-2 px-0.5 text-center text-[10px] font-medium leading-tight text-white">
+                        {item.title}
+                      </p>
+                    </button>
+                  ))
+                )}
+              </div>
+            ) : (
             <div className="relative flex min-h-[300px] flex-1 items-center justify-center overflow-hidden py-10 sm:min-h-[360px]">
               {items === null ? (
                 <div className="h-32 w-24 animate-pulse rounded-lg bg-white/15" />
@@ -296,6 +362,7 @@ export default function KnowledgeFolder({
                 })
               )}
             </div>
+            )}
           </div>
         </div>
       )}
