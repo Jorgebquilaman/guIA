@@ -54,7 +54,6 @@ export default function KnowledgeFolder({
   const [items, setItems] = useState<DeckItem[] | null>(null)
   const [hovered, setHovered] = useState<number | null>(null)
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
-  const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const n = items?.length ?? 0
@@ -123,9 +122,8 @@ export default function KnowledgeFolder({
           const nx = (e.clientX - r.left) / r.width - 0.5
           const ny = (e.clientY - r.top) / r.height - 0.5
           setTilt({ x: nx, y: ny })
-          setCursor({ x: e.clientX, y: e.clientY })
         }}
-        onMouseLeave={() => { setTilt({ x: 0, y: 0 }); setCursor(null) }}
+        onMouseLeave={() => { setTilt({ x: 0, y: 0 }) }}
         className="group relative block w-full cursor-pointer text-left"
         style={{ perspective: '800px' }}
       >
@@ -173,21 +171,6 @@ export default function KnowledgeFolder({
             </span>
           </div>
         </div>
-
-        {/* Cursor custom: burbuja "Abrir" que sigue al mouse (recortada al viewport
-            para no generar scroll horizontal cuando el cursor está en el borde) */}
-        {cursor && (
-          <span
-            className="pointer-events-none fixed z-50 rounded-full bg-iupa-dark px-3 py-1.5 text-[11px] font-semibold text-white shadow-lg"
-            style={{
-              left: Math.min(cursor.x + 14, (typeof window !== 'undefined' ? window.innerWidth : 9999) - 92),
-              top: Math.min(cursor.y + 14, (typeof window !== 'undefined' ? window.innerHeight : 9999) - 44),
-              fontFamily: 'Montserrat, sans-serif',
-            }}
-          >
-            Abrir
-          </span>
-        )}
       </button>
 
       {/* ── Overlay: carpeta abierta ── */}
