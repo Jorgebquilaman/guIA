@@ -70,7 +70,9 @@ function proactiveRefreshTick() {
   }
 }
 if (typeof window !== 'undefined') {
-  proactiveRefreshTick()
+  // El primer chequeo va diferido: este módulo y authStore se importan en
+  // círculo, y al momento de evaluarse el store todavía no está definido.
+  setTimeout(proactiveRefreshTick, 1500)
   setInterval(proactiveRefreshTick, 30_000)
 }
 
