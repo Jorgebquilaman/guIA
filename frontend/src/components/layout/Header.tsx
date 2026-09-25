@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { Moon, Sun } from 'lucide-react'
 import { useUiStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
+import { useThemeStore } from '../../store/themeStore'
 
 const breadcrumbLabels: Record<string, string> = {
   '': 'Home',
@@ -16,6 +18,7 @@ const breadcrumbLabels: Record<string, string> = {
 function Header() {
   const { toggleSidebar, sidebarCollapsed, toggleSidebarCollapsed } = useUiStore()
   const { user, logout } = useAuthStore()
+  const { dark, toggleDark } = useThemeStore()
   const location = useLocation()
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -105,6 +108,25 @@ function Header() {
                 <p className="text-sm font-medium text-white">{user?.fullName}</p>
                 <p className="text-xs text-white/50">{user?.email}</p>
               </div>
+              <button
+                onClick={() => toggleDark()}
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white/80 hover:bg-white/10"
+              >
+                {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                Tema oscuro
+                <span
+                  className={`ml-auto inline-flex h-4 w-8 items-center rounded-full px-0.5 transition-colors ${
+                    dark ? 'bg-iupa-green-secondary' : 'bg-white/20'
+                  }`}
+                >
+                  <span
+                    className={`h-3 w-3 rounded-full bg-white transition-transform ${
+                      dark ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                  />
+                </span>
+              </button>
+              <div className="border-b border-white/10" />
               <button
                 onClick={() => { navigate('/app/change-password'); setDropdownOpen(false) }}
                 className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white/80 hover:bg-white/10"

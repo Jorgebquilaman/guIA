@@ -7,11 +7,13 @@ import Spinner from '../ui/Spinner'
 import SessionExpiredModal from '../auth/SessionExpiredModal'
 import { useAuthStore } from '../../store/authStore'
 import { useUiStore } from '../../store/uiStore'
+import { useThemeStore } from '../../store/themeStore'
 
 function AppLayout() {
   const fetchUser = useAuthStore((s) => s.fetchUser)
   const isLoading = useAuthStore((s) => s.isLoading)
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed)
+  const dark = useThemeStore((s) => s.dark)
 
   useEffect(() => {
     fetchUser()
@@ -26,7 +28,7 @@ function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-iupa-light">
+    <div className={`flex h-screen overflow-hidden bg-iupa-light ${dark ? 'app-dark' : ''}`}>
       <Sidebar />
       <div
         className={`flex flex-1 flex-col overflow-hidden transition-all duration-300 ${
