@@ -33,3 +33,8 @@
   0% { transform: translateY(16px); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }
 }
+
+/* Barra inferior mobile (estilo app): dejar lugar al pie de página */
+@media (max-width: 1023px) {
+  body { padding-bottom: 5rem; }
+}

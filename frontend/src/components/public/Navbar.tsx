@@ -1,15 +1,17 @@
-import { Menu, X, Upload, ChevronDown } from 'lucide-react'
+import { Upload, ChevronDown } from 'lucide-react'
 import { menuItems } from '../../data/mockData'
 import CollectionNavDropdown from './CollectionNavDropdown'
+import MobileTabBar from './MobileTabBar'
 import { useI18n } from '../../i18n/context'
 import type { Lang } from '../../i18n/context'
 
 interface NavbarProps {
-  onMenuToggle: () => void
-  menuOpen: boolean
+  /** Sin uso: el menú hamburguesa fue reemplazado por MobileTabBar (barra inferior). */
+  onMenuToggle?: () => void
+  menuOpen?: boolean
 }
 
-export default function Navbar({ onMenuToggle, menuOpen }: NavbarProps) {
+export default function Navbar(_props: NavbarProps) {
   const { t, lang, setLang } = useI18n()
 
   function toggleLang() {
@@ -17,6 +19,7 @@ export default function Navbar({ onMenuToggle, menuOpen }: NavbarProps) {
   }
 
   return (
+    <>
     <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
@@ -41,12 +44,6 @@ export default function Navbar({ onMenuToggle, menuOpen }: NavbarProps) {
               <span className="flex items-center gap-1">
                 {t('nav.idioma')} <ChevronDown className="h-3 w-3" />
               </span>
-            </button>
-            <button
-              onClick={onMenuToggle}
-              className="rounded-lg p-2 text-iupa-medium hover:bg-iupa-light lg:hidden"
-            >
-              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
@@ -74,22 +71,10 @@ export default function Navbar({ onMenuToggle, menuOpen }: NavbarProps) {
           </a>
         </div>
       </nav>
-
-      {menuOpen && (
-        <div className="border-t border-iupa-light bg-white lg:hidden">
-          <div className="space-y-1 px-4 py-3">
-            {menuItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="block rounded-lg px-3 py-2 text-sm font-medium text-iupa-dark hover:bg-iupa-light"
-              >
-                {item.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
     </header>
+
+    {/* Navegación inferior estilo app (mobile) — el body reserva espacio con padding-bottom en index.css */}
+    <MobileTabBar />
+    </>
   )
 }
