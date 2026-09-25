@@ -15,3 +15,17 @@
   --color-dept-movement: #D81480;
   --color-dept-drama: #FF6900;
 }
+
+/* Carpeta interactiva: flotación idle y parpadeo sutil */
+@keyframes folder-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes folder-shine {
+  0%, 100% { opacity: 0.12; }
+  50% { opacity: 0.28; }
+}
+@keyframes folder-pop {
+  0% { transform: scale(0.85) translateY(24px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
