@@ -6,10 +6,12 @@ import Toast from '../ui/Toast'
 import Spinner from '../ui/Spinner'
 import SessionExpiredModal from '../auth/SessionExpiredModal'
 import { useAuthStore } from '../../store/authStore'
+import { useUiStore } from '../../store/uiStore'
 
 function AppLayout() {
   const fetchUser = useAuthStore((s) => s.fetchUser)
   const isLoading = useAuthStore((s) => s.isLoading)
+  const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed)
 
   useEffect(() => {
     fetchUser()
@@ -26,7 +28,11 @@ function AppLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-iupa-light">
       <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden lg:ml-[260px]">
+      <div
+        className={`flex flex-1 flex-col overflow-hidden transition-all duration-300 ${
+          sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-[260px]'
+        }`}
+      >
         <Header />
         <main className="flex-1 overflow-y-auto">
           <Outlet />

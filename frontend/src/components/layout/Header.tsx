@@ -14,12 +14,19 @@ const breadcrumbLabels: Record<string, string> = {
 }
 
 function Header() {
-  const { toggleSidebar } = useUiStore()
+  const { toggleSidebar, sidebarCollapsed, toggleSidebarCollapsed } = useUiStore()
   const { user, logout } = useAuthStore()
   const location = useLocation()
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // En desktop esconde/muestra el menú lateral (más lugar de pantalla);
+  // en mobile abre/cierra el overlay del menú.
+  function handleSidebarToggle() {
+    if (window.matchMedia('(min-width: 1024px)').matches) toggleSidebarCollapsed()
+    else toggleSidebar()
+  }
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -40,12 +47,15 @@ function Header() {
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-iupa-dark bg-iupa-dark px-4 lg:px-6">
       <button
-        onClick={toggleSidebar}
-        className="rounded-lg p-2 text-white hover:bg-white/10 lg:hidden"
-        aria-label="Toggle sidebar"
+        onClick={handleSidebarToggle}
+        className="rounded-lg p-2 text-white transition-colors hover:bg-white/10"
+        aria-label={sidebarCollapsed ? 'Mostrar menú lateral' : 'Ocultar menú lateral'}
+        title={sidebarCollapsed ? 'Mostrar menú lateral' : 'Ocultar menú lateral'}
       >
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <rect x="3" y="4.5" width="17.5" height="15" rx="2.5" />
+          <path strokeLinecap="round" strokeLinejoin="round" d={sidebarCollapsed ? 'M9 4.5v15' : 'M9 4.5v15'} />
+          {sidebarCollapsed && <path strokeLinecap="round" strokeLinejoin="round" d="M12.5 9.5L15 12l-2.5 2.5" />}
         </svg>
       </button>
 

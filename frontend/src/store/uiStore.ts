@@ -9,16 +9,21 @@ interface Toast {
 
 interface UiState {
   sidebarOpen: boolean
+  sidebarCollapsed: boolean
   toasts: Toast[]
   toggleSidebar: () => void
+  toggleSidebarCollapsed: () => void
   addToast: (type: Toast['type'], message: string) => void
   removeToast: (id: string) => void
 }
 
 export const useUiStore = create<UiState>((set) => ({
   sidebarOpen: true,
+  sidebarCollapsed: false,
   toasts: [],
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+  // Desktop: oculta el menú lateral para ganar ancho de pantalla
+  toggleSidebarCollapsed: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   addToast: (type, message) => {
     const id = generateId()
     set((s) => ({ toasts: [...s.toasts, { id, type, message }] }))
