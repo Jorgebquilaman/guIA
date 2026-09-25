@@ -48,14 +48,14 @@ function Header() {
     <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-iupa-dark bg-iupa-dark px-4 lg:px-6">
       <button
         onClick={handleSidebarToggle}
-        className="rounded-lg p-2 text-white transition-colors hover:bg-white/10"
+        className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-white/25 bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
         aria-label={sidebarCollapsed ? 'Mostrar menú lateral' : 'Ocultar menú lateral'}
         title={sidebarCollapsed ? 'Mostrar menú lateral' : 'Ocultar menú lateral'}
       >
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
           <rect x="3" y="4.5" width="17.5" height="15" rx="2.5" />
-          <path strokeLinecap="round" strokeLinejoin="round" d={sidebarCollapsed ? 'M9 4.5v15' : 'M9 4.5v15'} />
-          {sidebarCollapsed && <path strokeLinecap="round" strokeLinejoin="round" d="M12.5 9.5L15 12l-2.5 2.5" />}
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 4.5v15" />
+          {!sidebarCollapsed && <path strokeLinecap="round" strokeLinejoin="round" d="M15.5 9.5L13 12l2.5 2.5" />}
         </svg>
       </button>
 
