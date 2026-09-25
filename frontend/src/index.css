@@ -63,6 +63,13 @@
 .app-dark .bg-slate-50 { background-color: #181d24 !important; }
 .app-dark .bg-slate-100 { background-color: #232a33 !important; }
 .app-dark .bg-slate-200 { background-color: #2b333d !important; }
+.app-dark .text-slate-900 { color: #e7eaf0 !important; }
+.app-dark .text-slate-700 { color: #c2ccd8 !important; }
+.app-dark .text-slate-600 { color: #aab4c2 !important; }
+.app-dark .text-slate-500 { color: #9aa4b2 !important; }
+.app-dark .border-red-500 { border-color: #b04a4a !important; }
+.app-dark .focus\:border-red-500:focus { border-color: #b04a4a !important; }
+.app-dark .focus\:ring-red-500:focus { --tw-ring-color: #b04a4a !important; }
 .app-dark .bg-gray-900 { background-color: #0f1319 !important; }
 .app-dark .bg-amber-50 { background-color: #2b2413 !important; }
 .app-dark .bg-yellow-50 { background-color: #2b2413 !important; }
