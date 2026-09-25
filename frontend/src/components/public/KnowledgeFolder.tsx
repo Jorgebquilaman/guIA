@@ -129,19 +129,19 @@ export default function KnowledgeFolder({
       >
         {/* Solapa de la carpeta */}
         <div
-          className="relative mx-3 rounded-t-xl px-4 pt-2"
+          className="relative mx-3 rounded-t-xl px-4 pt-2 transition-colors duration-200 group-hover:brightness-90"
           style={{ backgroundColor: department.color, ...TEXTURE }}
         >
           <div className="h-2" />
         </div>
-        {/* Cuerpo con tilt 3D + flotación idle */}
+        {/* Cuerpo con tilt 3D + flotación idle + oscurecido y sombra proyectada en hover */}
         <div
-          className="relative overflow-hidden rounded-b-2xl px-5 pb-6 pt-5 text-white shadow-xl"
+          className="relative overflow-hidden rounded-b-2xl px-5 pb-6 pt-5 text-white shadow-xl transition-shadow duration-300 group-hover:shadow-2xl"
           style={{
             backgroundColor: department.color,
             ...TEXTURE,
             transform: `rotateX(${(-tilt.y * FOLDER_CONFIG.tiltMax).toFixed(2)}deg) rotateY(${(tilt.x * FOLDER_CONFIG.tiltMax).toFixed(2)}deg)`,
-            transition: `transform 250ms ${EASE_OUT}`,
+            transition: `transform 250ms ${EASE_OUT}, box-shadow 300ms ease, filter 200ms ease`,
             transformStyle: 'preserve-3d',
             animation:
               tilt.x === 0 && tilt.y === 0
@@ -153,6 +153,8 @@ export default function KnowledgeFolder({
             className="pointer-events-none absolute inset-0 bg-white"
             style={{ animation: 'folder-shine 5s ease-in-out infinite' }}
           />
+          {/* Capa de oscurecido al pasar el mouse */}
+          <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/20" />
           <div className="relative">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 shadow-inner">
               {Icon && <Icon className="h-6 w-6" />}
