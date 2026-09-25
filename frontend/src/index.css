@@ -39,48 +39,143 @@
   body { padding-bottom: 5rem; }
 }
 
-/* ── Tema oscuro del área logueada (scoped a .app-dark; el sitio público no cambia) ── */
+/* ── Tema oscuro del área logueada (scoped a .app-dark; el sitio público no cambia) ──
+   Superficies: #141920 (página) · #1f262f (tarjetas) · #232a33 (elevada) · #2b333d (activa) */
 .app-dark { color-scheme: dark; }
+
+/* Superficies / fondos */
 .app-dark .bg-white { background-color: #1f262f !important; }
+.app-dark .bg-white\/80 { background-color: rgba(31, 38, 47, 0.8) !important; }
+.app-dark .bg-iupa-white { background-color: #1f262f !important; }
 .app-dark .bg-iupa-light { background-color: #141920 !important; }
+.app-dark .bg-iupa-light\/30 { background-color: rgba(20, 25, 32, 0.7) !important; }
+.app-dark .bg-iupa-light\/50 { background-color: rgba(20, 25, 32, 0.6) !important; }
+.app-dark .bg-iupa-green-light { background-color: #1d2a26 !important; }
+.app-dark .bg-iupa-green-light\/20 { background-color: rgba(29, 42, 38, 0.55) !important; }
+.app-dark .bg-iupa-green-light\/30 { background-color: rgba(29, 42, 38, 0.6) !important; }
+.app-dark .bg-iupa-green-light\/40 { background-color: rgba(29, 42, 38, 0.65) !important; }
+.app-dark .bg-iupa-green-light\/50 { background-color: rgba(29, 42, 38, 0.7) !important; }
+.app-dark .bg-iupa-green-light\/60 { background-color: rgba(29, 42, 38, 0.8) !important; }
 .app-dark .bg-gray-50 { background-color: #181d24 !important; }
 .app-dark .bg-gray-100 { background-color: #232a33 !important; }
 .app-dark .bg-gray-200 { background-color: #2b333d !important; }
-.app-dark .bg-iupa-green-light { background-color: #1d2a26 !important; }
+.app-dark .bg-gray-300 { background-color: #333c47 !important; }
+.app-dark .bg-slate-50 { background-color: #181d24 !important; }
+.app-dark .bg-slate-100 { background-color: #232a33 !important; }
+.app-dark .bg-slate-200 { background-color: #2b333d !important; }
+.app-dark .bg-gray-900 { background-color: #0f1319 !important; }
+.app-dark .bg-amber-50 { background-color: #2b2413 !important; }
+.app-dark .bg-yellow-50 { background-color: #2b2413 !important; }
+.app-dark .bg-yellow-100 { background-color: #332a14 !important; }
+.app-dark .bg-red-50 { background-color: #2a1515 !important; }
+.app-dark .bg-red-100 { background-color: #331a1a !important; }
+.app-dark .bg-orange-50 { background-color: #2b1f12 !important; }
+.app-dark .bg-green-50 { background-color: #14261b !important; }
+.app-dark .bg-green-100 { background-color: #182e21 !important; }
+.app-dark .bg-emerald-50 { background-color: #14261b !important; }
+.app-dark .bg-blue-50 { background-color: #14202e !important; }
+.app-dark .bg-sky-50 { background-color: #12222e !important; }
+.app-dark .bg-teal-50 { background-color: #122a2a !important; }
+.app-dark .bg-purple-50 { background-color: #251830 !important; }
+.app-dark .bg-purple-100 { background-color: #2c1d39 !important; }
+.app-dark .bg-cyan-50 { background-color: #12282e !important; }
+.app-dark .bg-indigo-50 { background-color: #1a1c33 !important; }
+.app-dark .bg-black\/5 { background-color: rgba(0, 0, 0, 0.25) !important; }
+.app-dark .bg-black\/10 { background-color: rgba(0, 0, 0, 0.3) !important; }
+
+/* Gradientes con blanco → oscuro */
+.app-dark .via-white { --tw-gradient-via: #1f262f; }
+.app-dark .to-white { --tw-gradient-to: #141920; }
+
+/* Bordes y divisores */
 .app-dark .border-iupa-light { border-color: #2c343f !important; }
-.app-dark .border-gray-200 { border-color: #2f3844 !important; }
+.app-dark .border-iupa-green-light { border-color: #2e4a41 !important; }
 .app-dark .border-gray-100 { border-color: #232a33 !important; }
+.app-dark .border-gray-200 { border-color: #2f3844 !important; }
+.app-dark .border-gray-300 { border-color: #3a4450 !important; }
+.app-dark .border-slate-200 { border-color: #2f3844 !important; }
+.app-dark .border-red-200 { border-color: #5a2a2a !important; }
+.app-dark .border-amber-200 { border-color: #5a4a22 !important; }
+.app-dark .border-sky-200 { border-color: #25445c !important; }
+.app-dark .border-blue-100 { border-color: #25445c !important; }
+.app-dark .border-blue-400 { border-color: #2f6da0 !important; }
+.app-dark .border-green-400 { border-color: #2f7a52 !important; }
+.app-dark .border-emerald-400 { border-color: #2f7a52 !important; }
+.app-dark .hover\:border-iupa-green:hover { border-color: #3f7a68 !important; }
+.app-dark .hover\:border-iupa-green-light:hover { border-color: #3f7a68 !important; }
+.app-dark .hover\:border-gray-300:hover { border-color: #3a4450 !important; }
+.app-dark .divide-iupa-light > :not([hidden]) ~ :not([hidden]) { border-color: #2c343f !important; }
+.app-dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: #2f3844 !important; }
+
+/* Textos */
 .app-dark .text-iupa-dark { color: #e7eaf0 !important; }
 .app-dark .text-iupa-medium { color: #a3adba !important; }
+.app-dark .text-gray-500 { color: #9aa4b2 !important; }
+.app-dark .text-gray-600 { color: #aab4c2 !important; }
+.app-dark .text-gray-700 { color: #c2ccd8 !important; }
+.app-dark .text-gray-800 { color: #e7eaf0 !important; }
+.app-dark .hover\:text-gray-600:hover { color: #b6c0cc !important; }
+.app-dark .hover\:text-iupa-dark:hover { color: #f2f5f9 !important; }
 .app-dark .text-iupa-green { color: #7fd1b9 !important; }
 .app-dark .text-iupa-green-secondary { color: #5ec0a4 !important; }
+.app-dark .hover\:text-iupa-green:hover { color: #8fe0c7 !important; }
+.app-dark .hover\:text-iupa-green-secondary:hover { color: #6fd0b4 !important; }
+.app-dark .text-red-400 { color: #f87171 !important; }
+.app-dark .text-red-500 { color: #f87171 !important; }
+.app-dark .text-red-600 { color: #fb9b9b !important; }
+.app-dark .text-red-700 { color: #fda4a4 !important; }
+.app-dark .text-red-800 { color: #fecaca !important; }
+.app-dark .hover\:text-red-500:hover { color: #fca5a5 !important; }
+.app-dark .text-emerald-600 { color: #4ade80 !important; }
+.app-dark .text-emerald-700 { color: #86efac !important; }
+.app-dark .text-green-600 { color: #4ade80 !important; }
+.app-dark .text-green-700 { color: #86efac !important; }
+.app-dark .text-green-800 { color: #bbf7d0 !important; }
+.app-dark .text-blue-500 { color: #7dd3fc !important; }
+.app-dark .text-blue-600 { color: #93c5fd !important; }
+.app-dark .text-blue-700 { color: #bfdbfe !important; }
+.app-dark .text-blue-800 { color: #dbeafe !important; }
+.app-dark .text-sky-700 { color: #7dd3fc !important; }
+.app-dark .text-cyan-600 { color: #67e8f9 !important; }
+.app-dark .text-teal-700 { color: #5eead4 !important; }
+.app-dark .text-teal-800 { color: #99f6e4 !important; }
+.app-dark .text-amber-600 { color: #fbbf24 !important; }
+.app-dark .text-amber-700 { color: #fcd34d !important; }
+.app-dark .text-amber-700, .app-dark .text-amber-800 { color: #fcd34d !important; }
+.app-dark .text-yellow-700 { color: #fde047 !important; }
+.app-dark .text-yellow-800 { color: #fef08a !important; }
+.app-dark .text-orange-600 { color: #fdba74 !important; }
+.app-dark .text-orange-700 { color: #fed7aa !important; }
+.app-dark .text-purple-600 { color: #d8b4fe !important; }
+.app-dark .text-purple-800 { color: #e9d5ff !important; }
+
+/* Hover states de fondos */
 .app-dark .hover\:bg-iupa-light:hover { background-color: #181d24 !important; }
-.app-dark .hover\:bg-gray-100:hover { background-color: #232a33 !important; }
+.app-dark .hover\:bg-\[\#d0ebe5\]:hover { background-color: #1c2733 !important; }
+.app-dark .hover\:bg-iupa-light\/30:hover { background-color: rgba(24, 29, 36, 0.7) !important; }
 .app-dark .hover\:bg-iupa-green-light:hover { background-color: #1c2733 !important; }
 .app-dark .hover\:bg-iupa-green-light\/40:hover { background-color: #1c2733 !important; }
+.app-dark .hover\:bg-iupa-green-light\/20:hover { background-color: #1c2733 !important; }
 .app-dark .hover\:bg-gray-50:hover { background-color: #181d24 !important; }
-.app-dark .bg-amber-50 { background-color: #2b2413 !important; }
-.app-dark .text-amber-700, .app-dark .text-amber-800 { color: #fbbf24 !important; }
-.app-dark .bg-yellow-100 { background-color: #2b2413 !important; }
-.app-dark .text-yellow-700 { color: #fcd34d !important; }
-.app-dark .bg-red-50 { background-color: #2a1515 !important; }
-.app-dark .text-red-600 { color: #f87171 !important; }
-.app-dark .text-red-700 { color: #fca5a5 !important; }
+.app-dark .hover\:bg-gray-100:hover { background-color: #232a33 !important; }
+.app-dark .hover\:bg-slate-100:hover { background-color: #232a33 !important; }
 .app-dark .hover\:bg-red-50:hover { background-color: #2a1515 !important; }
-.app-dark .bg-green-100 { background-color: #14261b !important; }
-.app-dark .text-green-700 { color: #6ee7b7 !important; }
-.app-dark .hover\:bg-green-100\/40:hover { background-color: #14261b !important; }
-.app-dark .bg-blue-50 { background-color: #14202e !important; }
-.app-dark .text-blue-600 { color: #7dd3fc !important; }
-.app-dark .text-blue-700 { color: #93c5fd !important; }
-.app-dark .bg-teal-50 { background-color: #122a2a !important; }
-.app-dark .text-teal-700 { color: #5eead4 !important; }
-.app-dark .text-teal-800 { color: #5eead4 !important; }
+.app-dark .hover\:bg-red-100:hover { background-color: #331a1a !important; }
+.app-dark .hover\:bg-amber-50:hover { background-color: #2b2413 !important; }
+.app-dark .hover\:bg-yellow-50:hover { background-color: #2b2413 !important; }
+.app-dark .hover\:bg-orange-50:hover { background-color: #2b1f12 !important; }
+.app-dark .hover\:bg-green-50:hover { background-color: #14261b !important; }
+.app-dark .hover\:bg-emerald-50:hover { background-color: #14261b !important; }
+.app-dark .hover\:bg-blue-50:hover { background-color: #14202e !important; }
 .app-dark .hover\:bg-teal-50:hover { background-color: #122a2a !important; }
-.app-dark .bg-purple-100 { background-color: #251830 !important; }
-.app-dark .text-purple-800 { color: #d8b4fe !important; }
+.app-dark .hover\:bg-green-100\/40:hover { background-color: #14261b !important; }
+
+/* Placeholders */
 .app-dark .placeholder\:text-iupa-medium\/50::placeholder { color: #6b7280 !important; }
-.app-dark .divide-iupa-light > :not([hidden]) ~ :not([hidden]) { border-color: #2c343f !important; }
+.app-dark .placeholder\:text-iupa-medium::placeholder { color: #6b7280 !important; }
+.app-dark .placeholder\:text-gray-400::placeholder { color: #6b7280 !important; }
+.app-dark .placeholder\:text-gray-500::placeholder { color: #6b7280 !important; }
+
 /* Menú del usuario: superficie propia y distinguible del header en oscuro */
 .app-dark .user-dropdown { background-color: #232d38 !important; border-color: #3d4854 !important; }
 .app-dark .user-dropdown > div:first-child { border-color: #3d4854 !important; }
