@@ -174,11 +174,16 @@ export default function KnowledgeFolder({
           </div>
         </div>
 
-        {/* Cursor custom: burbuja "Abrir" que sigue al mouse */}
+        {/* Cursor custom: burbuja "Abrir" que sigue al mouse (recortada al viewport
+            para no generar scroll horizontal cuando el cursor está en el borde) */}
         {cursor && (
           <span
             className="pointer-events-none fixed z-50 rounded-full bg-iupa-dark px-3 py-1.5 text-[11px] font-semibold text-white shadow-lg"
-            style={{ left: cursor.x + 14, top: cursor.y + 14, fontFamily: 'Montserrat, sans-serif' }}
+            style={{
+              left: Math.min(cursor.x + 14, (typeof window !== 'undefined' ? window.innerWidth : 9999) - 92),
+              top: Math.min(cursor.y + 14, (typeof window !== 'undefined' ? window.innerHeight : 9999) - 44),
+              fontFamily: 'Montserrat, sans-serif',
+            }}
           >
             Abrir
           </span>

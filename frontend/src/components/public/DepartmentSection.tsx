@@ -22,7 +22,7 @@ export default function DepartmentSection() {
   }, [])
 
   return (
-    <section className="bg-iupa-light py-12">
+    <section className="overflow-x-clip bg-iupa-light py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-center gap-2">
           <Grid3X3 className="h-5 w-5 text-iupa-green" />
