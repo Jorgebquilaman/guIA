@@ -22,7 +22,7 @@ export default function Login() {
     setError('')
     try {
       const result = await loginMutation.mutateAsync({ email, password })
-      setAuth(result.user, result.accessToken, result.refreshToken)
+      setAuth(result.user, result.accessToken, result.refreshToken, result.expiresAt)
       navigate('/app', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión')

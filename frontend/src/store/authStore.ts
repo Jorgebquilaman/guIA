@@ -17,9 +17,10 @@ interface AuthState {
   user: User | null
   accessToken: string | null
   refreshToken: string | null
+  expiresAt: string | null
   isAuthenticated: boolean
   isLoading: boolean
-  setAuth: (user: User, accessToken: string, refreshToken: string) => void
+  setAuth: (user: User, accessToken: string, refreshToken: string, expiresAt?: string) => void
   clearAuth: () => void
   logout: () => void
   updateUser: (user: User) => void
@@ -32,17 +33,18 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       accessToken: null,
       refreshToken: null,
+      expiresAt: null,
       isAuthenticated: false,
       isLoading: false,
-      setAuth: (user, accessToken, refreshToken) =>
-        set({ user, accessToken, refreshToken, isAuthenticated: true }),
+      setAuth: (user, accessToken, refreshToken, expiresAt) =>
+        set({ user, accessToken, refreshToken, expiresAt: expiresAt ?? null, isAuthenticated: true }),
       clearAuth: () => {
         localStorage.removeItem('guia-auth')
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false })
+        set({ user: null, accessToken: null, refreshToken: null, expiresAt: null, isAuthenticated: false })
       },
       logout: () => {
         localStorage.removeItem('guia-auth')
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false })
+        set({ user: null, accessToken: null, refreshToken: null, expiresAt: null, isAuthenticated: false })
       },
       updateUser: (user) => set({ user }),
       fetchUser: async () => {
@@ -70,6 +72,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
+        expiresAt: state.expiresAt,
         isAuthenticated: state.isAuthenticated,
       }),
     }
@@ -90,7 +93,7 @@ if (typeof window !== 'undefined') {
       if (!next?.refreshToken) return
       const { refreshToken, setAuth } = useAuthStore.getState()
       if (next.refreshToken !== refreshToken && next.user) {
-        setAuth(next.user, next.accessToken, next.refreshToken)
+        setAuth(next.user, next.accessToken, next.refreshToken, next.expiresAt)
       }
     } catch {
       /* estado persistido ilegible: ignorar */

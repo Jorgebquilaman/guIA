@@ -41,7 +41,7 @@ function SessionExpiredModal() {
         setError(res.data.error?.message ?? 'Credenciales inválidas')
         return
       }
-      setAuth(res.data.data.user, res.data.data.accessToken, res.data.data.refreshToken)
+      setAuth(res.data.data.user, res.data.data.accessToken, res.data.data.refreshToken, res.data.data.expiresAt)
       resetSessionExpired()
       setOpen(false)
     } catch {

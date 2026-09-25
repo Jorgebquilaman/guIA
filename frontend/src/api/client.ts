@@ -20,7 +20,7 @@ async function attemptRefresh(token: string): Promise<boolean> {
     const res = await axios.post(`${baseURL}/auth/refresh`, { refreshToken: token })
     const d = res.data
     if (!d?.success || !d?.data) return false
-    useAuthStore.getState().setAuth(d.data.user, d.data.accessToken, d.data.refreshToken)
+    useAuthStore.getState().setAuth(d.data.user, d.data.accessToken, d.data.refreshToken, d.data.expiresAt)
     sessionExpired = false
     return true
   } catch {
@@ -44,6 +44,7 @@ async function tryRefresh(): Promise<boolean> {
         user: persisted.user,
         accessToken: persisted.accessToken,
         refreshToken: persisted.refreshToken,
+        expiresAt: persisted.expiresAt ?? null,
         isAuthenticated: true,
       })
       if (await attemptRefresh(persisted.refreshToken)) return true
@@ -53,6 +54,24 @@ async function tryRefresh(): Promise<boolean> {
   }
 
   return false
+}
+
+// ── Refresh proactivo ──
+// Renueva el access token ANTES de que expire (umbral 2 min) para que ninguna
+// consulta salga con un token vencido y no aparezcan 401 en la consola.
+const PROACTIVE_MARGIN_MS = 2 * 60 * 1000
+function proactiveRefreshTick() {
+  const { accessToken, expiresAt } = useAuthStore.getState()
+  if (!accessToken || !expiresAt || refreshing) return
+  const expires = new Date(expiresAt).getTime()
+  if (Number.isNaN(expires)) return
+  if (expires - Date.now() <= PROACTIVE_MARGIN_MS) {
+    refreshing = tryRefresh().finally(() => { refreshing = null })
+  }
+}
+if (typeof window !== 'undefined') {
+  proactiveRefreshTick()
+  setInterval(proactiveRefreshTick, 30_000)
 }
 
 export function resetSessionExpired() {
