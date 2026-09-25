@@ -134,9 +134,9 @@ export default function KnowledgeFolder({
         >
           <div className="h-2" />
         </div>
-        {/* Cuerpo con tilt 3D + flotación idle + oscurecido y sombra proyectada en hover */}
+        {/* Cuerpo con tilt 3D + flotación idle + oscurecido y sombra proyectada sobre el fondo */}
         <div
-          className="relative overflow-hidden rounded-b-2xl px-5 pb-6 pt-5 text-white shadow-xl transition-shadow duration-300 group-hover:shadow-2xl"
+          className="relative overflow-hidden rounded-b-2xl px-5 pb-6 pt-5 text-white shadow-md transition-shadow duration-300 group-hover:shadow-[0_26px_50px_-12px_rgba(0,0,0,0.45)]"
           style={{
             backgroundColor: department.color,
             ...TEXTURE,
@@ -154,7 +154,7 @@ export default function KnowledgeFolder({
             style={{ animation: 'folder-shine 5s ease-in-out infinite' }}
           />
           {/* Capa de oscurecido al pasar el mouse */}
-          <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/20" />
+          <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/15" />
           <div className="relative">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 shadow-inner">
               {Icon && <Icon className="h-6 w-6" />}
