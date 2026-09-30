@@ -1,10 +1,25 @@
 import { useState, useEffect, type ComponentType } from 'react'
-import { Grid3X3, Music, Video, Palette, Move, Theater, BookOpen, Mic, Camera, Code, Globe, Users, Library, Pen, Star, Heart, Zap, Sun, Moon, Cloud } from 'lucide-react'
+import { Grid3X3, Music, Video, Palette, Move, Theater, BookOpen, Mic, Camera, Code, Globe, Users, Library, Pen, Star, Heart, Zap, Sun, Moon, Cloud, Sparkles, GraduationCap, Landmark, ScrollText, Cpu, Shapes, Archive, FileText } from 'lucide-react'
 import { useI18n } from '../../i18n/context'
 import KnowledgeFolder, { type FolderDepartment } from './KnowledgeFolder'
 
 const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
   Music, Video, Palette, Move, Theater, BookOpen, Mic, Camera, Code, Globe, Users, Library, Pen, Star, Heart, Zap, Sun, Moon, Cloud,
+  Sparkles, GraduationCap, Landmark, ScrollText, Cpu, Shapes, Archive, FileText,
+}
+
+// Fallback por nombre de red para las que no tienen ícono asignado
+const NAME_ICON: Record<string, ComponentType<{ className?: string }>> = {
+  'Patrimonio Integral': Landmark,
+  'Sistemas': Cpu,
+  'Escuela de Arte Popular': Shapes,
+  'Editorial': BookOpen,
+  'Normativa Institucional': ScrollText,
+  'Investigación y Posgrado': GraduationCap,
+}
+
+function resolveIcon(dept: FolderDepartment): ComponentType<{ className?: string }> | null {
+  return ICON_MAP[dept.icon ?? ''] ?? NAME_ICON[dept.name] ?? null
 }
 
 export default function DepartmentSection() {
@@ -37,7 +52,7 @@ export default function DepartmentSection() {
         {/* Carpetas interactivas: una por red de conocimiento */}
         <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
           {departments.map((dept) => (
-            <KnowledgeFolder key={dept.id} department={dept} Icon={ICON_MAP[dept.icon ?? ''] ?? null} />
+            <KnowledgeFolder key={dept.id} department={dept} Icon={resolveIcon(dept)} />
           ))}
         </div>
       </div>
