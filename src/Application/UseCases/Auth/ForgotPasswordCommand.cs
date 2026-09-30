@@ -35,7 +35,8 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
         _context.PasswordResetTokens.Add(resetToken);
         await _context.SaveChangesAsync(ct);
 
-        var baseUrl = "http://localhost:5173";
+        var siteConfig = await _context.SiteConfigs.FirstOrDefaultAsync(ct);
+        var baseUrl = (siteConfig?.BaseUrl ?? "https://guia.iupa.edu.ar").TrimEnd('/');
         var resetLink = $"{baseUrl}/reset-password?token={token}";
 
         var body = $"""

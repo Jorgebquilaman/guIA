@@ -35,7 +35,8 @@ public class ApproveUserCommandHandler : IRequestHandler<ApproveUserCommand>
         await _context.SaveChangesAsync(ct);
 
         var emailAddr = user.Email?.Value ?? string.Empty;
-        var baseUrl = "http://localhost:5173";
+        var siteConfig = await _context.SiteConfigs.FirstOrDefaultAsync(ct);
+        var baseUrl = (siteConfig?.BaseUrl ?? "https://guia.iupa.edu.ar").TrimEnd('/');
         var setPasswordLink = $"{baseUrl}/reset-password?token={token}";
 
         var body = $"""
