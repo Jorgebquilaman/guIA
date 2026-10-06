@@ -24,8 +24,8 @@ public class MetadataFieldConfiguration : IEntityTypeConfiguration<MetadataField
         builder.Property(f => f.IsHidden).HasColumnName("is_hidden");
         builder.Property(f => f.IsSimpleView).HasColumnName("is_simple_view").HasDefaultValue(false);
         builder.Property(f => f.SortOrder).HasColumnName("sort_order");
-        builder.Property(f => f.HelpText).HasMaxLength(500).HasColumnName("help_text");
-        builder.Property(f => f.AiPrompt).HasMaxLength(1000).HasColumnName("ai_prompt");
+        builder.Property(f => f.HelpText).HasColumnName("help_text");
+        builder.Property(f => f.AiPrompt).HasColumnName("ai_prompt");
 
         builder.HasMany(f => f.Options)
             .WithOne(o => o.Field)
