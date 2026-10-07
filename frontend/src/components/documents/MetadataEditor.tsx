@@ -178,7 +178,18 @@ export default function MetadataEditor({
     aiPendingRef.current = true
     const start = Date.now()
     try {
-      await fetchAiSuggestions()
+      // refetch() NO lanza en error: hay que inspeccionar el resultado
+      const result = await fetchAiSuggestions()
+      if (result.isError) {
+        const status = (result.error as { response?: { status?: number } })?.response?.status
+        setAiLog((prev) => [...prev,
+          status === 404
+            ? '✗ La IA no encontró texto para analizar. Si el documento es un escaneo, necesita OCR (texto legible por máquina).'
+            : '✗ Error al analizar el documento',
+        ])
+        setAiLoading(false)
+        return
+      }
       setAiLog((prev) => [...prev, `  Tiempo total: ${((Date.now() - start) / 1000).toFixed(1)}s`])
     } catch {
       setAiLog((prev) => [...prev, '✗ Error al analizar el documento'])
