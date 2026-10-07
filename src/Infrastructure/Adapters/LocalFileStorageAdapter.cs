@@ -119,22 +119,30 @@ public class LocalFileStorageAdapter : IFileStoragePort
         }
     }
 
-    public Task<int> GetPdfPageCountAsync(string storedPath, CancellationToken ct = default)
+    public async Task<int> GetPdfPageCountAsync(string storedPath, CancellationToken ct = default)
     {
         var fullPath = GetFullPath(storedPath);
 
         if (!File.Exists(fullPath))
-            return Task.FromResult(0);
+            return 0;
 
-        try
+        // PdfPig es síncrono y con un PDF malformado puede girar indefinidamente
+        // (bloqueando el endpoint: 504). Acotar con timeout y devolver 0 si no responde.
+        var countTask = Task.Run(() =>
         {
-            using var pdfDoc = UglyToad.PdfPig.PdfDocument.Open(fullPath);
-            return Task.FromResult(pdfDoc.NumberOfPages);
-        }
-        catch
-        {
-            return Task.FromResult(0);
-        }
+            try
+            {
+                using var pdfDoc = UglyToad.PdfPig.PdfDocument.Open(fullPath);
+                return pdfDoc.NumberOfPages;
+            }
+            catch
+            {
+                return 0;
+            }
+        }, ct);
+
+        var completed = await Task.WhenAny(countTask, Task.Delay(TimeSpan.FromSeconds(20), ct));
+        return completed == countTask ? await countTask : 0;
     }
 
     private async Task<string?> TryExtractWithMarkItDownAsync(string fullPath, CancellationToken ct)

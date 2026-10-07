@@ -18,6 +18,9 @@ public class DeepSeekLlmAdapter : ILlmPort
     public DeepSeekLlmAdapter(IHttpClientFactory httpClientFactory, IAppDbContext context, IOptions<DeepSeekSettings> fallbackSettings)
     {
         _httpClient = httpClientFactory.CreateClient();
+        // Límite duro para la llamada al LLM: garantiza que el endpoint siempre
+        // responda (con análisis vacío) aunque el proveedor cuelgue.
+        _httpClient.Timeout = TimeSpan.FromSeconds(120);
         _context = context;
         _fallbackSettings = fallbackSettings.Value;
     }

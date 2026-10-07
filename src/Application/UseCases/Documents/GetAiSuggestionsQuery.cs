@@ -35,13 +35,16 @@ public class GetAiSuggestionsQueryHandler : IRequestHandler<GetAiSuggestionsQuer
             return null;
 
         var extractedTexts = new List<string>();
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         foreach (var file in document.Files)
         {
             try
             {
+                Console.WriteLine($"[AI] extrayendo texto de {file.StoredPath}");
                 // Use CancellationToken.None so slow OCR keeps running (and caches its result to .md)
                 // even if the HTTP request is aborted by a proxy timeout — the next attempt will hit the cache
                 var text = await _fileStorage.ExtractTextAsync(file.StoredPath, file.MimeType, CancellationToken.None);
+                Console.WriteLine($"[AI] extracción lista en {sw.ElapsedMilliseconds}ms ({text?.Length ?? 0} chars)");
                 if (!string.IsNullOrEmpty(text))
                     extractedTexts.Add(text);
             }
@@ -126,7 +129,9 @@ public class GetAiSuggestionsQueryHandler : IRequestHandler<GetAiSuggestionsQuer
                 "Usá exactamente este dato para el campo de extensión (RDA 3.4): no lo deduzcas del texto ni lo inventes.";
         }
 
+        Console.WriteLine($"[AI] esquema {(schema?.Label ?? "ninguno")}, llamando LLM en {sw.ElapsedMilliseconds}ms");
         var analysis = await _llmPort.AnalyzeDocumentAsync(combinedText, fileName, metadataFieldLabels, ct);
+        Console.WriteLine($"[AI] LLM respondió en {sw.ElapsedMilliseconds}ms (confianza {analysis.Confidence})");
 
         // dc.format is machine-generated from the file MIME type (SNRD mimeResolution) —
         // inject it deterministically so the AI never has to guess it
